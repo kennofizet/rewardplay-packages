@@ -2,7 +2,7 @@
 
 A monorepo containing frontend and backend packages for RewardPlay - an entertainment platform where members can exchange rewards and play games.
 
-## What is This Project?
+## What is This Project.?
 
 This repository contains two reusable packages:
 
