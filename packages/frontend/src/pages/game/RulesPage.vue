@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, inject, toValue } from 'vue'
+import { ref, inject, unref } from 'vue'
 
 const imagesUrl = inject('imagesUrl', '')
 
@@ -101,7 +101,7 @@ const mainQuests = ref([
 
 const getImageUrl = (filename) => {
   if (!filename) return ''
-  const url = toValue(imagesUrl)
+  const url = unref(imagesUrl)
   if (!url) {
     return `/${filename}`
   }

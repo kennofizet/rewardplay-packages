@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { inject, toValue } from 'vue'
+import { inject, unref } from 'vue'
 
 const props = defineProps({
   dayLabel: {
@@ -105,7 +105,7 @@ const imagesUrl = inject('imagesUrl', '')
 
 const getImageUrl = (filename) => {
   if (!filename) return ''
-  const url = toValue(imagesUrl)
+  const url = unref(imagesUrl)
   if (!url) {
     return `/${filename}`
   }

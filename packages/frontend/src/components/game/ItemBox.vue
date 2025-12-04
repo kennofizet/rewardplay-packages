@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import { computed, inject, toValue } from 'vue'
+import { computed, inject, unref } from 'vue'
 
 const props = defineProps({
   image: {
@@ -32,7 +32,7 @@ const imagesUrl = inject('imagesUrl', '')
 
 const getImageUrl = (filename) => {
   if (!filename) return ''
-  const url = toValue(imagesUrl)
+  const url = unref(imagesUrl)
   if (!url) {
     return `/${filename}`
   }

@@ -97,7 +97,7 @@
 </template>
 
 <script setup>
-import { ref, inject, computed, toValue } from 'vue'
+import { ref, inject, computed, unref } from 'vue'
 import ItemBox from '../../components/game/ItemBox.vue'
 
 const imagesUrl = inject('imagesUrl', '')
@@ -136,7 +136,7 @@ const bagItems = ref(
 
 const getImageUrl = (filename) => {
   if (!filename) return ''
-  const url = toValue(imagesUrl)
+  const url = unref(imagesUrl)
   if (!url) {
     return `/${filename}`
   }

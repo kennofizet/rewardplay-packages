@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { computed, inject, toValue } from 'vue'
+import { computed, inject, unref } from 'vue'
 
 const props = defineProps({
   isFirst: {
@@ -67,7 +67,7 @@ const iconClass = computed(() => {
 
 const iconStyle = computed(() => {
   if (props.iconImage && imagesUrl) {
-    const url = toValue(imagesUrl)
+    const url = unref(imagesUrl)
     const imageUrl = url.endsWith('/') 
       ? `${url}${props.iconImage}` 
       : `${url}/${props.iconImage}`
