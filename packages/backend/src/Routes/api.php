@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Company\RewardPlay\Controllers\DemoController;
-use Company\RewardPlay\Controllers\AuthController;
-use Company\RewardPlay\Middleware\ValidateRewardPlayToken;
+use Kennofizet\RewardPlay\Controllers\DemoController;
+use Kennofizet\RewardPlay\Controllers\AuthController;
+use Kennofizet\RewardPlay\Middleware\ValidateRewardPlayToken;
 
 $prefix = config('rewardplay.api_prefix', 'api/rewardplay');
 $rateLimit = config('rewardplay.rate_limit', 60);

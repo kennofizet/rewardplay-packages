@@ -1,6 +1,6 @@
 <?php
 
-namespace Company\RewardPlay\Services;
+namespace Kennofizet\RewardPlay\Services;
 
 use Illuminate\Support\Facades\DB;
 

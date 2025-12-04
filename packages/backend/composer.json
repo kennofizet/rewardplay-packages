@@ -1,5 +1,5 @@
 {
-  "name": "company/rewardplay-backend",
+  "name": "kennofizet/rewardplay-backend",
   "description": "RewardPlay backend package for Laravel - Token-based authentication system",
   "type": "library",
   "license": "MIT",
@@ -20,13 +20,13 @@
   },
   "autoload": {
     "psr-4": {
-      "Company\\RewardPlay\\": "src/"
+      "Kennofizet\\RewardPlay\\": "src/"
     }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "Company\\RewardPlay\\RewardPlayServiceProvider"
+        "Kennofizet\\RewardPlay\\RewardPlayServiceProvider"
       ]
     }
   }

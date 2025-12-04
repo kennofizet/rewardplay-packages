@@ -3,7 +3,7 @@
 ## Installation
 
 ```bash
-composer require company/rewardplay-backend
+composer require kennofizet/rewardplay-backend
 php artisan vendor:publish --tag=rewardplay-migrations
 php artisan vendor:publish --tag=rewardplay-config
 php artisan rewardplay:publish-images
@@ -46,7 +46,7 @@ The migration will:
 When creating a new user, you need to generate a token for them:
 
 ```php
-use Company\RewardPlay\Services\TokenService;
+use Kennofizet\RewardPlay\Services\TokenService;
 
 $tokenService = app(TokenService::class);
 $token = $tokenService->createOrRefreshToken($user->id);
@@ -57,7 +57,7 @@ $token = $tokenService->createOrRefreshToken($user->id);
 Add this to your `User` model:
 
 ```php
-use Company\RewardPlay\Services\TokenService;
+use Kennofizet\RewardPlay\Services\TokenService;
 
 class User extends Authenticatable
 {

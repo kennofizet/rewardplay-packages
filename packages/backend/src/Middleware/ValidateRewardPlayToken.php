@@ -1,10 +1,10 @@
 <?php
 
-namespace Company\RewardPlay\Middleware;
+namespace Kennofizet\RewardPlay\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Company\RewardPlay\Services\TokenService;
+use Kennofizet\RewardPlay\Services\TokenService;
 use Illuminate\Support\Facades\DB;
 
 class ValidateRewardPlayToken

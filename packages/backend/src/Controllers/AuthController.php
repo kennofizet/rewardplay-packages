@@ -1,10 +1,10 @@
 <?php
 
-namespace Company\RewardPlay\Controllers;
+namespace Kennofizet\RewardPlay\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Company\RewardPlay\Services\TokenService;
+use Kennofizet\RewardPlay\Services\TokenService;
 
 class AuthController extends Controller
 {

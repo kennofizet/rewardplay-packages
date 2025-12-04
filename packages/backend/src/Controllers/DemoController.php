@@ -1,6 +1,6 @@
 <?php
 
-namespace Company\RewardPlay\Controllers;
+namespace Kennofizet\RewardPlay\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

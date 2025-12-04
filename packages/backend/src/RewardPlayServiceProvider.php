@@ -1,6 +1,6 @@
 <?php
 
-namespace Company\RewardPlay;
+namespace Kennofizet\RewardPlay;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -33,7 +33,7 @@ class RewardPlayServiceProvider extends ServiceProvider
         // Register custom command
         if ($this->app->runningInConsole()) {
             $this->commands([
-                \Company\RewardPlay\Commands\PublishImagesCommand::class,
+                \Kennofizet\RewardPlay\Commands\PublishImagesCommand::class,
             ]);
         }
 

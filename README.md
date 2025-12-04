@@ -6,8 +6,8 @@ A monorepo containing frontend and backend packages for RewardPlay - an entertai
 
 This repository contains two reusable packages:
 
-1. **Frontend Package** (`@company/rewardplay-frontend`) - A Vue.js 3 component library for the RewardPlay game interface
-2. **Backend Package** (`company/rewardplay-backend`) - A Laravel 12 package providing the API and business logic for RewardPlay
+1. **Frontend Package** (`@kennofizet/rewardplay-frontend`) - A Vue.js 3 component library for the RewardPlay game interface
+2. **Backend Package** (`kennofizet/rewardplay-backend`) - A Laravel 12 package providing the API and business logic for RewardPlay
 
 Both packages are designed to be installed in any project that needs RewardPlay functionality, allowing you to reuse the game system across multiple applications.
 
@@ -54,12 +54,12 @@ Both packages are designed to be installed in any project that needs RewardPlay 
 
 **Frontend Package:**
 ```bash
-npm install @company/rewardplay-frontend vue@^3.2.30
+npm install @kennofizet/rewardplay-frontend vue@^3.2.30
 ```
 
 **Backend Package:**
 ```bash
-composer require company/rewardplay-backend
+composer require kennofizet/rewardplay-backend
 php artisan vendor:publish --tag=rewardplay-migrations
 php artisan vendor:publish --tag=rewardplay-config
 php artisan rewardplay:publish-images
@@ -72,7 +72,7 @@ php artisan migrate
 
 ```javascript
 import { createApp } from 'vue'
-import RewardPlay from '@company/rewardplay-frontend'
+import RewardPlay from '@kennofizet/rewardplay-frontend'
 
 const app = createApp({})
 
