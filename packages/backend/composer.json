@@ -1,5 +1,10 @@
 {
   "name": "kennofizet/rewardplay-backend",
+  "repositories": [
+    {
+      "url": "https://github.com/kennofizetreal/rewardplay-packages.git"
+    }
+  ],
   "description": "RewardPlay backend package for Laravel - Token-based authentication system",
   "type": "library",
   "license": "MIT",

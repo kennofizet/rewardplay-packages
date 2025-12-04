@@ -34,7 +34,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kennofizetreal/rewardplay-packages.git"
+    "url": "git+https://github.com/kennofizetreal/rewardplay-packages.git"
   },
   "dependencies": {
     "vue": "^3.2.30",
@@ -50,4 +50,3 @@
     "node": ">=16.0.0"
   }
 }
-
