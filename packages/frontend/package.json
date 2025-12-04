@@ -1,6 +1,6 @@
 {
   "name": "@kennofizet/rewardplay-frontend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "RewardPlay frontend package - Token-based API client for RewardPlay",
   "main": "./src/index.js",
   "module": "./src/index.js",
@@ -34,7 +34,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kennofizetreal/rewardplay-packages.git"
+    "url": "git+https://github.com/kennofizet/rewardplay-packages.git"
   },
   "dependencies": {
     "vue": "^3.2.30",
