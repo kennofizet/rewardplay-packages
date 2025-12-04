@@ -1,0 +1,48 @@
+# Documentation files (moved to gitignore as requested)
+*.md
+!README.md
+
+# Cursor rules files
+.cursorrules*
+
+# Dependencies
+node_modules/
+vendor/
+composer.lock
+package-lock.json
+yarn.lock
+
+# Build outputs
+packages/frontend/dist/
+packages/frontend/build/
+packages/backend/bootstrap/cache/*
+packages/backend/storage/*.key
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+.cache/
+
+test
+

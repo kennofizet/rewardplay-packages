@@ -1,0 +1,19 @@
+{
+  "name": "rewardplay-packages",
+  "version": "1.0.0",
+  "description": "RewardPlay packages monorepo - Frontend and backend packages for entertainment platform",
+  "private": true,
+  "workspaces": [
+    "packages/frontend"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace=packages/frontend",
+    "build:frontend": "npm run build --workspace=packages/frontend",
+    "watch:frontend": "npm run watch --workspace=packages/frontend",
+    "install:all": "npm install"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
+

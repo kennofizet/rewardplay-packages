@@ -1,0 +1,15 @@
+# Default Images Folder
+#
+# Place your default images here in this folder.
+# 
+# To publish images to your project's public directory:
+#   php artisan rewardplay:publish-images
+# 
+# Or using Laravel's vendor publish:
+#   php artisan vendor:publish --tag=rewardplay-images
+#
+# The folder name in public directory can be configured in:
+#   config/rewardplay.php -> images_folder
+#   or via .env: REWARDPLAY_IMAGES_FOLDER
+#
+# Default folder name: rewardplay-images

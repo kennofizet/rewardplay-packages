@@ -1,0 +1,69 @@
+<template>
+  <GameLayout 
+    :rotate="rotate"
+    @page-change="handlePageChange"
+    @icon-click="handleIconClick"
+  >
+    <component :is="currentPage" />
+  </GameLayout>
+</template>
+
+<script setup>
+import { ref, shallowRef } from 'vue'
+import GameLayout from './game/GameLayout.vue'
+import DailyRewardPage from '../pages/game/DailyRewardPage.vue'
+import BagGearPage from '../pages/game/BagGearPage.vue'
+import LuckyWheelPage from '../pages/game/LuckyWheelPage.vue'
+import RankingCoinPage from '../pages/game/RankingCoinPage.vue'
+import RulesPage from '../pages/game/RulesPage.vue'
+
+const props = defineProps({
+  imagesUrl: {
+    type: String,
+    default: ''
+  },
+  rotate: {
+    type: Boolean,
+    default: true
+  }
+})
+
+const pageMap = {
+  'reward': DailyRewardPage,
+  'bag': BagGearPage,
+  'lucky-wheel': LuckyWheelPage,
+  'ranking': RankingCoinPage,
+  'rules': RulesPage,
+  'shop': () => import('../pages/game/ShopPage.vue').catch(() => ({ default: () => null }))
+}
+
+const currentPage = shallowRef(DailyRewardPage) // Default to DailyReward
+
+const handlePageChange = (page) => {
+  if (page === 'back') {
+    // Handle back navigation
+    return
+  }
+  
+  if (pageMap[page]) {
+    const pageComponent = pageMap[page]
+    if (typeof pageComponent === 'function') {
+      // Lazy load component
+      pageComponent().then(module => {
+        currentPage.value = module.default || module
+      })
+    } else {
+      currentPage.value = pageComponent
+    }
+  }
+}
+
+const handleIconClick = (icon) => {
+  // Handle icon clicks (notifications, settings, etc.)
+  console.log('Icon clicked:', icon)
+}
+</script>
+
+<style scoped>
+/* Styles are in GameLayout component */
+</style>

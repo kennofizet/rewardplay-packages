@@ -1,0 +1,44 @@
+# Dependencies
+/vendor/
+composer.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.phpstorm.meta.php
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.backup
+.env.production
+
+# Laravel
+/bootstrap/cache/*
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Testing
+.phpunit.result.cache
+/coverage/
+
+# Logs
+*.log
+laravel.log
+
+# Cursor Rules (keep in repo for team)
+# .cursorrules-backend.md should be committed
+
+# Temporary files
+*.tmp
+.cache/
+
