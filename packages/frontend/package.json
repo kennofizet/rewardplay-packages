@@ -1,6 +1,6 @@
 {
   "name": "@kennofizet/rewardplay-frontend",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "RewardPlay frontend package - Token-based API client for RewardPlay",
   "main": "./src/index.js",
   "module": "./src/index.js",
