@@ -7,11 +7,12 @@ use Illuminate\Support\Facades\DB;
 class TokenService
 {
     /**
-     * Get token column name from config
+     * Get tokens table name
      */
-    protected function getTokenColumnName()
+    protected function getTokensTableName()
     {
-        return config('rewardplay.token_name', 'rewardpay_token');
+        $tablePrefix = config('rewardplay.table_prefix', '');
+        return $tablePrefix . 'rewardplay_tokens';
     }
 
     /**
@@ -31,12 +32,32 @@ class TokenService
     public function createOrRefreshToken($userId)
     {
         $token = $this->generateUniqueToken();
-        $tokenColumn = $this->getTokenColumnName();
-        $tableName = $this->getUserTableName();
+        $tokensTableName = $this->getTokensTableName();
 
-        DB::table($tableName)
-            ->where('id', $userId)
-            ->update([$tokenColumn => $token]);
+        // Check if user already has a token
+        $existingToken = DB::table($tokensTableName)
+            ->where('user_id', $userId)
+            ->where('is_active', true)
+            ->first();
+
+        if ($existingToken) {
+            // Update existing token
+            DB::table($tokensTableName)
+                ->where('id', $existingToken->id)
+                ->update([
+                    'token' => $token,
+                    'updated_at' => now(),
+                ]);
+        } else {
+            // Create new token
+            DB::table($tokensTableName)->insert([
+                'user_id' => $userId,
+                'token' => $token,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         return $token;
     }
@@ -49,12 +70,12 @@ class TokenService
      */
     public function getToken($userId)
     {
-        $tokenColumn = $this->getTokenColumnName();
-        $tableName = $this->getUserTableName();
+        $tokensTableName = $this->getTokensTableName();
 
-        return DB::table($tableName)
-            ->where('id', $userId)
-            ->value($tokenColumn);
+        return DB::table($tokensTableName)
+            ->where('user_id', $userId)
+            ->where('is_active', true)
+            ->value('token');
     }
 
     /**
@@ -64,25 +85,16 @@ class TokenService
      */
     protected function generateUniqueToken()
     {
-        $tokenColumn = $this->getTokenColumnName();
-        $tableName = $this->getUserTableName();
+        $tokensTableName = $this->getTokensTableName();
 
         do {
             $token = bin2hex(random_bytes(32)); // 64 character hex string
-            $exists = DB::table($tableName)
-                ->where($tokenColumn, $token)
+            $exists = DB::table($tokensTableName)
+                ->where('token', $token)
                 ->exists();
         } while ($exists);
 
         return $token;
-    }
-
-    /**
-     * Get token active column name from config
-     */
-    protected function getTokenActiveColumnName()
-    {
-        return config('rewardplay.token_active_name', 'token_active');
     }
 
     /**
@@ -93,16 +105,14 @@ class TokenService
      */
     public function validateToken($token)
     {
-        $tokenColumn = $this->getTokenColumnName();
-        $tokenActiveColumn = $this->getTokenActiveColumnName();
-        $tableName = $this->getUserTableName();
+        $tokensTableName = $this->getTokensTableName();
 
-        $userId = DB::table($tableName)
-            ->where($tokenColumn, $token)
-            ->where($tokenActiveColumn, 1)
-            ->value('id');
+        $tokenRecord = DB::table($tokensTableName)
+            ->where('token', $token)
+            ->where('is_active', true)
+            ->first();
 
-        return $userId;
+        return $tokenRecord ? $tokenRecord->user_id : null;
     }
 
     /**
@@ -113,13 +123,20 @@ class TokenService
      */
     public function checkUser($token)
     {
-        $tokenColumn = $this->getTokenColumnName();
-        $tokenActiveColumn = $this->getTokenActiveColumnName();
-        $tableName = $this->getUserTableName();
+        $tokensTableName = $this->getTokensTableName();
+        $userTableName = $this->getUserTableName();
 
-        $user = DB::table($tableName)
-            ->where($tokenColumn, $token)
-            ->where($tokenActiveColumn, 1)
+        $tokenRecord = DB::table($tokensTableName)
+            ->where('token', $token)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$tokenRecord) {
+            return null;
+        }
+
+        $user = DB::table($userTableName)
+            ->where('id', $tokenRecord->user_id)
             ->first();
 
         if (!$user) {
@@ -128,8 +145,7 @@ class TokenService
 
         return [
             'id' => $user->id,
-            'token_active' => $user->{$tokenActiveColumn} ?? 1,
+            'token_active' => $tokenRecord->is_active ? 1 : 0,
         ];
     }
 }
-

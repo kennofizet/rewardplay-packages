@@ -15,7 +15,6 @@ After publishing the config, edit `config/rewardplay.php`:
 
 ```php
 'table_user' => env('REWARDPLAY_TABLE_USER', 'users'),
-'token_name' => env('REWARDPLAY_TOKEN_NAME', 'rewardpay_token'),
 ```
 
 **IMPORTANT:** After changing the config, clear the config cache:
@@ -296,8 +295,6 @@ Add to your `.env`:
 
 ```env
 REWARDPLAY_TABLE_USER=users
-REWARDPLAY_TOKEN_NAME=rewardpay_token
-REWARDPLAY_TOKEN_ACTIVE_NAME=token_active
 REWARDPLAY_API_PREFIX=api/rewardplay
 REWARDPLAY_RATE_LIMIT=60
 REWARDPLAY_IMAGES_FOLDER=rewardplay-images

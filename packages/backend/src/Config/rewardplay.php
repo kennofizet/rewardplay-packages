@@ -14,31 +14,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Token Column Name
+    | Table Prefix
     |--------------------------------------------------------------------------
     |
-    | The name of the token column in the users table.
-    | Default: 'rewardpay_token'
-    |
-    | IMPORTANT: After changing this config, run:
-    | php artisan config:clear
+    | Prefix for RewardPlay tables (e.g., 'rp_' will create 'rp_rewardplay_tokens').
+    | Default: '' (no prefix)
     |
     */
-    'token_name' => env('REWARDPLAY_TOKEN_NAME', 'rewardpay_token'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Token Active Column Name
-    |--------------------------------------------------------------------------
-    |
-    | The name of the token active status column in the users table.
-    | Default: 'token_active'
-    |
-    | IMPORTANT: After changing this config, run:
-    | php artisan config:clear
-    |
-    */
-    'token_active_name' => env('REWARDPLAY_TOKEN_ACTIVE_NAME', 'token_active'),
+    'table_prefix' => env('REWARDPLAY_TABLE_PREFIX', ''),
 
     /*
     |--------------------------------------------------------------------------

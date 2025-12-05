@@ -12,7 +12,7 @@ $rateLimit = config('rewardplay.rate_limit', 60);
 Route::prefix($prefix)
     ->middleware(['api'])
     ->group(function () {
-        Route::post('/auth/check', [AuthController::class, 'checkUser']);
+        Route::get('/auth/check', [AuthController::class, 'checkUser']);
     });
 
 // Protected routes (require token validation)

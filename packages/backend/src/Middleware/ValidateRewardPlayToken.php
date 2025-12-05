@@ -30,13 +30,12 @@ class ValidateRewardPlayToken
 
         if (!$userId) {
             return response()->json([
-                'error' => 'Invalid token',
+                'error' => 'Invalid or inactive token',
             ], 401);
         }
 
-        // Check if user exists and token is active
+        // Check if user exists
         $tableName = config('rewardplay.table_user', 'users');
-        $tokenActiveColumnName = config('rewardplay.token_active_name', 'token_active');
         
         $user = DB::table($tableName)
             ->where('id', $userId)
@@ -48,18 +47,9 @@ class ValidateRewardPlayToken
             ], 404);
         }
 
-        // Check if token is active
-        $tokenActive = $user->{$tokenActiveColumnName} ?? 1;
-        if ($tokenActive != 1) {
-            return response()->json([
-                'error' => 'Token is inactive',
-            ], 403);
-        }
-
         // Attach user ID to request attributes (cannot be overridden by user input)
         $request->attributes->set('rewardplay_user_id', $userId);
 
         return $next($request);
     }
 }
-
