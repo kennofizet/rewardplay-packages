@@ -1,31 +1,36 @@
 <template>
-  <div class="rewardplay-page">
-    <LoginScreen
-      :show-login="showLogin"
-      :background-image="backgroundImage"
-      @login-success="handleLoginSuccess"
-      @login-failed="handleLoginFailed"
-    />
+  <div 
+    class="rewardplay-isolated"
+    :style="customStyles"
+  >
+    <div class="rewardplay-page">
+      <LoginScreen
+        :show-login="showLogin"
+        :background-image="backgroundImage"
+        @login-success="handleLoginSuccess"
+        @login-failed="handleLoginFailed"
+      />
 
-    <LoadingSource
-      :is-loading="isLoading"
-      :loading-progress="loadingProgress"
-      :unzip-progress="unzipProgress"
-      :background-image="backgroundImage"
-      @loading-complete="handleLoadingComplete"
-    />
-    
-    <div 
-      class="game-content"
-      :class="{ 'content-hidden': isLoading || showLogin }"
-    >
-      <MainGame :images-url="imagesUrl" :rotate="rotate" />
+      <LoadingSource
+        :is-loading="isLoading"
+        :loading-progress="loadingProgress"
+        :unzip-progress="unzipProgress"
+        :background-image="backgroundImage"
+        @loading-complete="handleLoadingComplete"
+      />
+      
+      <div 
+        class="game-content"
+        :class="{ 'content-hidden': isLoading || showLogin }"
+      >
+        <MainGame :images-url="imagesUrl" :rotate="rotate" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, provide } from 'vue'
+import { ref, provide, computed } from 'vue'
 import LoadingSource from '../components/LoadingSource.vue'
 import LoginScreen from '../components/LoginScreen.vue'
 import { ResourceLoader } from '../utils/resourceLoader'
@@ -62,7 +67,29 @@ const props = defineProps({
   rotate: {
     type: Boolean,
     default: true
+  },
+  // Custom styles (CSS variables or inline styles)
+  customStyles: {
+    type: Object,
+    default: () => ({})
   }
+})
+
+// Merge custom styles with CSS variables
+const customStyles = computed(() => {
+  const styles = { ...props.customStyles }
+  
+  // Allow CSS custom properties to be passed
+  if (props.customStyles && typeof props.customStyles === 'object') {
+    Object.keys(props.customStyles).forEach(key => {
+      if (key.startsWith('--')) {
+        // CSS custom property
+        styles[key] = props.customStyles[key]
+      }
+    })
+  }
+  
+  return styles
 })
 
 const showLogin = ref(true)
@@ -153,6 +180,59 @@ provide('imagesUrl', imagesUrl)
 </script>
 
 <style scoped>
+/* CSS Isolation - Prevent parent styles from affecting RewardPlay package */
+.rewardplay-isolated {
+  /* CSS Containment for isolation */
+  isolation: isolate !important;
+  contain: layout style paint !important;
+  
+  /* Reset common properties that might leak from parent */
+  display: block !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  
+  /* Reset typography that might be inherited */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  color: #000 !important;
+  text-align: left !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+  text-shadow: none !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  
+  /* Reset other common properties */
+  box-shadow: none !important;
+  outline: none !important;
+  list-style: none !important;
+  direction: ltr !important;
+  vertical-align: baseline !important;
+  white-space: normal !important;
+  
+  /* Prevent text selection issues */
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+  -moz-user-select: auto !important;
+  -ms-user-select: auto !important;
+}
+
+/* Reset common properties on all child elements to prevent parent CSS leakage */
+.rewardplay-isolated :deep(*),
+.rewardplay-isolated :deep(*::before),
+.rewardplay-isolated :deep(*::after) {
+  box-sizing: border-box;
+}
 .rewardplay-page {
   position: relative;
   width: 100%;
