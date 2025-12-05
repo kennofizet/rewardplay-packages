@@ -26,7 +26,7 @@ export function createGameApi(backendUrl, token) {
 
   return {
     // Auth
-    checkUser: () => api.post('/api/rewardplay/auth/check'),
+    checkUser: () => api.get('/api/rewardplay/auth/check'),
     
     // Demo
     getDemo: () => api.get('/api/rewardplay/demo'),

@@ -92,7 +92,6 @@ app.mount('#app')
 Configure in your `.env`:
 ```env
 REWARDPLAY_TABLE_USER=users
-REWARDPLAY_TOKEN_NAME=rewardpay_token
 REWARDPLAY_API_PREFIX=api/rewardplay
 ```
 
