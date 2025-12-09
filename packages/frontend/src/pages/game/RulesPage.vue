@@ -12,14 +12,14 @@
           :class="{ active: activeTab === 'rules' }"
           @click="activeTab = 'rules'"
         >
-          <span>Thể lệ</span>
+          <span>{{ t('component.rules.rulesTab') }}</span>
         </li>
         <li 
           class="menu-quest"
           :class="{ active: activeTab === 'quest' }"
           @click="activeTab = 'quest'"
         >
-          <span>Nhiệm vụ</span>
+          <span>{{ t('component.rules.questTab') }}</span>
         </li>
       </ul>
     </div>
@@ -33,51 +33,51 @@
       class="content menu content-quest"
       :class="{ show: activeTab === 'quest' }"
     >
-      <div class="title-first">GRINDING QUEST</div>
+      <div class="title-first">{{ displayGrindingQuest }}</div>
       <div class="text-right" style="right: 109px;bottom: 10px;position: absolute;">
         <!-- + 9000 -->
       </div>
       <div class="content-detail-quest">
         <div class="category-item">
-          <div class="title">Daily Quest</div>
+          <div class="title">{{ t('component.rules.dailyQuest') }}</div>
           <ul>
             <li>
-              <span class="text-left">Put daily reward</span>
+              <span class="text-left">{{ t('component.rules.putDailyReward') }}</span>
               <span class="text-right">
                 <i class="fas fa-check-circle" style="color:snow"></i>
               </span>
             </li>
             <li>
-              <span class="text-left">Login Daily</span>
+              <span class="text-left">{{ t('component.rules.loginDaily') }}</span>
               <span class="text-right">
                 <i class="fas fa-check-circle" style="color:snow"></i>
               </span>
             </li>
             <li>
-              <span class="text-left">CheckPoint</span>
+              <span class="text-left">{{ t('component.rules.checkpoint') }}</span>
               <span class="text-right">
                 <i class="fas fa-check-circle" style="color:snow"></i>
               </span>
             </li>
           </ul>
-          <div class="title title-unf">Main Quest</div>
+          <div class="title title-unf">{{ t('component.rules.mainQuest') }}</div>
           <ul>
             <li v-for="task in mainQuests" :key="task.id">
               <span class="text-left">{{ task.name }}</span>
               <span class="text-right">{{ task.reward }}</span>
             </li>
           </ul>
-          <div class="title title-unf">Other</div>
+          <div class="title title-unf">{{ t('component.rules.other') }}</div>
           <ul>
             <li>
-              <span class="text-left">Lucky Wheel</span>
+              <span class="text-left">{{ t('component.rules.luckyWheel') }}</span>
               <span class="text-right">1~9999</span>
             </li>
           </ul>
-          <div class="title title-unf">Buff</div>
+          <div class="title title-unf">{{ t('component.rules.buff') }}</div>
           <ul>
             <li>
-              <span class="text-left">Login Consecutive</span>
+              <span class="text-left">{{ t('component.rules.loginConsecutive') }}</span>
               <span class="text-right">{{ bonusDaily }}%</span>
             </li>
           </ul>
@@ -88,9 +88,22 @@
 </template>
 
 <script setup>
-import { ref, inject, unref } from 'vue'
+import { ref, inject, unref, computed } from 'vue'
+import { removeVietnameseDiacritics } from '../../i18n/utils'
 
 const imagesUrl = inject('imagesUrl', '')
+const translator = inject('translator', null)
+const language = inject('language', 'en')
+const t = translator || ((key) => key)
+
+// Remove diacritics for Vietnamese when using Chupada font
+const displayGrindingQuest = computed(() => {
+  const text = t('component.rules.grindingQuest')
+  if (language === 'vi') {
+    return removeVietnameseDiacritics(text)
+  }
+  return text
+})
 
 const activeTab = ref('rules')
 const bonusDaily = ref(10)

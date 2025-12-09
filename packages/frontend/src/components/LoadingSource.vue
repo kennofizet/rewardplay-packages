@@ -37,9 +37,29 @@ const props = defineProps({
     type: Number,
     default: 0
   },
+  userDataProgress: {
+    type: Number,
+    default: 0
+  },
   backgroundImage: {
     type: String,
     default: null
+  },
+  loadingTitle: {
+    type: String,
+    default: 'LOADING'
+  },
+  loadingSubtitle: {
+    type: String,
+    default: 'Preparing your gaming experience...'
+  },
+  loadingLabels: {
+    type: Object,
+    default: () => ({
+      assets: 'Loading Assets',
+      unzipping: 'Unzipping Files',
+      userData: 'Load Data User'
+    })
   }
 })
 
@@ -155,7 +175,8 @@ const updateCanvas = () => {
   ctx.font = 'bold 48px Arial, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText('LOADING', width / 2, titleY)
+  const loadingTitle = props.loadingTitle || 'LOADING'
+  ctx.fillText(loadingTitle, width / 2, titleY)
   
   // Reset shadow
   ctx.shadowBlur = 0
@@ -163,11 +184,12 @@ const updateCanvas = () => {
   // Draw subtitle
   ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
   ctx.font = '18px Arial, sans-serif'
-  ctx.fillText('Preparing your gaming experience...', width / 2, titleY + 50)
+  const loadingSubtitle = props.loadingSubtitle || 'Preparing your gaming experience...'
+  ctx.fillText(loadingSubtitle, width / 2, titleY + 50)
 
   // Draw main loading bar with chunky game-like style
-  // Calculate total progress as average of Loading Assets and Unzipping Files
-  const totalProgress = (props.loadingProgress + props.unzipProgress) / 2
+  // Calculate total progress as average of Loading Assets, Unzipping Files, and Load Data User
+  const totalProgress = (props.loadingProgress + props.unzipProgress + props.userDataProgress) / 3
   const barWidth = width * 0.65
   const barHeight = 35
   const barX = (width - barWidth) / 2
@@ -262,8 +284,9 @@ const updateCanvas = () => {
 
   // Draw progress items with better styling
   const progressItems = [
-    { label: 'Loading Assets', progress: Math.min(props.loadingProgress, 100) },
-    { label: 'Unzipping Files', progress: Math.min(props.unzipProgress, 100) }
+    { label: props.loadingLabels.assets, progress: Math.min(props.loadingProgress, 100) },
+    { label: props.loadingLabels.unzipping, progress: Math.min(props.unzipProgress, 100) },
+    { label: props.loadingLabels.userData, progress: Math.min(props.userDataProgress, 100) }
   ]
 
   const startY = height * 0.68
@@ -325,7 +348,7 @@ const handleResize = () => {
   })
 }
 
-watch([() => props.isLoading, () => props.loadingProgress, () => props.unzipProgress], () => {
+watch([() => props.isLoading, () => props.loadingProgress, () => props.unzipProgress, () => props.userDataProgress], () => {
   if (props.isLoading) {
     nextTick(() => {
       if (animationFrameId) {

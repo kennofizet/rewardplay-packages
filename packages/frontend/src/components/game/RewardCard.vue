@@ -20,7 +20,7 @@
     </span>
     
     <div v-if="isEpic" class="reward-title">
-      {{ epicTitle }}
+      {{ displayEpicTitle }}
     </div>
     
     <div class="reward-description">
@@ -29,9 +29,9 @@
     </div>
     
     <div 
-      v-if="imageType"
-      :class="`reward-${imageType}`"
-      :style="{ backgroundImage: `url('${getImageUrl(imageFile)}')` }"
+      v-if="imageClass"
+      :class="`reward-${imageClass}`"
+      :style="imageStyle"
     ></div>
     
     <div v-if="isCurrent && !isCollected" class="current-reward-ico">
@@ -43,13 +43,19 @@
     </div>
     
     <div v-if="isCurrent && !isCollected" class="collect-reward" @click.stop="$emit('collect')">
-      <div>collect</div>
+      <div>{{ t('component.dailyReward.collect') }}</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { inject, unref } from 'vue'
+import { inject, computed } from 'vue'
+import { removeVietnameseDiacritics } from '../../i18n/utils'
+import { getFileImageUrl } from '../../utils/imageResolverRuntime'
+
+const translator = inject('translator', null)
+const language = inject('language', 'en')
+const t = translator || ((key) => key)
 
 const props = defineProps({
   dayLabel: {
@@ -93,7 +99,7 @@ const props = defineProps({
     type: String,
     default: null // coins, chest, backpack, epic-chest
   },
-  imageFile: {
+  imageKey: {
     type: String,
     default: null
   }
@@ -101,18 +107,28 @@ const props = defineProps({
 
 defineEmits(['click', 'collect'])
 
-const imagesUrl = inject('imagesUrl', '')
-
-const getImageUrl = (filename) => {
-  if (!filename) return ''
-  const url = unref(imagesUrl)
-  if (!url) {
-    return `/${filename}`
+// Remove diacritics for Vietnamese when using Chupada font
+const displayEpicTitle = computed(() => {
+  const title = props.epicTitle || t('component.dailyReward.epicReward')
+  if (language === 'vi') {
+    return removeVietnameseDiacritics(title)
   }
-  const base = url.endsWith('/') ? url : `${url}/`
-  const file = filename.startsWith('/') ? filename.slice(1) : filename
-  return `${base}${file}`
-}
+  return title
+})
+
+const getImageUrl = (key) => getFileImageUrl(key)
+
+const imageClass = computed(() => {
+  if (props.imageType) return props.imageType
+  if (!props.imageKey) return null
+  const segments = props.imageKey.split('.')
+  return segments[segments.length - 1]
+})
+
+const imageStyle = computed(() => {
+  if (!props.imageKey) return {}
+  return { backgroundImage: `url('${getImageUrl(props.imageKey)}')` }
+})
 </script>
 
 <style scoped>

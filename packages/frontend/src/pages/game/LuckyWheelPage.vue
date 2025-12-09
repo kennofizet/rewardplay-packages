@@ -87,7 +87,7 @@
             @click="handleSpin"
           >
             <span class="btn-icon">🎰</span>
-            <span class="btn-text">SPIN</span>
+            <span class="btn-text">{{ t('component.luckyWheel.spin') }}</span>
             <span class="btn-count">{{ ticketCount }}</span>
           </button>
           <button 
@@ -96,7 +96,7 @@
             :disabled="isSpinning"
           >
             <span class="btn-icon">🎰</span>
-            <span class="btn-text">{{ isSpinning ? 'SPINNING...' : 'NO TICKETS' }}</span>
+            <span class="btn-text">{{ isSpinning ? t('component.luckyWheel.spinning') : t('component.luckyWheel.noTickets') }}</span>
             <span class="btn-count">{{ ticketCount }}</span>
           </button>
         </div>
@@ -132,23 +132,25 @@ import { ref, inject } from 'vue'
 
 const gameApi = inject('gameApi', null)
 const imagesUrl = inject('imagesUrl', '')
+const translator = inject('translator', null)
+const t = translator || ((key) => key)
 
 const rotation = ref(0)
 const isSpinning = ref(false)
 const ticketCount = ref(5) // Set initial ticket count for testing
 const wheelItems = ref([
-  { name: 'Item 1', qty: 1, rate: 8.33 },
-  { name: 'Item 2', qty: 2, rate: 8.33 },
-  { name: 'Item 3', qty: 3, rate: 8.33 },
-  { name: 'Item 4', qty: 4, rate: 8.33 },
-  { name: 'Item 5', qty: 5, rate: 8.33 },
-  { name: 'Item 6', qty: 6, rate: 8.33 },
-  { name: 'Item 7', qty: 7, rate: 8.33 },
-  { name: 'Item 8', qty: 8, rate: 8.33 },
-  { name: 'Item 9', qty: 9, rate: 8.33 },
-  { name: 'Item 10', qty: 10, rate: 8.33 },
-  { name: 'Item 11', qty: 11, rate: 8.33 },
-  { name: 'Item 12', qty: 12, rate: 8.33 }
+  { name: `${t('component.luckyWheel.item')} 1`, qty: 1, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 2`, qty: 2, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 3`, qty: 3, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 4`, qty: 4, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 5`, qty: 5, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 6`, qty: 6, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 7`, qty: 7, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 8`, qty: 8, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 9`, qty: 9, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 10`, qty: 10, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 11`, qty: 11, rate: 8.33 },
+  { name: `${t('component.luckyWheel.item')} 12`, qty: 12, rate: 8.33 }
 ])
 
 const getSectorPath = (index) => {

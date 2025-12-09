@@ -1,8 +1,8 @@
 <template>
   <div class="shop-page">
-    <Sector title="Shop">
+    <Sector :title="t('component.shop.title')">
       <div class="shop-content">
-        <p class="coming-soon">Shop coming soon...</p>
+        <p class="coming-soon">{{ t('component.shop.comingSoon') }}</p>
         <!-- TODO: Implement shop functionality -->
       </div>
     </Sector>
@@ -10,7 +10,11 @@
 </template>
 
 <script setup>
+import { inject } from 'vue'
 import Sector from '../../components/game/Sector.vue'
+
+const translator = inject('translator', null)
+const t = translator || ((key) => key)
 </script>
 
 <style scoped>

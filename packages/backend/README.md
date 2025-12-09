@@ -289,6 +289,50 @@ public/rewardplay-images/
     └── icon.svg
 ```
 
+### Custom Global Images
+
+The package supports custom global images that can override default global images. These images are automatically included in the manifest API response.
+
+#### Configuring Custom Global Images Folder
+
+By default, custom global images are stored in `public/custom/global/`. You can change this by:
+
+**Option 1: Environment variable (`.env`)**
+```env
+REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER=my-custom/global-images
+```
+
+**Option 2: Config file (`config/rewardplay.php`)**
+```php
+'custom_global_images_folder' => 'my-custom/global-images',
+```
+
+After changing the config, run:
+```bash
+php artisan config:clear
+```
+
+#### How It Works
+
+1. Place your custom global images in the configured folder (default: `public/custom/global/`)
+2. The manifest API endpoint (`GET /api/rewardplay/manifest`) automatically scans this folder
+3. The file list is included in the `custom` key of the manifest response
+4. Results are cached for 5 minutes to improve performance
+
+**Example:**
+- If `REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER=custom/global` (default)
+- Place images in: `public/custom/global/`
+- The manifest response will include:
+```json
+{
+  "bag.background_bag": "bag/background-bag.PNG",
+  "global.coin": "global/coin-df.png",
+  "custom": ["coin-custom.png", "reward-custom.png"]
+}
+```
+
+**Note:** Custom images are identified by filename. If a global image key (e.g., `global.coin`) exists in the manifest and the filename matches a file in the custom folder, the custom version will be used by the frontend.
+
 ## Environment Variables
 
 Add to your `.env`:
@@ -298,5 +342,6 @@ REWARDPLAY_TABLE_USER=users
 REWARDPLAY_API_PREFIX=api/rewardplay
 REWARDPLAY_RATE_LIMIT=60
 REWARDPLAY_IMAGES_FOLDER=rewardplay-images
+REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER=custom/global
 ```
 

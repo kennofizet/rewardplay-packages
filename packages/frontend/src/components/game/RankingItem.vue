@@ -11,39 +11,40 @@
           { 'u-bg--transparent': rank > 3 }
         ]"
       >
-        {{ rank }}
+        <span v-if="rank <= 3" class="c-flag__star">★</span>
+        <span class="c-flag__number">{{ rank }}</span>
       </div>
       <div class="c-media">
-        <img 
-          class="avatar-fix-content-corver-non c-avatar c-media__img" 
-          :src="user.avatar" 
-          :alt="user.name"
-        >
+        <div class="c-media__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 5V19L19 12L8 5Z" fill="currentColor"/>
+          </svg>
+        </div>
         <div class="c-media__content">
           <div class="c-media__title">{{ user.name }}</div>
-          <a class="c-media__link u-text--small" href="#" target="_blank">
-            @{{ user.type || 'USER' }}
-          </a>
+          <div class="c-media__link">@{{ user.type || t('component.rankingItem.user') }}</div>
         </div>
       </div>
       <div 
         :class="[
           'u-text--right',
           'c-kudos',
-          { 'u-text--yellow': rank === 1 },
-          { 'u-text--teal': rank === 2 },
-          { 'u-text--orange': rank === 3 }
+          { 'u-text--orange': rank <= 3 },
+          { 'u-text--white': rank > 3 }
         ]"
       >
-        <div class="u-mt--8">
-          <strong>{{ user.coin }}</strong>
-        </div>
+        <strong>{{ user.coin }}</strong>
       </div>
     </div>
   </li>
 </template>
 
 <script setup>
+import { inject } from 'vue'
+
+const translator = inject('translator', null)
+const t = translator || ((key) => key)
+
 defineProps({
   rank: {
     type: Number,
@@ -65,7 +66,7 @@ defineProps({
 
 <style scoped>
 .c-list__item {
-  padding: 15px;
+  padding: 22px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -85,6 +86,19 @@ defineProps({
   justify-content: center;
   font-weight: bold;
   color: #fff;
+  position: relative;
+}
+
+.c-flag__star {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.c-flag__number {
+  z-index: 1;
 }
 
 .u-bg--yellow {
@@ -108,6 +122,17 @@ defineProps({
   display: flex;
   align-items: center;
   gap: 15px;
+}
+
+.c-media__icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
 }
 
 .c-avatar {
@@ -145,5 +170,9 @@ defineProps({
 
 .u-text--orange {
   color: #ff8c00;
+}
+
+.u-text--white {
+  color: #fff;
 }
 </style>

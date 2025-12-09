@@ -1,6 +1,8 @@
 /**
  * Resource loader for tracking real loading progress
  */
+import axios from 'axios'
+import { setCustomGlobalFiles, setBaseManifest } from './imageResolverRuntime'
 
 /**
  * Load image and track progress
@@ -10,7 +12,7 @@
 export function loadImage(url) {
   return new Promise((resolve, reject) => {
     const img = new Image()
-    img.crossOrigin = 'anonymous'
+    // Avoid forcing CORS on hosts that don't send ACAO; set explicitly only when needed upstream
     img.onload = () => resolve(img)
     img.onerror = reject
     img.src = url
@@ -137,6 +139,8 @@ export class ResourceLoader {
     this.fontUrls = []
     this.onLoadingProgress = null
     this.onUnzipProgress = null
+    this.imagesBaseUrl = ''
+    this.backendUrl = ''
   }
 
   /**
@@ -196,6 +200,54 @@ export class ResourceLoader {
   }
 
   /**
+   * Set backend images base URL (images_url from API) for manifest/custom fetch
+   */
+  setImagesBaseUrl(url) {
+    this.imagesBaseUrl = url || ''
+    return this
+  }
+
+  /**
+   * Set backend API base URL for manifest API endpoint
+   */
+  setBackendUrl(url) {
+    this.backendUrl = url || ''
+    return this
+  }
+
+  /**
+   * Fetch base manifest (image-manifest.json) from images base URL
+   * Uses API endpoint if backendUrl is set, otherwise falls back to direct static file fetch
+   */
+  async fetchBaseManifest() {
+    // Try API endpoint first if backendUrl is available
+    if (this.backendUrl) {
+      const apiBase = this.backendUrl.endsWith('/') ? this.backendUrl.slice(0, -1) : this.backendUrl
+      const apiUrl = `${apiBase}/api/rewardplay/manifest`
+      try {
+        const res = await axios.get(apiUrl, { timeout: 5000 })
+        return res.data || null
+      } catch (err) {
+        console.warn(`Failed to fetch manifest from API ${apiUrl}, falling back to static file`, err)
+        // Fall through to static file fetch
+      }
+    }
+
+    // Fallback to direct static file fetch
+    if (!this.imagesBaseUrl) return null
+    const base = this.imagesBaseUrl.endsWith('/') ? this.imagesBaseUrl.slice(0, -1) : this.imagesBaseUrl
+    const manifestUrl = `${base}/image-manifest.json`
+    try {
+      const res = await axios.get(manifestUrl, { timeout: 5000 })
+      return res.data || null
+    } catch (err) {
+      console.warn(`Failed to fetch base manifest from ${manifestUrl}`, err)
+      return null
+    }
+  }
+
+
+  /**
    * Load all resources
    */
   async load() {
@@ -215,6 +267,31 @@ export class ResourceLoader {
       if (this.onLoadingProgress) {
         this.onLoadingProgress(progress)
       }
+    }
+
+    // Simulate unzip if needed (or replace with real unzip logic)
+    if (this.onUnzipProgress) {
+      try {
+        const baseManifest = await this.fetchBaseManifest()
+        if (baseManifest) {
+          // Extract custom key from manifest if present
+          const customList = baseManifest.custom || []
+          // Remove custom key from manifest before setting it
+          const { custom, ...manifestWithCustom } = baseManifest
+          setBaseManifest(manifestWithCustom, this.imagesBaseUrl || '')
+          if (customList && Array.isArray(customList)) {
+            setCustomGlobalFiles(customList)
+          }
+
+          const convertUrls = Object.values(manifestWithCustom).map(url => {
+            return this.imagesBaseUrl ? `${this.imagesBaseUrl}/${url}` : url
+          })
+          this.addImages(convertUrls)
+        }
+      } catch (err) {
+        console.warn('Failed to fetch manifest', err)
+      }
+      await simulateUnzip(this.onUnzipProgress)
     }
 
     // Load images
@@ -255,11 +332,6 @@ export class ResourceLoader {
         console.warn(`Failed to load font: ${font.fontFamily}`, err)
         updateProgress()
       }
-    }
-
-    // Simulate unzip if needed (or replace with real unzip logic)
-    if (this.onUnzipProgress) {
-      await simulateUnzip(this.onUnzipProgress)
     }
 
     return {

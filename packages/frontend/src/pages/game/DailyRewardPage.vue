@@ -1,14 +1,14 @@
 <template>
   <div>
     <Sector 
-      title="BONUS FOR EVERYDAY LOGIN"
-      footer="Missing even a single day will drop your progress to basic level"
+      :title="t('component.dailyReward.bonusTitle')"
+      :footer="t('component.dailyReward.bonusFooter')"
     >
       <div class="week-line">
         <WeekDay
           v-for="day in weekDays"
           :key="day.day"
-          :title="`Day ${day.day}`"
+          :title="`${t('component.dailyReward.day')} ${day.day}`"
           :is-completed="day.completed"
           :is-past="day.past"
           :is-current="day.current"
@@ -22,7 +22,7 @@
       </div>
     </Sector>
     
-    <Sector title="TODAYS REWARDS">
+    <Sector :title="t('component.dailyReward.todaysRewards')">
       <div class="reward-line">
         <RewardCard
           v-for="reward in rewards"
@@ -37,7 +37,7 @@
           :is-feature="reward.isFeature"
           :epic-title="reward.epicTitle"
           :image-type="reward.imageType"
-          :image-file="reward.imageFile"
+          :image-key="reward.imageKey"
           @collect="handleCollect(reward)"
         />
       </div>
@@ -53,6 +53,8 @@ import RewardItem from '../../components/game/RewardItem.vue'
 import RewardCard from '../../components/game/RewardCard.vue'
 
 const gameApi = inject('gameApi', null)
+const translator = inject('translator', null)
+const t = translator || ((key) => key)
 
 const weekDays = ref([
   { day: 1, completed: true, past: true, current: false, rewards: [] },
@@ -67,23 +69,23 @@ const weekDays = ref([
 const rewards = ref([
   {
     id: 1,
-    day: 'day 8',
+    day: `${t('component.dailyReward.day')} 8`,
     title: 'V-money',
     description: '+100 V-money',
     rarity: 'common',
     isCollected: true,
     imageType: 'coins',
-    imageFile: 'coin.png'
+    imageKey: 'global.coin'
   },
   {
     id: 2,
-    day: 'day 9',
+    day: `${t('component.dailyReward.day')} 9`,
     title: 'Wing-Chest',
     description: 'acquire two common items and one rare weapon',
     rarity: 'rare',
     isCollected: true,
     imageType: 'chest',
-    imageFile: 'box-coin.png'
+    imageKey: 'global.box_coin'
   },
   {
     id: 3,
@@ -93,38 +95,38 @@ const rewards = ref([
     rarity: 'common',
     isCollected: true,
     imageType: 'coins',
-    imageFile: 'coin.png'
+    imageKey: 'global.coin'
   },
   {
     id: 4,
-    day: 'day 11',
+    day: `${t('component.dailyReward.day')} 11`,
     title: 'First-Aid',
     description: 'nicely looking upgrade to first aid backpack capacity',
     rarity: 'epic',
     isCurrent: true,
     isCollected: false,
     imageType: 'backpack',
-    imageFile: 'bag.png'
+    imageKey: 'bag.bag'
   },
   {
     id: 5,
-    day: 'day 12',
+    day: `${t('component.dailyReward.day')} 12`,
     title: 'V-money',
     description: '+500 V-money',
     rarity: 'common',
     isFeature: true,
     imageType: 'coins',
-    imageFile: 'coin.png'
+    imageKey: 'global.coin'
   },
   {
     id: 6,
-    day: 'day 13',
+    day: `${t('component.dailyReward.day')} 13`,
     title: 'Wing-Chest',
     description: 'acquire two common items and one rare weapon',
     rarity: 'rare',
     isFeature: true,
     imageType: 'chest',
-    imageFile: 'box-coin.png'
+    imageKey: 'global.box_coin'
   },
   {
     id: 7,
@@ -134,19 +136,19 @@ const rewards = ref([
     rarity: 'common',
     isFeature: true,
     imageType: 'coins',
-    imageFile: 'coin.png'
+    imageKey: 'global.coin'
   },
   {
     id: 8,
-    day: 'day 28',
+    day: `${t('component.dailyReward.day')} 28`,
     title: 'BOOM BOX',
     description: 'The BOOM BOX is an explosive weapon. Once thrown, it will begin to play music and emit powerful blasts that deal huge damage to all structures within its radius, but do not harm the player.',
     rarity: 'epic',
     isEpic: true,
     isFeature: true,
-    epicTitle: 'EPIC REWARD',
+    epicTitle: t('component.dailyReward.epicReward'),
     imageType: 'epic-chest',
-    imageFile: 'gift.png'
+    imageKey: 'global.epic_chest'
   }
 ])
 

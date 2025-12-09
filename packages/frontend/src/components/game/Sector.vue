@@ -1,7 +1,7 @@
 <template>
   <div class="sector">
     <div class="sector-title">
-      {{ title }}
+      {{ displayTitle }}
     </div>
     <div class="sector-body">
       <slot></slot>
@@ -13,7 +13,10 @@
 </template>
 
 <script setup>
-defineProps({
+import { inject, computed } from 'vue'
+import { removeVietnameseDiacritics } from '../../i18n/utils'
+
+const props = defineProps({
   title: {
     type: String,
     required: true
@@ -22,6 +25,16 @@ defineProps({
     type: String,
     default: null
   }
+})
+
+const language = inject('language', 'en')
+
+// Remove diacritics for Vietnamese when using Chupada font
+const displayTitle = computed(() => {
+  if (language === 'vi') {
+    return removeVietnameseDiacritics(props.title)
+  }
+  return props.title
 })
 </script>
 

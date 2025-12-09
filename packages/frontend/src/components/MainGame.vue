@@ -14,8 +14,10 @@ import GameLayout from './game/GameLayout.vue'
 import DailyRewardPage from '../pages/game/DailyRewardPage.vue'
 import BagGearPage from '../pages/game/BagGearPage.vue'
 import LuckyWheelPage from '../pages/game/LuckyWheelPage.vue'
-import RankingCoinPage from '../pages/game/RankingCoinPage.vue'
+import RankingPage from '../pages/game/RankingPage.vue'
 import RulesPage from '../pages/game/RulesPage.vue'
+import ShopPage from '../pages/game/ShopPage.vue'
+import ComingSoonPage from '../pages/ComingSoonPage.vue'
 
 const props = defineProps({
   imagesUrl: {
@@ -31,10 +33,10 @@ const props = defineProps({
 const pageMap = {
   'reward': DailyRewardPage,
   'bag': BagGearPage,
-  'lucky-wheel': LuckyWheelPage,
-  'ranking': RankingCoinPage,
-  'rules': RulesPage,
-  'shop': () => import('../pages/game/ShopPage.vue').catch(() => ({ default: () => null }))
+  'lucky-wheel': ComingSoonPage,
+  'ranking': RankingPage,
+  'rules': ComingSoonPage,
+  'shop': ComingSoonPage
 }
 
 const currentPage = shallowRef(DailyRewardPage) // Default to DailyReward

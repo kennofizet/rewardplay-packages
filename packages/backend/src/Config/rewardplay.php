@@ -59,5 +59,23 @@ return [
     |
     */
     'images_folder' => env('REWARDPLAY_IMAGES_FOLDER', 'rewardplay-images'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Global Images Folder
+    |--------------------------------------------------------------------------
+    |
+    | The path to the folder in the public directory where custom global images
+    | are stored. These images will override default global images when present.
+    | Default: 'custom/global'
+    |
+    | Example: If set to 'custom/global', images should be placed in:
+    | public/custom/global/
+    |
+    | The manifest API endpoint will automatically scan this folder and include
+    | the file list in the 'custom' key of the manifest response.
+    |
+    */
+    'custom_global_images_folder' => env('REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER', 'custom/global'),
 ];
 

@@ -498,11 +498,14 @@ const animate = () => {
   }
 }
 
+const translator = inject('translator', null)
+const t = translator || ((key) => key)
+
 const checkUser = async () => {
   if (!gameApi) {
     status.value = 'error'
     errorType.value = 'no-api'
-    emit('login-failed', 'API not available')
+    emit('login-failed', t('component.login.apiNotAvailable'))
     return
   }
 
@@ -523,7 +526,7 @@ const checkUser = async () => {
       }, 500)
     } else {
       status.value = 'error'
-      const errorMsg = response.data.error || 'Authentication failed'
+      const errorMsg = response.data.error || t('component.login.authenticationFailed')
       
       // Determine error type
       if (errorMsg.toLowerCase().includes('token') || errorMsg.toLowerCase().includes('invalid')) {
@@ -538,7 +541,7 @@ const checkUser = async () => {
     }
   } catch (err) {
     status.value = 'error'
-    const errorMessage = err.response?.data?.error || err.message || 'Connection failed'
+    const errorMessage = err.response?.data?.error || err.message || t('component.login.connectionFailed')
     
     // Determine error type
     if (err.code === 'ECONNREFUSED' || err.message.includes('Network') || errorMessage.includes('Connection')) {
@@ -583,7 +586,6 @@ onMounted(() => {
   if (props.showLogin) {
     nextTick(() => {
       animate()
-      checkUser()
     })
   }
 })

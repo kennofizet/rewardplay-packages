@@ -5,27 +5,27 @@
         is-first 
         @click="$emit('page-change', 'reward')"
       >
-        Reward
+        {{ t('component.menu.reward') }}
       </MenuItem>
 
       <MenuItem @click="$emit('page-change', 'bag')">
-        Bag
-      </MenuItem>
-
-      <MenuItem @click="$emit('page-change', 'lucky-wheel')">
-        Lucky Wheel
+        {{ t('component.menu.bag') }}
       </MenuItem>
 
       <MenuItem @click="$emit('page-change', 'ranking')">
-        Ranking
+        {{ t('component.menu.ranking') }}
+      </MenuItem>
+
+      <MenuItem @click="$emit('page-change', 'lucky-wheel')">
+        {{ t('component.menu.luckyWheel') }}
       </MenuItem>
 
       <MenuItem @click="$emit('page-change', 'rules')">
-        Rules
+        {{ t('component.menu.rules') }}
       </MenuItem>
 
       <MenuItem @click="$emit('page-change', 'shop')">
-        Shop
+        {{ t('component.menu.shop') }}
       </MenuItem>
     </div>
 
@@ -61,7 +61,11 @@
 </template>
 
 <script setup>
+import { inject } from 'vue'
 import MenuItem from './MenuItem.vue'
+
+const translator = inject('translator', null)
+const t = translator || ((key) => key)
 
 defineEmits(['page-change', 'icon-click'])
 </script>

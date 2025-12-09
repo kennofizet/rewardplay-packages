@@ -15,11 +15,20 @@
         :is-loading="isLoading"
         :loading-progress="loadingProgress"
         :unzip-progress="unzipProgress"
+        :user-data-progress="userDataProgress"
         :background-image="backgroundImage"
+        :loading-title="translator('page.loading.title')"
+        :loading-subtitle="translator('page.loading.subtitle')"
+        :loading-labels="{
+          assets: translator('page.loading.assets'),
+          unzipping: translator('page.loading.unzipping'),
+          userData: translator('page.loading.userData')
+        }"
         @loading-complete="handleLoadingComplete"
       />
       
       <div 
+        v-if="!isLoading && !showLogin"
         class="game-content"
         :class="{ 'content-hidden': isLoading || showLogin }"
       >
@@ -30,11 +39,12 @@
 </template>
 
 <script setup>
-import { ref, provide, computed } from 'vue'
+import { ref, provide, computed, inject } from 'vue'
 import LoadingSource from '../components/LoadingSource.vue'
 import LoginScreen from '../components/LoginScreen.vue'
 import { ResourceLoader } from '../utils/resourceLoader'
 import MainGame from '../components/MainGame.vue'
+import { createTranslator } from '../i18n'
 
 const props = defineProps({
   // Resource URLs to load
@@ -54,14 +64,14 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  // Backend API base URL (passed from parent)
+  backendUrl: {
+    type: String,
+    default: ''
+  },
   backgroundImage: {
     type: String,
     default: null
-  },
-  // Enable unzip simulation
-  enableUnzip: {
-    type: Boolean,
-    default: true
   },
   // Enable auto-rotation when width < height (portrait mode)
   rotate: {
@@ -72,6 +82,11 @@ const props = defineProps({
   customStyles: {
     type: Object,
     default: () => ({})
+  },
+  // Language code (default: 'en')
+  language: {
+    type: String,
+    default: 'en'
   }
 })
 
@@ -96,16 +111,20 @@ const showLogin = ref(true)
 const isLoading = ref(false)
 const loadingProgress = ref(0)
 const unzipProgress = ref(0)
+const userDataProgress = ref(0)
 const loginError = ref(null)
 const imagesUrl = ref('')
+const gameApi = inject('gameApi', null)
+const injectedBackendUrl = inject('backendUrl', '')
 
-const handleLoginSuccess = (userData) => {
+const handleLoginSuccess = async (userData) => {
   showLogin.value = false
   loginError.value = null
   // Save images URL from user data
   imagesUrl.value = userData.imagesUrl || ''
   // Start loading resources after successful login
   isLoading.value = true
+  await loadUserData()
   loadAllResources()
 }
 
@@ -116,12 +135,20 @@ const handleLoginFailed = (error) => {
 
 const handleLoadingComplete = () => {
   setTimeout(() => {
-    isLoading.value = false
+    // isLoading.value = false
   }, 500)
 }
 
 const loadAllResources = async () => {
   const loader = new ResourceLoader()
+  if (imagesUrl.value) {
+    loader.setImagesBaseUrl(imagesUrl.value)
+  }
+  // Set backendUrl from parent prop or injected value
+  const backendUrl = props.backendUrl || injectedBackendUrl
+  if (backendUrl) {
+    loader.setBackendUrl(backendUrl)
+  }
 
   // Add all resources to loader
   if (props.imageUrls.length > 0) {
@@ -142,18 +169,14 @@ const loadAllResources = async () => {
     })
   }
 
+  loader.onUnzipProgressCallback((progress) => {
+    unzipProgress.value = Math.min(progress, 100)
+  })
+
   // Set progress callbacks
   loader.onLoadingProgressCallback((progress) => {
     loadingProgress.value = Math.min(progress, 100)
   })
-
-  if (props.enableUnzip) {
-    loader.onUnzipProgressCallback((progress) => {
-      unzipProgress.value = Math.min(progress, 100)
-    })
-  } else {
-    unzipProgress.value = 100
-  }
 
   try {
     await loader.load()
@@ -162,18 +185,64 @@ const loadAllResources = async () => {
     if (loadingProgress.value < 100) {
       loadingProgress.value = 100
     }
+    
+    // Ensure unzip reaches 100%
+    if (unzipProgress.value < 100) {
+      unzipProgress.value = 100
+    }
   } catch (error) {
     console.error('Error loading resources:', error)
     // Still show as loaded even if some resources failed
     loadingProgress.value = 100
-    if (!props.enableUnzip) {
-      unzipProgress.value = 100
+  }
+
+  isLoading.value = false
+}
+
+const loadUserData = async () => {
+  if (!gameApi) {
+    console.warn('gameApi not available, skipping user data load')
+    userDataProgress.value = 100
+    return
+  }
+
+  try {
+    userDataProgress.value = 0
+    
+    // Simulate progress for better UX
+    const progressInterval = setInterval(() => {
+      if (userDataProgress.value < 90) {
+        userDataProgress.value += 10
+      }
+    }, 100)
+
+    const response = await gameApi.getUserData()
+    
+    clearInterval(progressInterval)
+    userDataProgress.value = 100
+    
+    if (response.data && response.data.success) {
+      // Store user data to be provided to child components
+      userData.value = response.data.data
     }
+  } catch (error) {
+    console.error('Error loading user data:', error)
+    // Still mark as complete even if failed
+    userDataProgress.value = 100
   }
 }
 
-// Provide images URL to all child components
+// Create translator for the specified language
+const translator = createTranslator(props.language)
+
+// Provide images URL, language, and userData to all child components
 provide('imagesUrl', imagesUrl)
+provide('language', props.language)
+provide('translator', translator)
+
+// Provide userData (will be set after getUserData loads)
+const userData = ref(null)
+provide('userData', userData)
 
 // Login screen will auto check user on mount
 // After successful login, loading will start
