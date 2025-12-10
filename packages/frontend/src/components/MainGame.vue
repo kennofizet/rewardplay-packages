@@ -33,7 +33,7 @@ const props = defineProps({
 const pageMap = {
   'reward': DailyRewardPage,
   'bag': BagGearPage,
-  'lucky-wheel': ComingSoonPage,
+  'lucky-wheel': LuckyWheelPage,
   'ranking': RankingPage,
   'rules': ComingSoonPage,
   'shop': ComingSoonPage

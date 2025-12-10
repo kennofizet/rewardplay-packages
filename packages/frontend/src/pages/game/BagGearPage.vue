@@ -82,7 +82,7 @@
               <span>{{ t('component.bag.buffCheckin') }} <span>{{ bonusCheckin }}%</span></span>
             </div>
             <div class="power-display-wrapper">
-              <div class="power-display">
+              <div class="power-display" :style="powerBackgroundStyle">
                 <div class="power-title">{{ t('component.bag.power') }}</div>
                 <div class="power-value">{{ formatPower(userPower) }}</div>
               </div>
@@ -288,6 +288,21 @@ const bagContentStyle = computed(() => {
     backgroundImage: `url('${getImageUrl('bag.background_bag')}')`
   }
 })
+
+// Pick a themed background for the power badge
+const powerBackgroundKey = computed(() => {
+  const userDataValue = unref(userData)
+  if (userDataValue?.power_bg) {
+    return userDataValue.power_bg
+  }
+  if (userPower.value >= 100000) return 'power.power_bg_3'
+  if (userPower.value >= 10000) return 'power.power_bg_2'
+  return 'power.power_bg_1'
+})
+
+const powerBackgroundStyle = computed(() => ({
+  backgroundImage: `url('${getImageUrl(powerBackgroundKey.value)}')`
+}))
 
 const handleItemClick = (item) => {
   // Only show detail panel if item has data (has item_id or id, and has property)
@@ -588,17 +603,15 @@ const formatPower = (power) => {
 .power-display {
   display: inline-block;
   text-align: center;
-  padding: 15px 30px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  border: 2px solid rgba(246, 169, 1, 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  min-width: 200px;
+  padding: 120px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
 }
 
 .power-display .power-title {
   display: block;
-  color: dimgray;
+  color: aliceblue;
   font-family: Nanami, sans-serif;
   font-size: 14px;
   font-weight: 600;
