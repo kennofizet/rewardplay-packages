@@ -34,22 +34,52 @@ class ValidateRewardPlayToken
             ], 401);
         }
 
-        // Check if user exists
-        $tableName = config('rewardplay.table_user', 'users');
-        
-        $user = DB::table($tableName)
-            ->where('id', $userId)
-            ->first();
+        $zoneColumn = config('rewardplay.user_zone_id_column');
+        $user = $this->resolveUserWithZone($userId, $zoneColumn);
 
-        if (!$user) {
+        if (empty($user)) {
             return response()->json([
-                'error' => 'User not found',
+                'error' => 'User not found'
             ], 404);
         }
 
-        // Attach user ID to request attributes (cannot be overridden by user input)
+        if (!empty($zoneColumn)) {
+            $zoneId = $user->{$zoneColumn} ?? null;
+            $request->attributes->set('rewardplay_user_zone_id', $zoneId);
+        }
+
+        // Attach user info to request attributes (cannot be overridden by user input)
         $request->attributes->set('rewardplay_user_id', $userId);
 
         return $next($request);
+    }
+
+    /**
+     * Resolve user and ensure zone column exists and is not null.
+     *
+     * @param int $userId
+     * @param string $tableName
+     * @param string $zoneColumn
+     * @return object|false|null  user object, false if zone missing, null if user missing
+     */
+    protected function resolveUserWithZone(int $userId, string $zoneColumn)
+    {
+        $table_user = config('rewardplay.table_user', 'users');
+        $user = DB::table($table_user)->where('id', $userId)
+            ->first();
+
+        if (empty($user)) {
+            return null;
+        }
+
+        if (empty($zoneColumn)) {
+            return $user;
+        }
+
+        if (empty($user->{$zoneColumn}) || $user->{$zoneColumn} === null) {
+            return false;
+        }
+
+        return $user;
     }
 }

@@ -15,6 +15,8 @@ After publishing the config, edit `config/rewardplay.php`:
 
 ```php
 'table_user' => env('REWARDPLAY_TABLE_USER', 'users'),
+'user_zone_id_column' => env('REWARDPLAY_USER_ZONE_ID_COLUMN', 'branch_id'),
+'table_prefix' => env('REWARDPLAY_TABLE_PREFIX', ''),
 ```
 
 **IMPORTANT:** After changing the config, clear the config cache:
@@ -104,9 +106,12 @@ $newToken = $user->refreshRewardPlayToken();
 The package includes middleware that automatically:
 - Validates the `X-RewardPlay-Token` header
 - Checks if the user exists in the database
+- Optionally reads the configured zone column (default: `branch_id`) and attaches it as `rewardplay_user_zone_id`
 - Attaches the user ID to the request as `rewardplay_user_id`
 
 All routes are protected by this middleware automatically.
+If you set `user_zone_id_column` to a non-null value, ensure the column exists on the users table; otherwise the request will be rejected.
+The table name and prefix come from `REWARDPLAY_TABLE_USER` and `REWARDPLAY_TABLE_PREFIX`.
 
 ## Rate Limiting
 
@@ -343,5 +348,7 @@ REWARDPLAY_API_PREFIX=api/rewardplay
 REWARDPLAY_RATE_LIMIT=60
 REWARDPLAY_IMAGES_FOLDER=rewardplay-images
 REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER=custom/global
+REWARDPLAY_USER_ZONE_ID_COLUMN=branch_id
+REWARDPLAY_TABLE_PREFIX=
 ```
 
