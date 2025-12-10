@@ -149,6 +149,9 @@ const loadAllResources = async () => {
   if (backendUrl) {
     loader.setBackendUrl(backendUrl)
   }
+  if (gameApi) {
+    loader.setGameApi(gameApi)
+  }
 
   // Add all resources to loader
   if (props.imageUrls.length > 0) {

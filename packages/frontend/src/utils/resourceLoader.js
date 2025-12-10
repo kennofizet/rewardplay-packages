@@ -141,6 +141,7 @@ export class ResourceLoader {
     this.onUnzipProgress = null
     this.imagesBaseUrl = ''
     this.backendUrl = ''
+    this.gameApi = null
   }
 
   /**
@@ -216,19 +217,25 @@ export class ResourceLoader {
   }
 
   /**
+   * Set gameApi client (must include RewardPlay token via inject)
+   */
+  setGameApi(gameApi) {
+    this.gameApi = gameApi || null
+    return this
+  }
+
+  /**
    * Fetch base manifest (image-manifest.json) from images base URL
    * Uses API endpoint if backendUrl is set, otherwise falls back to direct static file fetch
    */
   async fetchBaseManifest() {
     // Try API endpoint first if backendUrl is available
-    if (this.backendUrl) {
-      const apiBase = this.backendUrl.endsWith('/') ? this.backendUrl.slice(0, -1) : this.backendUrl
-      const apiUrl = `${apiBase}/api/rewardplay/manifest`
+    if (this.backendUrl && this.gameApi && typeof this.gameApi.getManifest === 'function') {
       try {
-        const res = await axios.get(apiUrl, { timeout: 5000 })
-        return res.data || null
+        const res = await this.gameApi.getManifest()
+        return res?.data || null
       } catch (err) {
-        console.warn(`Failed to fetch manifest from API ${apiUrl}, falling back to static file`, err)
+        console.warn('Failed to fetch manifest via gameApi, falling back to static file', err)
         // Fall through to static file fetch
       }
     }

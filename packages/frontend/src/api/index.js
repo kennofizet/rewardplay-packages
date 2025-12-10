@@ -29,6 +29,9 @@ export function createGameApi(backendUrl, token) {
     checkUser: () => api.get('/api/rewardplay/auth/check'),
     getUserData: () => api.get('/api/rewardplay/auth/user-data'),
     
+    // Manifest
+    getManifest: () => api.get('/api/rewardplay/manifest'),
+
     // Ranking
     getRanking: () => api.get('/api/rewardplay/ranking'),
     
