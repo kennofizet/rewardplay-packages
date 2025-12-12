@@ -2,19 +2,11 @@
 
 namespace Kennofizet\RewardPlay\Services;
 
+use Kennofizet\RewardPlay\Models\Token;
 use Illuminate\Support\Facades\DB;
 
 class TokenService
 {
-    /**
-     * Get tokens table name
-     */
-    protected function getTokensTableName()
-    {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . 'rewardplay_tokens';
-    }
-
     /**
      * Get user table name from config
      */
@@ -32,30 +24,23 @@ class TokenService
     public function createOrRefreshToken($userId)
     {
         $token = $this->generateUniqueToken();
-        $tokensTableName = $this->getTokensTableName();
 
         // Check if user already has a token
-        $existingToken = DB::table($tokensTableName)
-            ->where('user_id', $userId)
-            ->where('is_active', true)
+        $existingToken = Token::byUser($userId)
+            ->active()
             ->first();
 
         if ($existingToken) {
             // Update existing token
-            DB::table($tokensTableName)
-                ->where('id', $existingToken->id)
-                ->update([
-                    'token' => $token,
-                    'updated_at' => now(),
-                ]);
+            $existingToken->update([
+                'token' => $token,
+            ]);
         } else {
             // Create new token
-            DB::table($tokensTableName)->insert([
+            Token::create([
                 'user_id' => $userId,
                 'token' => $token,
                 'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
         }
 
@@ -70,12 +55,11 @@ class TokenService
      */
     public function getToken($userId)
     {
-        $tokensTableName = $this->getTokensTableName();
+        $token = Token::byUser($userId)
+            ->active()
+            ->first();
 
-        return DB::table($tokensTableName)
-            ->where('user_id', $userId)
-            ->where('is_active', true)
-            ->value('token');
+        return $token ? $token->token : null;
     }
 
     /**
@@ -85,13 +69,9 @@ class TokenService
      */
     protected function generateUniqueToken()
     {
-        $tokensTableName = $this->getTokensTableName();
-
         do {
             $token = bin2hex(random_bytes(32)); // 64 character hex string
-            $exists = DB::table($tokensTableName)
-                ->where('token', $token)
-                ->exists();
+            $exists = Token::byToken($token)->exists();
         } while ($exists);
 
         return $token;
@@ -105,11 +85,8 @@ class TokenService
      */
     public function validateToken($token)
     {
-        $tokensTableName = $this->getTokensTableName();
-
-        $tokenRecord = DB::table($tokensTableName)
-            ->where('token', $token)
-            ->where('is_active', true)
+        $tokenRecord = Token::byToken($token)
+            ->active()
             ->first();
 
         return $tokenRecord ? $tokenRecord->user_id : null;
@@ -123,18 +100,15 @@ class TokenService
      */
     public function checkUser($token)
     {
-        $tokensTableName = $this->getTokensTableName();
-        $userTableName = $this->getUserTableName();
-
-        $tokenRecord = DB::table($tokensTableName)
-            ->where('token', $token)
-            ->where('is_active', true)
+        $tokenRecord = Token::byToken($token)
+            ->active()
             ->first();
 
         if (!$tokenRecord) {
             return null;
         }
 
+        $userTableName = $this->getUserTableName();
         $user = DB::table($userTableName)
             ->where('id', $tokenRecord->user_id)
             ->first();

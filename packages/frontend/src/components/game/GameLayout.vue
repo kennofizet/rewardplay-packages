@@ -1,5 +1,5 @@
 <template>
-  <div class="main-game-wrapper">
+  <div ref="mainWrapper" class="main-game-wrapper">
     <div 
       class="game-container"
       :style="containerStyle"
@@ -38,6 +38,7 @@ defineEmits(['page-change', 'icon-click'])
 const BASE_WIDTH = 1920
 const BASE_HEIGHT = 1080
 
+const mainWrapper = ref(null)
 const scale = ref(1)
 const translateX = ref(0)
 const translateY = ref(0)
@@ -64,8 +65,13 @@ const containerStyle = computed(() => {
 })
 
 const calculateScale = () => {
-  let viewportWidth = window.innerWidth
-  let viewportHeight = window.innerHeight
+  if (!mainWrapper.value) return
+  
+  // Get the actual dimensions of the main page content container
+  const containerRect = mainWrapper.value.getBoundingClientRect()
+  let viewportWidth = containerRect.width
+  let viewportHeight = containerRect.height
+  console.log('viewportWidth', viewportWidth)
   
   // Check if we need to rotate (portrait mode)
   const isPortrait = viewportWidth < viewportHeight
@@ -93,9 +99,9 @@ const calculateScale = () => {
   // the center of the element aligns with the center of the viewport
   // The element's center is at (BASE_WIDTH/2, BASE_HEIGHT/2) in its original coordinate system
   // After scaling, we need to move it so its center is at (viewportWidth/2, viewportHeight/2)
-  // But we use the actual viewport dimensions (not swapped) for positioning
-  const actualViewportWidth = window.innerWidth
-  const actualViewportHeight = window.innerHeight
+  // But we use the actual container dimensions (not swapped) for positioning
+  const actualViewportWidth = containerRect.width
+  const actualViewportHeight = containerRect.height
   
   translateX.value = (actualViewportWidth / 2) - (BASE_WIDTH / 2)
   translateY.value = (actualViewportHeight / 2) - (BASE_HEIGHT / 2)
@@ -124,8 +130,8 @@ onUnmounted(() => {
   margin: 0;
   padding: 0;
   background: linear-gradient(#101d2d 40px, #345579 50%, #395d84 85%, #101d2d 100%);
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   position: relative;
 }
