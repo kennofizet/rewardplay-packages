@@ -30,7 +30,8 @@ const emit = defineEmits(['login-success', 'login-failed'])
 const gameApi = inject('gameApi')
 const canvasRef = ref(null)
 const error = ref(null)
-const errorType = ref(null) // 'no-api', 'invalid-token', 'connection-failed', 'server-error'
+const errorType = ref(null) // 'no-api', 'invalid-token', 'connection-failed', 'server-error', 'no-zone'
+const errorMessage = ref(null) // Custom error message to display
 const status = ref('checking') // 'checking', 'success', 'error'
 let animationFrameId = null
 let pulseAnimation = 0
@@ -67,6 +68,10 @@ const drawContent = (ctx, width, height) => {
     drawCheckingAnimation(ctx, centerX, centerY, width, height)
   } else if (status.value === 'error') {
     drawErrorIcon(ctx, centerX, centerY, width, height)
+    // Draw error message if available
+    if (errorMessage.value) {
+      drawErrorMessage(ctx, centerX, centerY + Math.min(width, height) * 0.15, width, height)
+    }
   } else if (status.value === 'success') {
     drawSuccessIcon(ctx, centerX, centerY, width, height)
   }
@@ -172,6 +177,8 @@ const drawErrorIcon = (ctx, centerX, centerY, width, height) => {
     drawConnectionError(ctx, centerX, centerY + size * 1.2, width, height)
   } else if (errorType.value === 'server-error') {
     drawServerError(ctx, centerX, centerY + size * 1.2, width, height)
+  } else if (errorType.value === 'no-zone') {
+    drawNoZoneError(ctx, centerX, centerY + size * 1.2, width, height)
   } else {
     drawGenericError(ctx, centerX, centerY + size * 1.2, width, height)
   }
@@ -426,6 +433,91 @@ const drawGenericError = (ctx, centerX, centerY, width, height) => {
   }
 }
 
+const drawNoZoneError = (ctx, centerX, centerY, width, height) => {
+  const iconSize = Math.min(width, height) * 0.08
+  
+  // Draw zone/server icon with X mark
+  ctx.strokeStyle = '#ff6666'
+  ctx.fillStyle = '#ff6666'
+  ctx.lineWidth = iconSize * 0.12
+  ctx.lineCap = 'round'
+  
+  // Draw server/zone box
+  const boxX = centerX - iconSize * 0.4
+  const boxY = centerY - iconSize * 0.3
+  const boxWidth = iconSize * 0.8
+  const boxHeight = iconSize * 0.6
+  
+  ctx.strokeRect(boxX, boxY, boxWidth, boxHeight)
+  
+  // Draw X mark over the box
+  ctx.strokeStyle = '#ff0000'
+  ctx.lineWidth = iconSize * 0.15
+  const xSize = iconSize * 0.5
+  
+  ctx.beginPath()
+  ctx.moveTo(boxX + boxWidth * 0.2, boxY + boxHeight * 0.2)
+  ctx.lineTo(boxX + boxWidth * 0.8, boxY + boxHeight * 0.8)
+  ctx.stroke()
+  
+  ctx.beginPath()
+  ctx.moveTo(boxX + boxWidth * 0.8, boxY + boxHeight * 0.2)
+  ctx.lineTo(boxX + boxWidth * 0.2, boxY + boxHeight * 0.8)
+  ctx.stroke()
+}
+
+const drawErrorMessage = (ctx, centerX, centerY, width, height) => {
+  if (!errorMessage.value) return
+  
+  ctx.save()
+  ctx.fillStyle = '#ffffff'
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'
+  ctx.lineWidth = 2
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  
+  // Calculate font size based on screen size
+  const fontSize = Math.min(width, height) * 0.025
+  ctx.font = `bold ${fontSize}px Arial, sans-serif`
+  
+  // Draw text with outline for better visibility
+  const text = errorMessage.value
+  const maxWidth = width * 0.8
+  const words = text.split(' ')
+  const lines = []
+  let currentLine = ''
+  
+  // Word wrap
+  words.forEach(word => {
+    const testLine = currentLine + (currentLine ? ' ' : '') + word
+    const metrics = ctx.measureText(testLine)
+    if (metrics.width > maxWidth && currentLine) {
+      lines.push(currentLine)
+      currentLine = word
+    } else {
+      currentLine = testLine
+    }
+  })
+  if (currentLine) {
+    lines.push(currentLine)
+  }
+  
+  // Draw each line
+  const lineHeight = fontSize * 1.4
+  const startY = centerY - ((lines.length - 1) * lineHeight) / 2
+  
+  lines.forEach((line, index) => {
+    const y = startY + index * lineHeight
+    
+    // Draw text outline (shadow)
+    ctx.strokeText(line, centerX, y)
+    // Draw text
+    ctx.fillText(line, centerX, y)
+  })
+  
+  ctx.restore()
+}
+
 const drawSuccessIcon = (ctx, centerX, centerY, width, height) => {
   const size = Math.min(width, height) * 0.15
   const x = centerX
@@ -520,13 +612,13 @@ const checkUser = async () => {
       // Wait a moment to show success icon
       setTimeout(() => {
         emit('login-success', {
-          ...response.data.user,
-          imagesUrl: response.data.images_url || ''
+          ...response.data.datas.user,
+          imagesUrl: response.data.datas.images_url || ''
         })
       }, 500)
     } else {
       status.value = 'error'
-      const errorMsg = response.data.error || t('component.login.authenticationFailed')
+      const errorMsg = response.data.message || t('component.login.authenticationFailed')
       
       // Determine error type
       if (errorMsg.toLowerCase().includes('token') || errorMsg.toLowerCase().includes('invalid')) {
@@ -541,20 +633,32 @@ const checkUser = async () => {
     }
   } catch (err) {
     status.value = 'error'
-    const errorMessage = err.response?.data?.error || err.message || t('component.login.connectionFailed')
+    const errorMsg = err.response?.data?.message || err.message || t('component.login.connectionFailed')
     
-    // Determine error type
-    if (err.code === 'ECONNREFUSED' || err.message.includes('Network') || errorMessage.includes('Connection')) {
-      errorType.value = 'connection-failed'
-    } else if (err.response?.status >= 500) {
-      errorType.value = 'server-error'
-    } else if (err.response?.status === 401 || errorMessage.includes('token') || errorMessage.includes('Invalid')) {
-      errorType.value = 'invalid-token'
-    } else {
-      errorType.value = 'generic'
+    // Handle 403 error specifically
+    if (err.response?.status === 403) {
+      errorType.value = 'no-zone'
+      errorMessage.value = 'User not in any zone or not managing any server'
+      emit('login-failed', errorMessage.value)
+      return
     }
     
-    emit('login-failed', errorMessage)
+    // Determine error type for other errors
+    if (err.code === 'ECONNREFUSED' || err.message.includes('Network') || errorMsg.includes('Connection')) {
+      errorType.value = 'connection-failed'
+      errorMessage.value = null
+    } else if (err.response?.status >= 500) {
+      errorType.value = 'server-error'
+      errorMessage.value = null
+    } else if (err.response?.status === 401 || errorMsg.includes('token') || errorMsg.includes('Invalid')) {
+      errorType.value = 'invalid-token'
+      errorMessage.value = null
+    } else {
+      errorType.value = 'generic'
+      errorMessage.value = null
+    }
+    
+    emit('login-failed', errorMsg)
   }
 }
 
@@ -567,6 +671,7 @@ watch(() => props.showLogin, (newVal) => {
       status.value = 'checking'
       error.value = null
       errorType.value = null
+      errorMessage.value = null
       pulseAnimation = 0
       errorAnimation = 0
       animate()

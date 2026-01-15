@@ -2,17 +2,17 @@
 
 namespace Kennofizet\RewardPlay\Models;
 
-use Kennofizet\RewardPlay\Models\ZoneManager\ZoneManagerRelations;
-use Kennofizet\RewardPlay\Models\ZoneManager\ZoneManagerScopes;
-use Kennofizet\RewardPlay\Models\ZoneManager\ZoneManagerActions;
+use Kennofizet\RewardPlay\Models\ServerManager\ServerManagerRelations;
+use Kennofizet\RewardPlay\Models\ServerManager\ServerManagerScopes;
+use Kennofizet\RewardPlay\Models\ServerManager\ServerManagerActions;
 use Kennofizet\RewardPlay\Core\Model\BaseModel;
 
 /**
- * ZoneManager Model
+ * ServerManager Model
  */
-class ZoneManager extends BaseModel
+class ServerManager extends BaseModel
 {
-    use ZoneManagerRelations, ZoneManagerActions, ZoneManagerScopes;
+    use ServerManagerRelations, ServerManagerActions, ServerManagerScopes;
 
     /**
      * Get the table name with prefix
@@ -22,7 +22,7 @@ class ZoneManager extends BaseModel
     public function getTable()
     {
         $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . 'rewardplay_zone_manager';
+        return $tablePrefix . 'rewardplay_server_managers';
     }
 
     /**
@@ -32,7 +32,6 @@ class ZoneManager extends BaseModel
      */
     protected $fillable = [
         'user_id',
-        'zone_id',
+        'server_id',
     ];
 }
-

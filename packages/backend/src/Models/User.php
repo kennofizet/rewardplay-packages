@@ -8,7 +8,6 @@ use Kennofizet\RewardPlay\Models\User\UserActions;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Kennofizet\RewardPlay\Core\Model\BaseModelManage;
 /**
  * User Model
  */
@@ -25,14 +24,14 @@ class User extends Model
     {
         parent::boot();
 
-        // Apply global scope for company user and delete status
-        static::addGlobalScope('is_in_zone', function (Builder $builder) {
+        // Apply global scope for server user filtering
+        static::addGlobalScope('by_server_user', function (Builder $builder) {
             
-            if (empty(config('rewardplay.user_zone_id_column'))) {
+            if (empty(config('rewardplay.user_server_id_column'))) {
                 return;
             }
 
-            $builder->isInZone();
+            $builder->byServer();
         });
     }
 }

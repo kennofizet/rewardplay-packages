@@ -226,7 +226,7 @@ const loadUserData = async () => {
     
     if (response.data && response.data.success) {
       // Store user data to be provided to child components
-      userData.value = response.data.data
+      userData.value = response.data.datas
     }
   } catch (error) {
     console.error('Error loading user data:', error)

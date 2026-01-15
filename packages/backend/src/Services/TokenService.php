@@ -3,18 +3,10 @@
 namespace Kennofizet\RewardPlay\Services;
 
 use Kennofizet\RewardPlay\Models\Token;
-use Illuminate\Support\Facades\DB;
+use Kennofizet\RewardPlay\Models\User;
 
 class TokenService
 {
-    /**
-     * Get user table name from config
-     */
-    protected function getUserTableName()
-    {
-        return config('rewardplay.table_user', 'users');
-    }
-
     /**
      * Create or refresh token for a user
      * 
@@ -108,17 +100,13 @@ class TokenService
             return null;
         }
 
-        $userTableName = $this->getUserTableName();
-        $user = DB::table($userTableName)
-            ->where('id', $tokenRecord->user_id)
-            ->first();
+        $user = User::byId($tokenRecord->user_id)->first();
 
         if (!$user) {
             return null;
         }
 
         return [
-            'id' => $user->id,
             'token_active' => $tokenRecord->is_active ? 1 : 0,
         ];
     }

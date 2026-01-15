@@ -1,50 +1,79 @@
 # RewardPlay Backend Package
 
-## Installation
+## Quick Start
+
+### Installation
 
 ```bash
 composer require kennofizet/rewardplay-backend
 php artisan vendor:publish --tag=rewardplay-migrations
 php artisan vendor:publish --tag=rewardplay-config
 php artisan rewardplay:publish-images
+php artisan migrate
 ```
 
-## Configuration
+### Configuration
 
-After publishing the config, edit `config/rewardplay.php`:
+Edit `config/rewardplay.php` or add to your `.env`:
 
-```php
-'table_user' => env('REWARDPLAY_TABLE_USER', 'users'),
-'user_zone_id_column' => env('REWARDPLAY_USER_ZONE_ID_COLUMN', 'branch_id'),
-'table_prefix' => env('REWARDPLAY_TABLE_PREFIX', ''),
+```env
+REWARDPLAY_TABLE_USER=users
+REWARDPLAY_USER_SERVER_ID_COLUMN=branch_id
+REWARDPLAY_TABLE_PREFIX=
+REWARDPLAY_API_PREFIX=api/rewardplay
+REWARDPLAY_RATE_LIMIT=60
+REWARDPLAY_IMAGES_FOLDER=rewardplay-images
+REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER=custom/global
 ```
 
-**IMPORTANT:** After changing the config, clear the config cache:
+**Important:** After changing config, run:
 ```bash
 php artisan config:clear
 ```
 
-## Migration
+## Upgrading from Old Version
 
-Run the migration to add the token column to your users table:
+When upgrading to a new version that includes database changes:
 
+### Step 1: Backup Your Data (Recommended)
+```bash
+# Export your database or backup important tables
+# Especially if you have data in rewardplay_settings_items
+```
+
+### Step 2: Update Package
+```bash
+composer update kennofizet/rewardplay-backend
+```
+
+### Step 3: Publish New Migrations
+```bash
+php artisan vendor:publish --tag=rewardplay-migrations --force
+```
+
+### Step 4: Run Migrations
 ```bash
 php artisan migrate
 ```
 
-The migration will:
-1. Check if the token column already exists (from config)
-2. If found, return an error and stop
-3. If not found, create the column after the `id` column
-4. Generate tokens for all existing users automatically
+### Step 5: Publish Updated Images (if needed)
+```bash
+php artisan rewardplay:publish-images
+# Or force overwrite:
+php artisan rewardplay:publish-images --force
+```
 
-**Note:** Old users will have tokens created automatically during migration.
+### Step 6: Clear Cache
+```bash
+php artisan config:clear
+php artisan cache:clear
+```
 
-## Token Management
+## Features
 
-### Creating/Refreshing Token for User
+### Token Management
 
-When creating a new user, you need to generate a token for them:
+Generate tokens for users:
 
 ```php
 use Kennofizet\RewardPlay\Services\TokenService;
@@ -53,302 +82,72 @@ $tokenService = app(TokenService::class);
 $token = $tokenService->createOrRefreshToken($user->id);
 ```
 
-### Using in User Model
+### API Authentication
 
-Add this to your `User` model:
-
-```php
-use Kennofizet\RewardPlay\Services\TokenService;
-
-class User extends Authenticatable
-{
-    // ... existing code ...
-
-    /**
-     * Get RewardPlay token
-     */
-    public function getRewardPlayToken()
-    {
-        $tokenService = app(TokenService::class);
-        $token = $tokenService->getToken($this->id);
-        
-        // If token doesn't exist, create one
-        if (!$token) {
-            $token = $tokenService->createOrRefreshToken($this->id);
-        }
-        
-        return $token;
-    }
-
-    /**
-     * Refresh RewardPlay token
-     */
-    public function refreshRewardPlayToken()
-    {
-        $tokenService = app(TokenService::class);
-        return $tokenService->createOrRefreshToken($this->id);
-    }
-}
-```
-
-### Usage Example
-
-```php
-// Get token for user
-$token = $user->getRewardPlayToken();
-
-// Refresh token
-$newToken = $user->refreshRewardPlayToken();
-```
-
-## Middleware
-
-The package includes middleware that automatically:
-- Validates the `X-RewardPlay-Token` header
-- Checks if the user exists in the database
-- Optionally reads the configured zone column (default: `branch_id`) and attaches it as `rewardplay_user_zone_id`
-- Attaches the user ID to the request as `rewardplay_user_id`
-
-All routes are protected by this middleware automatically.
-If you set `user_zone_id_column` to a non-null value, ensure the column exists on the users table; otherwise the request will be rejected.
-The table name and prefix come from `REWARDPLAY_TABLE_USER` and `REWARDPLAY_TABLE_PREFIX`.
-
-## Rate Limiting
-
-All API endpoints are rate-limited per token. Default: **60 requests per minute**.
-
-You can configure this in your `.env`:
-```env
-REWARDPLAY_RATE_LIMIT=60
-```
-
-When the rate limit is exceeded, the API will return a `429 Too Many Requests` response.
-
-## API Usage
-
-The package provides a demo API endpoint that validates the token:
+All API routes require the `X-RewardPlay-Token` header:
 
 ```
 GET /api/rewardplay/demo
 Headers: X-RewardPlay-Token: {token}
 ```
 
-**Response:**
-```json
-{
-    "message": "Demo API endpoint",
-    "user_id": 1,
-    "status": "success"
-}
-```
+### Setting Items (Game Items)
 
-**Error Responses:**
-- `401 Unauthorized` - Token missing or invalid
-- `404 Not Found` - User not found
-- `429 Too Many Requests` - Rate limit exceeded
+Manage game items with zones, images, and properties:
 
-## Accessing User ID in Controllers
-
-The middleware automatically attaches the user ID to the request attributes (secure, cannot be overridden). You can access it in your controllers:
-
-```php
-public function index(Request $request)
-{
-    $userId = $request->attributes->get('rewardplay_user_id');
-    // Use $userId...
-}
-```
-
-**Security Note:** The user ID is stored in request attributes, not input, so it cannot be overridden by user input. This prevents users from impersonating other users.
-
-## Token Active Status
-
-The package includes a `token_active` column to control token status:
-- `1` = Active (default)
-- `0` = Inactive
-
-When a token is inactive, authentication will fail even if the token is valid.
-
-### Migration
-
-Run the migration to add the `token_active` column:
-
-```bash
-php artisan migrate
-```
-
-The migration will:
-1. Add `token_active` column (default: 1)
-2. Set all existing tokens as active (1)
+- **Create/Update Items:** With image uploads, zone assignment, and JSON properties
+- **Zone Filtering:** Items are organized by zones
+- **Image Storage:** Images saved to `public/{images_folder}/items/{zone_id}/{user_id}/`
 
 ## API Endpoints
 
-### Authentication Check (Public)
+### Authentication
+- `POST /api/rewardplay/auth/check` - Check token validity
+- `GET /api/rewardplay/auth/user-data` - Get user data
 
-```
-POST /api/rewardplay/auth/check
-Headers: X-RewardPlay-Token: {token}
-```
+### Setting Items
+- `GET /api/rewardplay/setting-items` - List items (with zone filter)
+- `GET /api/rewardplay/setting-items/types` - Get item types
+- `GET /api/rewardplay/setting-items/{id}` - Get single item
+- `POST /api/rewardplay/setting-items` - Create item (with image upload)
+- `PATCH /api/rewardplay/setting-items/{id}` - Update item
+- `DELETE /api/rewardplay/setting-items/{id}` - Delete item
 
-**Response (Success):**
-```json
-{
-    "success": true,
-    "user": {
-        "id": 1
-    }
-}
-```
+### Images
+- `GET /api/rewardplay/manifest` - Get image manifest
 
-**Response (Error):**
-```json
-{
-    "success": false,
-    "error": "Invalid or inactive token"
-}
-```
-
-### Demo Endpoint (Protected)
-
-```
-GET /api/rewardplay/demo
-Headers: X-RewardPlay-Token: {token}
-```
-
-## Default Images
-
-The package includes a default images folder that can be published to your project's public directory.
+## Images Management
 
 ### Publishing Images
 
-You can publish default images using either method:
-
-**Method 1: Using the custom command (Recommended)**
 ```bash
 php artisan rewardplay:publish-images
 ```
 
-**Method 2: Using Laravel's vendor publish**
-```bash
-php artisan vendor:publish --tag=rewardplay-images
-```
-
-**Force overwrite existing files:**
-```bash
-php artisan rewardplay:publish-images --force
-```
-
-### Configuring Images Folder Name
-
-By default, images are published to `public/rewardplay-images/`. You can change this by:
-
-**Option 1: Environment variable (`.env`)**
-```env
-REWARDPLAY_IMAGES_FOLDER=my-custom-images
-```
-
-**Option 2: Config file (`config/rewardplay.php`)**
-```php
-'images_folder' => 'my-custom-images',
-```
-
-After changing the config, run:
-```bash
-php artisan config:clear
-php artisan rewardplay:publish-images
-```
-
-### Adding Default Images
-
-To add default images to the package:
-
-1. Place your images in: `packages/backend/src/Assets/images/`
-2. Run the publish command in your project:
-   ```bash
-   php artisan rewardplay:publish-images
-   ```
-
-Images will be available at: `/{images_folder}/your-image.jpg`
-
-**Example:**
-- If `REWARDPLAY_IMAGES_FOLDER=rewardplay-images` (default)
-- Image path: `/rewardplay-images/background.jpg`
-
-### Image Structure
-
-```
-packages/backend/src/Assets/images/
-├── .gitkeep
-├── background.jpg
-├── logo.png
-└── icons/
-    └── icon.svg
-```
-
-After publishing, the structure in your project will be:
-```
-public/rewardplay-images/
-├── background.jpg
-├── logo.png
-└── icons/
-    └── icon.svg
-```
+Images are published to `public/{images_folder}/` (default: `rewardplay-images`).
 
 ### Custom Global Images
 
-The package supports custom global images that can override default global images. These images are automatically included in the manifest API response.
+Place custom images in `public/{images_folder}/{custom_global_images_folder}/` (default: `custom/global/`).
 
-#### Configuring Custom Global Images Folder
+These images will:
+- Override default global images with matching filenames
+- Be included in the manifest API response
+- Be cached for 5 minutes for performance
 
-By default, custom global images are stored in `public/custom/global/`. You can change this by:
+## Middleware
 
-**Option 1: Environment variable (`.env`)**
-```env
-REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER=my-custom/global-images
-```
+All routes are automatically protected by token validation middleware that:
+- Validates `X-RewardPlay-Token` header
+- Checks user existence
+- Optionally reads zone column and attaches as `rewardplay_user_zone_id`
 
-**Option 2: Config file (`config/rewardplay.php`)**
-```php
-'custom_global_images_folder' => 'my-custom/global-images',
-```
+## Token Status
 
-After changing the config, run:
-```bash
-php artisan config:clear
-```
+Tokens have an `is_active` status:
+- `1` = Active (default)
+- `0` = Inactive (blocks authentication)
 
-#### How It Works
+## Support
 
-1. Place your custom global images in the configured folder (default: `public/custom/global/`)
-2. The manifest API endpoint (`GET /api/rewardplay/manifest`) automatically scans this folder
-3. The file list is included in the `custom` key of the manifest response
-4. Results are cached for 5 minutes to improve performance
-
-**Example:**
-- If `REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER=custom/global` (default)
-- Place images in: `public/custom/global/`
-- The manifest response will include:
-```json
-{
-  "bag.background_bag": "bag/background-bag.PNG",
-  "global.coin": "global/coin-df.png",
-  "custom": ["coin-custom.png", "reward-custom.png"]
-}
-```
-
-**Note:** Custom images are identified by filename. If a global image key (e.g., `global.coin`) exists in the manifest and the filename matches a file in the custom folder, the custom version will be used by the frontend.
-
-## Environment Variables
-
-Add to your `.env`:
-
-```env
-REWARDPLAY_TABLE_USER=users
-REWARDPLAY_API_PREFIX=api/rewardplay
-REWARDPLAY_RATE_LIMIT=60
-REWARDPLAY_IMAGES_FOLDER=rewardplay-images
-REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER=custom/global
-REWARDPLAY_USER_ZONE_ID_COLUMN=branch_id
-REWARDPLAY_TABLE_PREFIX=
-```
-
+For issues or questions, check the package documentation or contact support.

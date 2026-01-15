@@ -1,13 +1,13 @@
 <?php
 
-namespace Kennofizet\RewardPlay\Models\ZoneManager;
+namespace Kennofizet\RewardPlay\Models\ZoneUser;
 
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * ZoneManager Model Scopes
+ * ZoneUser Model Scopes
  */
-trait ZoneManagerScopes
+trait ZoneUserScopes
 {
     /**
      * Scope to filter by user_id
@@ -16,7 +16,7 @@ trait ZoneManagerScopes
      * @param int $userId
      * @return Builder
      */
-    public function scopeByUser(Builder $query, $userId)
+    public function scopeByUserId(Builder $query, $userId)
     {
         return $query->where('user_id', $userId);
     }
@@ -28,9 +28,8 @@ trait ZoneManagerScopes
      * @param int $zoneId
      * @return Builder
      */
-    public function scopeByZone(Builder $query, $zoneId)
+    public function scopeByZoneId(Builder $query, $zoneId)
     {
         return $query->where('zone_id', $zoneId);
     }
 }
-

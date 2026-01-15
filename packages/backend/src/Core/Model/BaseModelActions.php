@@ -2,8 +2,6 @@
 
 namespace Kennofizet\RewardPlay\Core\Model;
 
-use Kennofizet\RewardPlay\Models\User;
-
 trait BaseModelActions
 {
     public static function arrayRemoveEmpty($data)
@@ -16,22 +14,54 @@ trait BaseModelActions
         return [];
     }
 
-    public static function currentUserId()
+    /**
+     * Get array of zone IDs that the current user is in
+     * 
+     * @return array
+     */
+    public static function currentUserZoneIds()
     {
-        return request()->attributes->get('rewardplay_user_id');
+        $zoneIds = request()->attributes->get('rewardplay_user_zone_ids', []);
+        if (!is_array($zoneIds)) {
+            return [];
+        }
+        return array_filter($zoneIds, function($id) {
+            return !empty($id);
+        });
     }
 
-    public static function currentZoneId()
+    /**
+     * Get array of zone IDs that the current user manages
+     * 
+     * @return array
+     */
+    public static function currentUserManagedZoneIds()
     {
-        $zoneIdColumn = config('rewardplay.user_zone_id_column');
-        if (empty($zoneIdColumn)) {
+        $zoneIds = request()->attributes->get('rewardplay_user_managed_zone_ids', []);
+        if (!is_array($zoneIds)) {
+            return [];
+        }
+        return array_filter($zoneIds, function($id) {
+            return !empty($id);
+        });
+    }
+
+    /**
+     * Get current server ID from request attributes
+     * 
+     * @return int|null
+     */
+    public static function currentServerId()
+    {
+        $serverIdColumn = config('rewardplay.user_server_id_column');
+        if (empty($serverIdColumn)) {
             return null;
         }
         
-        $zoneId = request()->attributes->get('rewardplay_user_zone_id');
-        if (empty($zoneId)) {
+        $serverId = request()->attributes->get('rewardplay_user_server_id');
+        if (empty($serverId)) {
             return null;
         }
-        return $zoneId;
+        return $serverId;
     }
 }

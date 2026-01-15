@@ -25,7 +25,13 @@ class ZoneService
      */
     public function getZones($filters = [])
     {
-        return $this->zoneRepository->list($filters);
+        $query = Zone::query();
+
+        if (!empty($filters['name'])) {
+            $query->search($filters['name']);
+        }
+
+        return $query->get();
     }
 
     /**
@@ -47,7 +53,7 @@ class ZoneService
     public function editZone(int $zoneId, array $data): ?Zone
     {
         $this->validation->validateZone($data);
-        $zone = $this->zoneRepository->find($zoneId);
+        $zone = Zone::findById($zoneId);
         if (!$zone) {
             return null;
         }
@@ -59,7 +65,7 @@ class ZoneService
      */
     public function deleteZone(int $zoneId): bool
     {
-        $zone = $this->zoneRepository->find($zoneId);
+        $zone = Zone::findById($zoneId);
         if (!$zone) {
             return false;
         }

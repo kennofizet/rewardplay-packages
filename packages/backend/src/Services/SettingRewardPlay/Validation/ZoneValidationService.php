@@ -16,6 +16,7 @@ class ZoneValidationService
     {
         $validator = Validator::make($data, [
             'name' => 'required|string|max:255',
+            'server_id' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {

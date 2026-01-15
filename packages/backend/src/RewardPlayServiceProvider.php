@@ -30,10 +30,11 @@ class RewardPlayServiceProvider extends ServiceProvider
             __DIR__.'/Assets/images' => public_path($imagesFolder),
         ], 'rewardplay-images');
 
-        // Register custom command
+        // Register custom commands
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Kennofizet\RewardPlay\Commands\PublishImagesCommand::class,
+                \Kennofizet\RewardPlay\Commands\ManageRewardPlayCommand::class,
             ]);
         }
 

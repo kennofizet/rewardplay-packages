@@ -6,7 +6,7 @@ use Kennofizet\RewardPlay\Models\Zone\ZoneRelations;
 use Kennofizet\RewardPlay\Models\Zone\ZoneScopes;
 use Kennofizet\RewardPlay\Models\Zone\ZoneActions;
 use Kennofizet\RewardPlay\Core\Model\BaseModel;
-
+use Illuminate\Database\Eloquent\Builder;
 /**
  * Zone Model
  */
@@ -32,6 +32,16 @@ class Zone extends BaseModel
      */
     protected $fillable = [
         'name',
+        'server_id',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope('by_server', function (Builder $builder) {
+            $builder->byServer();
+        });
+    }
 }
 

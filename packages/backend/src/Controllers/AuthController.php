@@ -2,7 +2,7 @@
 
 namespace Kennofizet\RewardPlay\Controllers;
 
-use App\Http\Controllers\Controller;
+use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Kennofizet\RewardPlay\Services\TokenService;
 use Illuminate\Support\Facades\File;
@@ -30,19 +30,13 @@ class AuthController extends Controller
         $now = Carbon::now();
 
         if (!File::exists($manifestPath)) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Manifest file not found',
-            ], 404);
+            return $this->apiErrorResponse('Manifest file not found', 404);
         }
 
         $manifest = json_decode(File::get($manifestPath), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid manifest file',
-            ], 500);
+            return $this->apiErrorResponse('Invalid manifest file', 500);
         }
 
         // Get custom global images with 5-minute cache
@@ -106,7 +100,7 @@ class AuthController extends Controller
                     }
                     
                     // If no match found, try to infer key from filename for global images
-                    if (!$found && preg_match('/^(coin|ticket|box[-_]?coin|bracelet|clothes|epic[-_]?chest|reward)/i', $customBase)) {
+                    if (!$found && preg_match('/^(coin|ticket|box[-_]?coin|epic[-_]?chest|reward)/i', $customBase)) {
                         // Normalize the base name to match manifest key format
                         $normalized = str_replace(['-', '_'], '', $customBase);
                         $potentialKey = 'global.' . $normalized;
@@ -146,30 +140,20 @@ class AuthController extends Controller
         $token = $request->header('X-RewardPlay-Token');
 
         if (!$token) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Token is required',
-            ], 401);
+            return $this->apiErrorResponse('Token is required', 401);
         }
 
         $user = $this->tokenService->checkUser($token);
 
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid or inactive token',
-            ], 401);
+            return $this->apiErrorResponse('Invalid or inactive token', 401);
         }
 
         // Get images folder URL from config
         $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
         $imagesUrl = url($imagesFolder);
 
-        return response()->json([
-            'success' => true,
-            'user' => [
-                'id' => $user['id'],
-            ],
+        return $this->apiResponseWithContext([
             'images_url' => $imagesUrl,
         ]);
     }
@@ -182,19 +166,13 @@ class AuthController extends Controller
         $token = $request->header('X-RewardPlay-Token');
 
         if (!$token) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Token is required',
-            ], 401);
+            return $this->apiErrorResponse('Token is required', 401);
         }
 
         $user = $this->tokenService->checkUser($token);
 
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid or inactive token',
-            ], 401);
+            return $this->apiErrorResponse('Invalid or inactive token', 401);
         }
 
         // Item details mapping (id, image, name only - no property)
@@ -221,7 +199,7 @@ class AuthController extends Controller
             ],
             5 => [
                 'id' => 5,
-                'key_image' => 'global.bracelet',
+                'key_image' => 'bag.bracelet',
                 'name' => 'Bracelet',
             ],
             6 => [
@@ -462,22 +440,18 @@ class AuthController extends Controller
         ];
 
         // Demo user data - replace with actual user data retrieval
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'user_id' => $user['id'],
-                'coin' => 1000000,
-                'box_coin' => 100,
-                'ruby' => 1000,
-                'power' => 125000,
-                'user_bag' => [
-                    'bag' => $bagItems,
-                    'sword' => $swordItems,
-                    'other' => $otherItems,
-                    'shop' => $shopItems,
-                ],
-                'item_detail' => $itemDetails,
+        return $this->apiResponseWithContext([
+            'coin' => 1000000,
+            'box_coin' => 100,
+            'ruby' => 1000,
+            'power' => 125000,
+            'user_bag' => [
+                'bag' => $bagItems,
+                'sword' => $swordItems,
+                'other' => $otherItems,
+                'shop' => $shopItems,
             ],
+            'item_detail' => $itemDetails,
         ]);
     }
 }

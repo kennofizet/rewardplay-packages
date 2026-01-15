@@ -2,38 +2,20 @@
 
 namespace Kennofizet\RewardPlay\Models\Zone;
 
-use Illuminate\Support\Facades\DB;
+use Kennofizet\RewardPlay\Models\Zone;
 
 trait ZoneActions
 {
     /**
-     * Get the manager of this zone from user table using DB::
+     * Find zone by ID
      * 
-     * @return object|null
+     * @param int $id
+     * @return Zone|null
      */
-    public function getManager()
+    public static function findById(int $id): ?Zone
     {
-        $zoneManager = $this->zoneManager;
-        
-        if (!$zoneManager) {
-            return null;
-        }
-
-        $userTable = config('rewardplay.table_user', 'users');
-        
-        return DB::table($userTable)
-            ->where('id', $zoneManager->user_id)
-            ->first();
+        return Zone::find($id);
     }
 
-    /**
-     * Check if zone has a manager
-     * 
-     * @return bool
-     */
-    public function hasManager()
-    {
-        return $this->zoneManager()->exists();
-    }
 }
 

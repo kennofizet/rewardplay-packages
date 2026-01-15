@@ -27,6 +27,10 @@
       <MenuItem @click="$emit('page-change', 'shop')">
         {{ t('component.menu.shop') }}
       </MenuItem>
+
+      <MenuItem @click="$emit('page-change', 'manage-setting')">
+        {{ t('component.menu.manageSetting') }}
+      </MenuItem>
     </div>
 
     <div class="menu-right">

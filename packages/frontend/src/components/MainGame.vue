@@ -18,6 +18,7 @@ import RankingPage from '../pages/game/RankingPage.vue'
 import RulesPage from '../pages/game/RulesPage.vue'
 import ShopPage from '../pages/game/ShopPage.vue'
 import ComingSoonPage from '../pages/ComingSoonPage.vue'
+import ManageSettingPage from '../pages/game/ManageSettingPage.vue'
 
 const props = defineProps({
   imagesUrl: {
@@ -36,7 +37,8 @@ const pageMap = {
   'lucky-wheel': LuckyWheelPage,
   'ranking': RankingPage,
   'rules': ComingSoonPage,
-  'shop': ComingSoonPage
+  'shop': ComingSoonPage,
+  'manage-setting': ManageSettingPage
 }
 
 const currentPage = shallowRef(DailyRewardPage) // Default to DailyReward

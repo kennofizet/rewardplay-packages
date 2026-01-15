@@ -14,14 +14,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | User Zone ID Column
+    | User Server ID Column
     |--------------------------------------------------------------------------
     |
-    | The name of the column that stores the zone ID for the user.
-    | Default: 'branch_id'
+    | The name of the column that stores the server ID for the user.
+    | Default: null merge all users to one server
     |
     */
-    'user_zone_id_column' => env('REWARDPLAY_USER_ZONE_ID_COLUMN'),
+    'user_server_id_column' => env('REWARDPLAY_USER_SERVER_ID_COLUMN'),
 
     /*
     |--------------------------------------------------------------------------

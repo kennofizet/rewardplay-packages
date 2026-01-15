@@ -2,19 +2,24 @@
 
 namespace Kennofizet\RewardPlay\Models\Zone;
 
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Kennofizet\RewardPlay\Models\ZoneManager;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 trait ZoneRelations
 {
     /**
-     * Zone has one manager (ZoneManager)
+     * Zone belongs to many users (many-to-many through zone_users pivot)
      * 
-     * @return HasOne
+     * @return BelongsToMany
      */
-    public function zoneManager()
+    public function users()
     {
-        return $this->hasOne(ZoneManager::class, 'zone_id');
+        $zoneUsersTableName = \Kennofizet\RewardPlay\Models\ZoneUser::getTable();
+        
+        return $this->belongsToMany(
+            \Kennofizet\RewardPlay\Models\User::class,
+            $zoneUsersTableName,
+            'zone_id',
+            'user_id'
+        )->using(\Kennofizet\RewardPlay\Models\ZoneUser::class)->withTimestamps();
     }
 }
-

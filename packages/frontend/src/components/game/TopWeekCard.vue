@@ -1,5 +1,13 @@
 <template>
-  <div class="leaderboard-container">
+  <TopWeekCardSkeleton v-if="loading" />
+  <div v-else-if="error" class="leaderboard-container error-state">
+    <div class="error-content">
+      <div class="error-icon">⚠️</div>
+      <div class="error-message">{{ error }}</div>
+      <button class="error-retry" @click="$emit('retry')">{{ t('page.ranking.retry') || 'Retry' }}</button>
+    </div>
+  </div>
+  <div v-else class="leaderboard-container">
     <div class="leaderboard-title">• {{ t('component.topWeek.title') }} •</div>
     
     <div class="top-three-section">
@@ -48,6 +56,7 @@
 
 <script setup>
 import { inject } from 'vue'
+import TopWeekCardSkeleton from './TopWeekCardSkeleton.vue'
 
 const props = defineProps({
   topThree: {
@@ -57,6 +66,14 @@ const props = defineProps({
   remainingPlayers: {
     type: Array,
     default: () => [],
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  error: {
+    type: String,
+    default: null,
   },
 })
 
@@ -69,6 +86,8 @@ const formatScore = (score) => {
   }
   return String(score).replace(/,/g, '.')
 }
+
+defineEmits(['retry'])
 </script>
 
 <style scoped>
@@ -314,5 +333,52 @@ const formatScore = (score) => {
   text-align: center;
   box-shadow: 0 2px 6px rgba(255, 140, 66, 0.3);
   margin-left: auto;
+}
+
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 600px;
+}
+
+.error-content {
+  text-align: center;
+  padding: 40px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.error-message {
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 20px;
+  background: rgba(255, 107, 107, 0.2);
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.error-retry {
+  background: linear-gradient(135deg, #ff8c00 0%, #ffa366 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
+}
+
+.error-retry:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 140, 66, 0.4);
 }
 </style>

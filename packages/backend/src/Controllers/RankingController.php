@@ -2,7 +2,7 @@
 
 namespace Kennofizet\RewardPlay\Controllers;
 
-use App\Http\Controllers\Controller;
+use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Kennofizet\RewardPlay\Services\TokenService;
 
@@ -23,19 +23,13 @@ class RankingController extends Controller
         $token = $request->header('X-RewardPlay-Token');
 
         if (!$token) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Token is required',
-            ], 401);
+            return $this->apiErrorResponse('Token is required', 401);
         }
 
         $user = $this->tokenService->checkUser($token);
 
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid or inactive token',
-            ], 401);
+            return $this->apiErrorResponse('Invalid or inactive token', 401);
         }
 
         // Fake ranking data
@@ -174,9 +168,6 @@ class RankingController extends Controller
             ],
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $ranking_data,
-        ]);
+        return $this->apiResponseWithContext($ranking_data);
     }
 }

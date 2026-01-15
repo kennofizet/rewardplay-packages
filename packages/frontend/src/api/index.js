@@ -37,6 +37,34 @@ export function createGameApi(backendUrl, token) {
     
     // Demo
     getDemo: () => api.get('/api/rewardplay/demo'),
+
+    // Setting Items CRUD
+    getSettingItems: (params) => api.get('/api/rewardplay/setting-items', { params }),
+    getSettingItem: (id) => api.get(`/api/rewardplay/setting-items/${id}`),
+    getItemTypes: () => api.get('/api/rewardplay/setting-items/types'),
+    createSettingItem: (data) => {
+      // If data is FormData, use multipart/form-data, otherwise use JSON
+      if (data instanceof FormData) {
+        return api.post('/api/rewardplay/setting-items', data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+      }
+      return api.post('/api/rewardplay/setting-items', data)
+    },
+    updateSettingItem: (id, data) => {
+      // If data is FormData, use PATCH with multipart/form-data, otherwise use PUT with JSON
+      if (data instanceof FormData) {
+        return api.patch(`/api/rewardplay/setting-items/${id}`, data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+      }
+      return api.put(`/api/rewardplay/setting-items/${id}`, data)
+    },
+    deleteSettingItem: (id) => api.delete(`/api/rewardplay/setting-items/${id}`),
   }
 }
 

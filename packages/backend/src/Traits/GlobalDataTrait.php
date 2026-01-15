@@ -2,25 +2,8 @@
 
 namespace Kennofizet\RewardPlay\Traits;
 
-use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
-
 trait GlobalDataTrait
 {
-    /**
-     * Get current zone id
-     */
-    protected function getCurrentZoneId()
-    {
-        return BaseModelActions::currentZoneId();
-    }
-
-    /**
-     * Get current user id
-     */
-    protected function getCurrentUserId()
-    {
-        return BaseModelActions::currentUserId();
-    }
     /**
      * Get API response with user context
      */
@@ -29,7 +12,7 @@ trait GlobalDataTrait
         return response()->json([
             'success' => true,
             'message' => $message,
-            'data' => $data,
+            'datas' => $data,
             'timestamp' => now()->toISOString()
         ], $status);
     }

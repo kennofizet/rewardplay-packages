@@ -1,12 +1,21 @@
 <template>
-  <div class="card top-coin-card">
+  <TopCoinCardSkeleton v-if="loading" />
+  <div v-else-if="error" class="card top-coin-card error-state">
+    <div class="error-content">
+      <div class="error-icon">⚠️</div>
+      <div class="error-message">{{ error }}</div>
+      <button class="error-retry" @click="$emit('retry')">{{ t('page.ranking.retry') || 'Retry' }}</button>
+    </div>
+  </div>
+  <div v-else class="card top-coin-card">
     <div class="card__header">
       <h3 class="card__title">{{ t('component.topCoin.title') }}</h3>
-      <select class="card__select" v-model="selectedPeriod" @change="handlePeriodChange">
-        <option value="now">{{ t('component.topCoin.period.now') }}</option>
-        <option value="week">{{ t('component.topCoin.period.week') }}</option>
-        <option value="month">{{ t('component.topCoin.period.month') }}</option>
-      </select>
+      <CustomSelect
+        v-model="selectedPeriod"
+        :options="periodOptions"
+        @change="handlePeriodChange"
+        trigger-class="card__select"
+      />
     </div>
     <div class="card__body">
       <ul class="list">
@@ -29,8 +38,10 @@
 </template>
 
 <script setup>
-import { ref, inject } from 'vue'
+import { ref, inject, computed } from 'vue'
 import RankingItem from './RankingItem.vue'
+import CustomSelect from '../CustomSelect.vue'
+import TopCoinCardSkeleton from './TopCoinCardSkeleton.vue'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
@@ -40,11 +51,25 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  error: {
+    type: String,
+    default: null,
+  },
 })
 
-const emit = defineEmits(['period-change'])
+const emit = defineEmits(['period-change', 'retry'])
 
 const selectedPeriod = ref('now')
+
+const periodOptions = computed(() => [
+  { value: 'now', label: t('component.topCoin.period.now') },
+  { value: 'week', label: t('component.topCoin.period.week') },
+  { value: 'month', label: t('component.topCoin.period.month') }
+])
 
 const handlePeriodChange = () => {
   emit('period-change', selectedPeriod.value)
@@ -78,23 +103,8 @@ const handlePeriodChange = () => {
 }
 
 .card__select {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: #fff;
-  font-size: 0.9rem;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.card__select:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.card__select:focus {
-  border-color: rgba(255, 255, 255, 0.4);
+  width: auto;
+  min-width: 120px;
 }
 
 .card__body {
@@ -125,5 +135,46 @@ const handlePeriodChange = () => {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.8);
   letter-spacing: 0.02em;
+}
+
+.error-state {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-content {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.error-message {
+  color: #ff6b6b;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.error-retry {
+  background: linear-gradient(135deg, #ff8c00 0%, #ffa366 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
+}
+
+.error-retry:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 140, 66, 0.4);
 }
 </style>

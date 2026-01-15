@@ -19,6 +19,24 @@ export default {
       unzipping: 'Unzipping Files',
       userData: 'Load Data User',
     },
+    manageSetting: {
+      menu: {
+        settingItems: 'Setting Items',
+      },
+      settingItems: {
+        title: 'Setting Items',
+        create: 'Create New',
+        edit: 'Edit Setting Item',
+        searchPlaceholder: 'Search by name or description...',
+        allTypes: 'All Types',
+        allZones: 'All Zones',
+        selectType: 'Select Type',
+        selectZone: 'Select Zone',
+        loading: 'Loading...',
+        saving: 'Saving...',
+        saveFailed: 'Failed',
+      },
+    },
   },
   component: {
     topMe: {
@@ -55,6 +73,7 @@ export default {
       luckyWheel: 'Lucky Wheel',
       rules: 'Rules',
       shop: 'Shop',
+      manageSetting: 'Manage Settings',
     },
     rules: {
       rulesTab: 'Rules',

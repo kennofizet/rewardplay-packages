@@ -120,7 +120,7 @@
               :class="{ active: currentFilter === 'other' }"
               @click="filterBag('other')"
             >
-              <img :src="getImageUrl('global.bracelet')" alt="Other">
+              <img :src="getImageUrl('bag.bracelet')" alt="Other">
             </div>
             <div 
               class="menu-package-right menu-item-bag item" 
@@ -182,13 +182,13 @@ const mainWeapons = computed(() => [
 
 const specialWeapons = computed(() => [
   { key: 'special-weapon-1', name: t('component.bag.necklace'), key_image: 'bag.necklace' },
-  { key: 'special-weapon-2', name: t('component.bag.bracelet'), key_image: 'global.bracelet' },
+  { key: 'special-weapon-2', name: t('component.bag.bracelet'), key_image: 'bag.bracelet' },
   { key: 'special-weapon-3', name: t('component.bag.ring'), key_image: 'bag.ring' },
   { key: 'special-weapon-4', name: t('component.bag.ring'), key_image: 'bag.ring' }
 ])
 
 const specialItems = computed(() => [
-  { key: 'special-item-1', name: t('component.bag.clothes'), key_image: 'global.clothes' },
+  { key: 'special-item-1', name: t('component.bag.clothes'), key_image: 'bag.clothes' },
   { key: 'special-item-2', name: t('component.bag.wing'), key_image: 'bag.wing' }
 ])
 
@@ -207,7 +207,6 @@ const allItems = ref({
 })
 
 // Merge user bag items with empty slots
-// Items from getUserData will be placed at the beginning
 const initializeBagItems = () => {
   const userDataValue = unref(userData)
   if (!userDataValue) return
@@ -726,6 +725,7 @@ const formatPower = (power) => {
   font-family: Nanami, sans-serif;
   height: calc(100% + 32px);
   overflow-y: auto;
+  z-index: 11;
 }
 
 .item-detail-close {

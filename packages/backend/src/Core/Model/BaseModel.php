@@ -30,19 +30,11 @@ class BaseModel extends Model
     {
         parent::boot();
 
-        // Apply global scope for company user and delete status
+        // Apply global scope for zone filtering
         static::addGlobalScope('is_in_zone', function (Builder $builder) {
-            
-            if (empty(config('rewardplay.user_zone_id_column'))) {
-                return;
-            }
-
             $table = $builder->getModel()->getTable();
-
-            $array_skips = [
-
-            ];
-
+            $array_skips = [];
+            
             if (self::tableHasColumn($table, HelperConstant::ZONE_ID_COLUMN) && !in_array($table, $array_skips)) {
                 $builder->isInZone();
             }

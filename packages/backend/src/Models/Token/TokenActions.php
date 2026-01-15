@@ -2,22 +2,18 @@
 
 namespace Kennofizet\RewardPlay\Models\Token;
 
-use Illuminate\Support\Facades\DB;
+use Kennofizet\RewardPlay\Models\User;
 
 trait TokenActions
 {
     /**
-     * Get the user from user table using DB::
+     * Get the user from user model
      * 
-     * @return object|null
+     * @return User|null
      */
     public function getUser()
     {
-        $userTable = config('rewardplay.table_user', 'users');
-        
-        return DB::table($userTable)
-            ->where('id', $this->user_id)
-            ->first();
+        return User::findById($this->user_id);
     }
 }
 

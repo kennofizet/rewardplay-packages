@@ -19,6 +19,24 @@ export default {
       unzipping: 'Đang Giải Nén Tệp',
       userData: 'Tải Dữ Liệu Người Dùng',
     },
+    manageSetting: {
+      menu: {
+        settingItems: 'Mục Cài Đặt',
+      },
+      settingItems: {
+        title: 'Mục Cài Đặt',
+        create: 'Tạo Mới',
+        edit: 'Chỉnh Sửa Mục Cài Đặt',
+        searchPlaceholder: 'Tìm kiếm theo tên hoặc mô tả...',
+        allTypes: 'Tất Cả Loại',
+        allZones: 'Tất Cả Vùng',
+        selectType: 'Chọn Loại',
+        selectZone: 'Chọn Vùng',
+        loading: 'Đang tải...',
+        saving: 'Đang lưu...',
+        saveFailed: 'Thất bại',
+      },
+    },
   },
   component: {
     topMe: {
@@ -55,6 +73,7 @@ export default {
       luckyWheel: 'Vòng Quay',
       rules: 'Luật Chơi',
       shop: 'Cửa Hàng',
+      manageSetting: 'QL Cài Đặt',
     },
     rules: {
       rulesTab: 'Thể lệ',

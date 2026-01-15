@@ -1,14 +1,14 @@
 <?php
 
-namespace Kennofizet\RewardPlay\Models\ZoneManager;
+namespace Kennofizet\RewardPlay\Models\SettingItem;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Kennofizet\RewardPlay\Models\Zone;
 
-trait ZoneManagerRelations
+trait SettingItemRelations
 {
     /**
-     * ZoneManager belongs to Zone
+     * SettingItem belongs to Zone
      * 
      * @return BelongsTo
      */

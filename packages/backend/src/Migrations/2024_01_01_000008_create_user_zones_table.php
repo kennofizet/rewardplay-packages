@@ -12,11 +12,11 @@ return new class extends Migration
     public function up()
     {
         $tablePrefix = config('rewardplay.table_prefix', '');
-        $zoneManagerTableName = $tablePrefix . 'rewardplay_zone_manager';
+        $zoneUsersTableName = $tablePrefix . 'rewardplay_zone_users';
         $userTable = config('rewardplay.table_user', 'users');
         $zonesTableName = $tablePrefix . 'rewardplay_zones';
 
-        Schema::create($zoneManagerTableName, function (Blueprint $table) use ($userTable, $zonesTableName) {
+        Schema::create($zoneUsersTableName, function (Blueprint $table) use ($userTable, $zonesTableName) {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('zone_id');
@@ -26,8 +26,8 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on($userTable)->onDelete('cascade');
             $table->foreign('zone_id')->references('id')->on($zonesTableName)->onDelete('cascade');
 
-            // Unique constraint: each zone can have only one manager
-            $table->unique('zone_id');
+            // Unique constraint: each user can only be in a zone once
+            $table->unique(['user_id', 'zone_id']);
 
             // Indexes
             $table->index('user_id');
@@ -41,9 +41,8 @@ return new class extends Migration
     public function down()
     {
         $tablePrefix = config('rewardplay.table_prefix', '');
-        $zoneManagerTableName = $tablePrefix . 'rewardplay_zone_manager';
+        $zoneUsersTableName = $tablePrefix . 'rewardplay_zone_users';
 
-        Schema::dropIfExists($zoneManagerTableName);
+        Schema::dropIfExists($zoneUsersTableName);
     }
 };
-

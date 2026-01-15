@@ -37,12 +37,4 @@ class BaseModelResponse
             'data' => $data
         ];
     }
-
-    /**
-     * Return a permission denied response
-     */
-    public static function permissionDenied(string $message = 'Permission denied'): array
-    {
-        return self::error($message, null, 403);
-    }
 }

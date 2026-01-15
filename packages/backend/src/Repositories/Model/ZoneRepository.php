@@ -6,26 +6,11 @@ use Kennofizet\RewardPlay\Models\Zone;
 
 class ZoneRepository
 {
-    public function list($filters = [])
-    {
-        $query = Zone::query();
-
-        if (!empty($filters['name'])) {
-            $query->where('name', 'like', '%'.$filters['name'].'%');
-        }
-
-        return $query->get();
-    }
-
-    public function find(int $id): ?Zone
-    {
-        return Zone::find($id);
-    }
-
     public function create(array $data): Zone
     {
         return Zone::create([
             'name' => $data['name'],
+            'server_id' => $data['server_id'] ?? null,
         ]);
     }
 
@@ -33,6 +18,7 @@ class ZoneRepository
     {
         $zone->update([
             'name' => $data['name'],
+            'server_id' => $data['server_id'] ?? $zone->server_id,
         ]);
 
         return $zone;

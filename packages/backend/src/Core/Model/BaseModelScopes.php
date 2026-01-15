@@ -10,17 +10,19 @@ trait BaseModelScopes
 {
     public function scopeReturnNull(Builder $query)
     {
-        return $query->where(1, '!=', 1);
+        return $query->whereRaw('1 != 1');
     }
 
     public function scopeIsInZone(Builder $query)
     {
-        if(empty(config('rewardplay.user_zone_id_column'))) {
-            return $query;
+        $zoneIds = BaseModelActions::currentUserZoneIds();
+        if (empty($zoneIds)) {
+            return $query->returnNull();
         }
+        
         $table = $query->getModel()->getTable();
-        return $query->where(function($q) use ($table) {
-            $q->where($table . '.' . HelperConstant::ZONE_ID_COLUMN, BaseModelActions::currentZoneId());
+        return $query->where(function($q) use ($table, $zoneIds) {
+            $q->whereIn($table . '.' . HelperConstant::ZONE_ID_COLUMN, $zoneIds);
         });
     }
 
