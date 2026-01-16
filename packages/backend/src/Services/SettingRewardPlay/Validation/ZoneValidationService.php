@@ -9,6 +9,7 @@ class ZoneValidationService
 {
     /**
      * Validate create / update zone data.
+     * Permission checks are handled by middleware.
      *
      * @throws ValidationException
      */

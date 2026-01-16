@@ -95,10 +95,13 @@ class SettingItemService
      * @param UploadedFile|null $imageFile
      * @return SettingItem
      * @throws ValidationException
+     * @throws \Exception
      */
     public function createSettingItem(array $data, ?UploadedFile $imageFile = null): SettingItem
     {
+        // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile);
+        
         return $this->settingItemRepository->create($data, $imageFile);
     }
 
@@ -110,19 +113,28 @@ class SettingItemService
      * @param UploadedFile|null $imageFile
      * @return SettingItem|null
      * @throws ValidationException
+     * @throws \Exception
      */
     public function updateSettingItem(int $id, array $data, ?UploadedFile $imageFile = null): ?SettingItem
     {
+        // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile, $id);
+        
         $settingItem = SettingItem::findById($id);
         if (!$settingItem) {
             return null;
         }
+        
+        // If updating zone_id, middleware already validated it
+        // If not updating zone_id, check existing item's zone (middleware validates on route param if needed)
+        
         return $this->settingItemRepository->update($settingItem, $data, $imageFile);
     }
 
     /**
      * Delete a setting item
+     *
+     * @throws \Exception
      */
     public function deleteSettingItem(int $id): bool
     {
@@ -130,6 +142,16 @@ class SettingItemService
         if (!$settingItem) {
             return false;
         }
+        
+        // Permission check: validate that item's zone is in user's managed zones
+        // This is done by checking if zone_id is in managed zones (from middleware)
+        if (!empty($settingItem->zone_id)) {
+            $managedZoneIds = \Kennofizet\RewardPlay\Core\Model\BaseModelActions::currentUserManagedZoneIds();
+            if (!in_array($settingItem->zone_id, $managedZoneIds)) {
+                throw new \Exception('You do not have permission to manage this zone');
+            }
+        }
+        
         return $this->settingItemRepository->delete($settingItem);
     }
 }

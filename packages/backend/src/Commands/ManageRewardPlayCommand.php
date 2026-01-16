@@ -108,6 +108,7 @@ class ManageRewardPlayCommand extends Command
 
     /**
      * Select server
+     * Command is for root admin only - no permission checks
      */
     protected function selectServer()
     {
@@ -161,6 +162,7 @@ class ManageRewardPlayCommand extends Command
 
     /**
      * Manage zones menu
+     * Command is for root admin only - no permission checks
      */
     protected function manageZones()
     {
@@ -372,6 +374,7 @@ class ManageRewardPlayCommand extends Command
 
     /**
      * Manage server managers menu
+     * Command is for root admin only - no permission checks
      */
     protected function manageServerManagers()
     {

@@ -64,4 +64,41 @@ trait BaseModelActions
         }
         return $serverId;
     }
+
+    /**
+     * Get the server ID that the current user manages (single server per user)
+     * 
+     * @return int|null
+     */
+    public static function currentUserManagedServerId(): ?int
+    {
+        return request()->attributes->get('rewardplay_user_managed_server_id');
+    }
+
+    /**
+     * Check if current user can manage a specific server
+     * Uses request attributes (no database query needed)
+     * 
+     * @param int $serverId
+     * @return bool
+     */
+    public static function canManageServer(int $serverId): bool
+    {
+        $managedServerId = self::currentUserManagedServerId();
+        return !empty($managedServerId) && $managedServerId === $serverId;
+    }
+
+    /**
+     * Check if current user can manage a specific zone
+     * Uses request attributes (no database query needed)
+     * Checks if zone is in user's managed zones
+     * 
+     * @param int $zoneId
+     * @return bool
+     */
+    public static function canManageZone(int $zoneId): bool
+    {
+        $managedZoneIds = self::currentUserManagedZoneIds();
+        return in_array($zoneId, $managedZoneIds);
+    }
 }

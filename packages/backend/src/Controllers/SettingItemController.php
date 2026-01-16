@@ -8,6 +8,8 @@ use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\Services\Model\SettingItemService;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemModelResponse;
 use Kennofizet\RewardPlay\Models\SettingItem;
+use Kennofizet\RewardPlay\Requests\StoreSettingItemRequest;
+use Kennofizet\RewardPlay\Requests\UpdateSettingItemRequest;
 
 class SettingItemController extends Controller
 {
@@ -83,19 +85,13 @@ class SettingItemController extends Controller
     /**
      * Create a new setting item
      * 
-     * @param Request $request
+     * @param StoreSettingItemRequest $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreSettingItemRequest $request): JsonResponse
     {
-        $data = $request->only([
-            'name',
-            'description',
-            'type',
-            'default_property',
-            'zone_id'
-        ]);
-
+        $data = $request->validated();
+        
         // Get image file if uploaded
         $imageFile = $request->hasFile('image') ? $request->file('image') : null;
 
@@ -107,8 +103,6 @@ class SettingItemController extends Controller
             return $this->apiResponseWithContext([
                 'setting_item' => $formattedSettingItem,
             ], 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return $this->apiErrorResponse($e->getMessage(), 422);
         } catch (\Exception $e) {
             return $this->apiErrorResponse($e->getMessage(), 500);
         }
@@ -117,19 +111,13 @@ class SettingItemController extends Controller
     /**
      * Update a setting item
      * 
-     * @param Request $request
+     * @param UpdateSettingItemRequest $request
      * @param int $id
      * @return JsonResponse
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateSettingItemRequest $request, int $id): JsonResponse
     {
-        $data = $request->only([
-            'name',
-            'description',
-            'type',
-            'default_property',
-            'zone_id'
-        ]);
+        $data = $request->validated();
 
         // Get image file if uploaded
         $imageFile = $request->hasFile('image') ? $request->file('image') : null;
@@ -147,8 +135,6 @@ class SettingItemController extends Controller
             return $this->apiResponseWithContext([
                 'setting_item' => $formattedSettingItem,
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return $this->apiErrorResponse($e->getMessage(), 422);
         } catch (\Exception $e) {
             return $this->apiErrorResponse($e->getMessage(), 500);
         }

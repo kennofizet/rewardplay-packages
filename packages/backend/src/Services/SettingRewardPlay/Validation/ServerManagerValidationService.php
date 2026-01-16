@@ -9,6 +9,7 @@ class ServerManagerValidationService
 {
     /**
      * Validate assign manager data.
+     * Permission checks are handled by middleware.
      *
      * @throws ValidationException
      */

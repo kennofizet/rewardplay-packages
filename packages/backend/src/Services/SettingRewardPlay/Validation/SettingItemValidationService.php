@@ -10,11 +10,7 @@ class SettingItemValidationService
 {
     /**
      * Validate create / update setting item data.
-     *
-     * @throws ValidationException
-     */
-    /**
-     * Validate create / update setting item data.
+     * Permission checks are handled by middleware.
      *
      * @param array $data
      * @param \Illuminate\Http\UploadedFile|null $imageFile
@@ -24,13 +20,11 @@ class SettingItemValidationService
     public function validateSettingItem(array $data, ?\Illuminate\Http\UploadedFile $imageFile = null, ?int $id = null)
     {
         $tablePrefix = config('rewardplay.table_prefix', '');
-        $tableName = $tablePrefix . 'rewardplay_settings_items';
+        $zonesTableName = $tablePrefix . 'rewardplay_zones';
 
         // Get allowed types (item types)
         $itemTypes = array_keys(SettingItemConstant::ITEM_TYPE_NAMES);
         $allowedTypesString = implode(',', $itemTypes);
-
-        $zonesTableName = $tablePrefix . 'rewardplay_zones';
 
         $rules = [
             'name' => 'required|string|max:255',

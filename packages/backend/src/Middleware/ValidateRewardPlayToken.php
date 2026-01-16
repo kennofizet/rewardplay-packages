@@ -8,6 +8,7 @@ use Kennofizet\RewardPlay\Services\TokenService;
 use Kennofizet\RewardPlay\Models\ZoneUser;
 use Kennofizet\RewardPlay\Models\ServerManager;
 use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 use Kennofizet\RewardPlay\Traits\GlobalDataTrait;
 use Illuminate\Support\Facades\DB;
 
@@ -60,11 +61,66 @@ class ValidateRewardPlayToken
         // Attach user info to request attributes (cannot be overridden by user input)
         $request->attributes->set('rewardplay_user_id', $userId);
 
-        if(empty($managedZoneIds) && empty($zoneIds)){
+        // Get the server ID that the user manages (single server per user)
+        $managedServerId = $this->getUserManagedServerId($userId);
+        $request->attributes->set('rewardplay_user_managed_server_id', $managedServerId);
+
+        if(empty($managedZoneIds) && empty($zoneIds) && empty($managedServerId)){
             return $this->apiErrorResponse('User not in any zone or not managing any server', 403);
         }
 
+        // Validate zone_id and server_id from request (if provided)
+        // User can only use their own server/zone
+        $validationError = $this->validateRequestPermissions($request, $managedServerId, $managedZoneIds);
+        if ($validationError) {
+            return $validationError;
+        }
+
         return $next($request);
+    }
+
+    /**
+     * Validate zone_id and server_id from request
+     * User can only use their managed server/zone
+     * Validates both request input and route parameters
+     *
+     * @param Request $request
+     * @param int|null $managedServerId
+     * @param array $managedZoneIds
+     * @return \Illuminate\Http\JsonResponse|null
+     */
+    protected function validateRequestPermissions(Request $request, ?int $managedServerId, array $managedZoneIds)
+    {
+        // Validate server_id if provided in request
+        if ($request->has('server_id')) {
+            $requestServerId = $request->input('server_id');
+            if (!empty($requestServerId) && $requestServerId != $managedServerId) {
+                return $this->apiErrorResponse('You do not have permission to manage this server', 403);
+            }
+        }
+
+        // Validate zone_id if provided in request
+        if ($request->has('zone_id')) {
+            $requestZoneId = $request->input('zone_id');
+            if (!empty($requestZoneId) && !in_array($requestZoneId, $managedZoneIds)) {
+                return $this->apiErrorResponse('You do not have permission to manage this zone', 403);
+            }
+        }
+
+        // Validate zone_id from route parameters (for update/delete operations)
+        // Check if route has 'zone' or 'zoneId' parameter
+        $routeZoneId = $request->route('zone') ?? $request->route('zoneId');
+        if (!empty($routeZoneId) && !in_array($routeZoneId, $managedZoneIds)) {
+            return $this->apiErrorResponse('You do not have permission to manage this zone', 403);
+        }
+
+        // Validate server_id from route parameters
+        $routeServerId = $request->route('server') ?? $request->route('serverId');
+        if (!empty($routeServerId) && $routeServerId != $managedServerId) {
+            return $this->apiErrorResponse('You do not have permission to manage this server', 403);
+        }
+
+        return null;
     }
 
     /**
@@ -147,4 +203,36 @@ class ValidateRewardPlayToken
         }));
     }
 
+    /**
+     * Get the server ID that the user manages (single server per user)
+     * User can only manage one server - the server they are assigned to
+     *
+     * @param int $userId
+     * @return int|null
+     */
+    protected function getUserManagedServerId(int $userId): ?int
+    {
+        $serverColumn = config('rewardplay.user_server_id_column');
+        if (empty($serverColumn)) {
+            return null;
+        }
+        
+        $user = $this->resolveUserWithServer($userId, $serverColumn);
+        if (empty($user)) {
+            return null;
+        }
+        
+        $serverId = $user->{$serverColumn};
+        if (empty($serverId)) {
+            return null;
+        }
+        
+        // Check if user is a manager for this server
+        $checkManagedServer = ServerManager::byUser($userId)->byServer($serverId)->first();
+        if (empty($checkManagedServer)) {
+            return null;
+        }
+        
+        return $serverId;
+    }
 }
