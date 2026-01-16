@@ -21,10 +21,6 @@ import ComingSoonPage from '../pages/ComingSoonPage.vue'
 import ManageSettingPage from '../pages/game/ManageSettingPage.vue'
 
 const props = defineProps({
-  imagesUrl: {
-    type: String,
-    default: ''
-  },
   rotate: {
     type: Boolean,
     default: true

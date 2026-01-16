@@ -612,8 +612,7 @@ const checkUser = async () => {
       // Wait a moment to show success icon
       setTimeout(() => {
         emit('login-success', {
-          ...response.data.datas.user,
-          imagesUrl: response.data.datas.images_url || ''
+          ...response.data.datas.user
         })
       }, 500)
     } else {

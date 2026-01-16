@@ -18,6 +18,7 @@ export default {
       assets: 'Đang Tải Tài Nguyên',
       unzipping: 'Đang Giải Nén Tệp',
       userData: 'Tải Dữ Liệu Người Dùng',
+      customImages: 'Đang Tải Hình Ảnh Tùy Chỉnh',
     },
     manageSetting: {
       menu: {

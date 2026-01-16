@@ -26,7 +26,6 @@ defineProps({
 .reward-ico {
   display: inline-block;
   background-color: #fff;
-  -webkit-mask: url('https://image.flaticon.com/icons/svg/1208/1208120.svg') no-repeat 100% 50%;
   -webkit-mask-size: 18px;
   height: 18px;
   width: 18px; 

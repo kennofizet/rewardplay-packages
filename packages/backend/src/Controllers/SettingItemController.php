@@ -10,6 +10,7 @@ use Kennofizet\RewardPlay\Models\SettingItem\SettingItemModelResponse;
 use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Requests\StoreSettingItemRequest;
 use Kennofizet\RewardPlay\Requests\UpdateSettingItemRequest;
+use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 
 class SettingItemController extends Controller
 {
@@ -171,6 +172,60 @@ class SettingItemController extends Controller
         if ($request->expectsJson()) {
             return $this->apiResponseWithContext([
                 'item_types' => SettingItem::getItemTypes(),
+            ]);
+        }
+
+        return $this->apiErrorResponse();
+    }
+
+    /**
+     * Get custom images list for loading
+     * Returns images from setting items that have images from all zones user is in or manages
+     * Used for caching images on frontend - no zone_id parameter needed
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getCustomImages(Request $request): JsonResponse
+    {
+        // Get all zone IDs user is in OR manages
+        // currentUserZoneIds also includes managed zones
+        $userZoneIds = BaseModelActions::currentUserZoneIds();
+        
+        // Merge and get unique zone IDs
+        $allZoneIds = array_unique($userZoneIds);
+        
+        if (empty($allZoneIds)) {
+            return $this->apiResponseWithContext([
+                'images' => [],
+                'total' => 0,
+            ]);
+        }
+        
+        // Get setting items with images from all accessible zones
+        $settingItems = SettingItem::whereIn('zone_id', $allZoneIds)
+            ->whereNotNull('image')
+            ->where('image', '!=', '')
+            ->get();
+        
+        $images = [];
+        
+        foreach ($settingItems as $item) {
+            if (!empty($item->image)) {
+                // Get full URL using GlobalDataTrait method
+                $fullUrl = $this->getImageFullUrl($item->image);
+                
+                $images[] = [
+                    'url' => $fullUrl,
+                    'type' => $item->type,
+                ];
+            }
+        }
+        
+        if ($request->expectsJson()) {
+            return $this->apiResponseWithContext([
+                'images' => $images,
+                'total' => count($images),
             ]);
         }
 

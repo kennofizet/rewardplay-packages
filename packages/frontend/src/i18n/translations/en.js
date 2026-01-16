@@ -18,6 +18,7 @@ export default {
       assets: 'Loading Assets',
       unzipping: 'Unzipping Files',
       userData: 'Load Data User',
+      customImages: 'Loading Custom Images',
     },
     manageSetting: {
       menu: {

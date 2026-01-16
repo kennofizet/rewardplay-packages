@@ -24,6 +24,7 @@
           unzipping: translator('page.loading.unzipping'),
           userData: translator('page.loading.userData')
         }"
+        :loading-sub-texts="loadingSubTexts"
         @loading-complete="handleLoadingComplete"
       />
       
@@ -32,7 +33,7 @@
         class="game-content"
         :class="{ 'content-hidden': isLoading || showLogin }"
       >
-        <MainGame :images-url="imagesUrl" :rotate="rotate" />
+        <MainGame :rotate="rotate" />
       </div>
     </div>
   </div>
@@ -112,16 +113,18 @@ const isLoading = ref(false)
 const loadingProgress = ref(0)
 const unzipProgress = ref(0)
 const userDataProgress = ref(0)
+const loadingSubTexts = ref({
+  assets: '',
+  unzipping: '',
+  userData: ''
+})
 const loginError = ref(null)
-const imagesUrl = ref('')
 const gameApi = inject('gameApi', null)
 const injectedBackendUrl = inject('backendUrl', '')
 
 const handleLoginSuccess = async (userData) => {
   showLogin.value = false
   loginError.value = null
-  // Save images URL from user data
-  imagesUrl.value = userData.imagesUrl || ''
   // Start loading resources after successful login
   isLoading.value = true
   await loadUserData()
@@ -141,9 +144,6 @@ const handleLoadingComplete = () => {
 
 const loadAllResources = async () => {
   const loader = new ResourceLoader()
-  if (imagesUrl.value) {
-    loader.setImagesBaseUrl(imagesUrl.value)
-  }
   // Set backendUrl from parent prop or injected value
   const backendUrl = props.backendUrl || injectedBackendUrl
   if (backendUrl) {
@@ -172,31 +172,62 @@ const loadAllResources = async () => {
     })
   }
 
-  loader.onUnzipProgressCallback((progress) => {
+  // Set unzip progress callback with sub-text
+  loader.onUnzipProgressCallback((progress, current, total) => {
     unzipProgress.value = Math.min(progress, 100)
+    if (progress < 100) {
+      if (current !== undefined && total !== undefined) {
+        loadingSubTexts.value.unzipping = `Unzipping files... ${current}/${total}`
+      } else {
+        loadingSubTexts.value.unzipping = 'Unzipping files...'
+      }
+    } else {
+      loadingSubTexts.value.unzipping = 'Unzip complete'
+    }
   })
 
-  // Set progress callbacks
-  loader.onLoadingProgressCallback((progress) => {
+  // Set loading progress callback with sub-text (includes custom images)
+  loader.onLoadingProgressCallback((progress, current, total, currentFileName) => {
     loadingProgress.value = Math.min(progress, 100)
+    if (progress < 100) {
+      if (currentFileName) {
+        // Show custom image being loaded
+        loadingSubTexts.value.assets = `Loading ${current}/${total} files - ${currentFileName}`
+      } else if (total !== undefined && total > 0) {
+        // Show general progress with current/total
+        if (current !== undefined) {
+          loadingSubTexts.value.assets = `Loading assets... ${current}/${total}`
+        } else {
+          loadingSubTexts.value.assets = `Loading assets... 0/${total}`
+        }
+      } else {
+        loadingSubTexts.value.assets = 'Loading assets...'
+      }
+    } else {
+      loadingSubTexts.value.assets = 'Assets loaded'
+    }
   })
 
   try {
+    // Load base resources first
     await loader.load()
     
     // Ensure loading reaches 100%
     if (loadingProgress.value < 100) {
       loadingProgress.value = 100
+      loadingSubTexts.value.assets = 'Assets loaded'
     }
     
     // Ensure unzip reaches 100%
     if (unzipProgress.value < 100) {
       unzipProgress.value = 100
+      loadingSubTexts.value.unzipping = 'Unzip complete'
     }
   } catch (error) {
     console.error('Error loading resources:', error)
     // Still show as loaded even if some resources failed
     loadingProgress.value = 100
+    loadingSubTexts.value.assets = 'Assets load failed'
   }
 
   isLoading.value = false
@@ -206,23 +237,36 @@ const loadUserData = async () => {
   if (!gameApi) {
     console.warn('gameApi not available, skipping user data load')
     userDataProgress.value = 100
+    loadingSubTexts.value.userData = 'No API available'
     return
   }
 
   try {
     userDataProgress.value = 0
+    const totalSteps = 10 // Total steps for progress calculation
+    let currentStep = 0
+    loadingSubTexts.value.userData = `Loading user data... ${currentStep}/${totalSteps}`
     
     // Simulate progress for better UX
     const progressInterval = setInterval(() => {
-      if (userDataProgress.value < 90) {
-        userDataProgress.value += 10
+      if (currentStep < totalSteps - 1) {
+        currentStep++
+        userDataProgress.value = (currentStep / totalSteps) * 100
+        loadingSubTexts.value.userData = `Loading user data... ${currentStep}/${totalSteps}`
       }
     }, 100)
 
     const response = await gameApi.getUserData()
     
     clearInterval(progressInterval)
+    currentStep = totalSteps
     userDataProgress.value = 100
+    loadingSubTexts.value.userData = `Loading user data... ${currentStep}/${totalSteps}`
+    
+    // Small delay to show completion
+    setTimeout(() => {
+      loadingSubTexts.value.userData = 'User data loaded'
+    }, 200)
     
     if (response.data && response.data.success) {
       // Store user data to be provided to child components
@@ -232,14 +276,14 @@ const loadUserData = async () => {
     console.error('Error loading user data:', error)
     // Still mark as complete even if failed
     userDataProgress.value = 100
+    loadingSubTexts.value.userData = 'User data load failed'
   }
 }
 
 // Create translator for the specified language
 const translator = createTranslator(props.language)
 
-// Provide images URL, language, and userData to all child components
-provide('imagesUrl', imagesUrl)
+// Provide language and userData to all child components
 provide('language', props.language)
 provide('translator', translator)
 

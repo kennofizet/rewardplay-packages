@@ -39,6 +39,7 @@ Route::prefix($prefix)
         // Setting Items CRUD
         Route::get('/setting-items', [SettingItemController::class, 'index']);
         Route::get('/setting-items/types', [SettingItemController::class, 'getItemTypes']);
+        Route::get('/setting-items/custom-images', [SettingItemController::class, 'getCustomImages']);
         Route::get('/setting-items/{id}', [SettingItemController::class, 'show']);
         Route::post('/setting-items', [SettingItemController::class, 'store']);
         Route::patch('/setting-items/{id}', [SettingItemController::class, 'update']); // Support FormData

@@ -42,6 +42,7 @@ export function createGameApi(backendUrl, token) {
     getSettingItems: (params) => api.get('/api/rewardplay/setting-items', { params }),
     getSettingItem: (id) => api.get(`/api/rewardplay/setting-items/${id}`),
     getItemTypes: () => api.get('/api/rewardplay/setting-items/types'),
+    getCustomImages: (params) => api.get('/api/rewardplay/setting-items/custom-images', { params }),
     createSettingItem: (data) => {
       // If data is FormData, use multipart/form-data, otherwise use JSON
       if (data instanceof FormData) {

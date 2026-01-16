@@ -126,7 +126,17 @@ class AuthController extends Controller
         // Merge custom manifest into main manifest (custom entries replace manifest entries)
         $manifest = array_merge($manifest, $customManifest);
 
-        return response()->json($manifest)
+        // Convert all manifest values to full URLs
+        $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
+        $manifestWithFullUrls = [];
+        foreach ($manifest as $key => $value) {
+            // Value is relative path (e.g., global/coin.png or custom/global/coin.png)
+            // Convert to full URL
+            $fullPath = $imagesFolder . '/' . ltrim($value, '/');
+            $manifestWithFullUrls[$key] = $this->getImageFullUrl($fullPath);
+        }
+
+        return response()->json($manifestWithFullUrls)
             ->header('Access-Control-Allow-Origin', '*')
             ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
             ->header('Access-Control-Allow-Headers', 'Content-Type');
@@ -149,13 +159,7 @@ class AuthController extends Controller
             return $this->apiErrorResponse('Invalid or inactive token', 401);
         }
 
-        // Get images folder URL from config
-        $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
-        $imagesUrl = url($imagesFolder);
-
-        return $this->apiResponseWithContext([
-            'images_url' => $imagesUrl,
-        ]);
+        return $this->apiResponseWithContext();
     }
 
     /**

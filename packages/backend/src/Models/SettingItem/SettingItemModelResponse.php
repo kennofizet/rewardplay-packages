@@ -37,7 +37,7 @@ class SettingItemModelResponse extends BaseModelResponse
                 'description' => $settingItem->description,
                 'type' => $settingItem->type,
                 'default_property' => $settingItem->default_property,
-                'image' => $settingItem->image,
+                'image' => self::getImageFullUrl($settingItem->image),
                 'zone_id' => $settingItem->zone_id,
                 'zone' => $settingItem->zone ? [
                     'id' => $settingItem->zone->id,
@@ -65,7 +65,7 @@ class SettingItemModelResponse extends BaseModelResponse
             'description' => $settingItem->description,
             'type' => $settingItem->type,
             'default_property' => $settingItem->default_property,
-            'image' => $settingItem->image,
+            'image' => self::getImageFullUrl($settingItem->image),
             'zone_id' => $settingItem->zone_id,
         ];
     }

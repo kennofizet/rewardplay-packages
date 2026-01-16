@@ -37,7 +37,6 @@
       <MenuItem 
         is-icon 
         is-light 
-        icon-image="test.png"
         @click="$emit('icon-click', 'icon1')"
       >
         &nbsp;
@@ -46,7 +45,6 @@
       <MenuItem 
         is-icon 
         is-light 
-        icon-image="test.png"
         @click="$emit('icon-click', 'icon2')"
       >
         &nbsp;
@@ -55,7 +53,6 @@
       <MenuItem 
         is-icon 
         is-dark 
-        icon-image="test.png"
         @click="$emit('icon-click', 'icon3')"
       >
         &nbsp;

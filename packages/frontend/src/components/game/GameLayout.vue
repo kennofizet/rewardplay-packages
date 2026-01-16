@@ -71,7 +71,6 @@ const calculateScale = () => {
   const containerRect = mainWrapper.value.getBoundingClientRect()
   let viewportWidth = containerRect.width
   let viewportHeight = containerRect.height
-  console.log('viewportWidth', viewportWidth)
   
   // Check if we need to rotate (portrait mode)
   const isPortrait = viewportWidth < viewportHeight
