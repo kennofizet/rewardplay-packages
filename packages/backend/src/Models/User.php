@@ -20,6 +20,16 @@ class User extends Model
         HelperConstant::ZONE_ID_COLUMN
     ];
 
+    /**
+     * Get the table name with prefix
+     * 
+     * @return string
+     */
+    public function getTable()
+    {
+        return config('rewardplay.table_user', 'users');
+    }
+
     protected static function boot()
     {
         parent::boot();

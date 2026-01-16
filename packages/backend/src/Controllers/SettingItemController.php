@@ -6,6 +6,7 @@ use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\Services\Model\SettingItemService;
+use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemModelResponse;
 use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Requests\StoreSettingItemRequest;
@@ -15,10 +16,14 @@ use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 class SettingItemController extends Controller
 {
     protected SettingItemService $settingItemService;
+    protected ZoneService $zoneService;
 
-    public function __construct(SettingItemService $settingItemService)
-    {
+    public function __construct(
+        SettingItemService $settingItemService,
+        ZoneService $zoneService
+    ) {
         $this->settingItemService = $settingItemService;
+        $this->zoneService = $zoneService;
     }
 
     /**
@@ -42,7 +47,7 @@ class SettingItemController extends Controller
         $settingItems = $this->settingItemService->getSettingItems($filters, $reponseMode);
 
         // Get zones user can manage
-        $zones = SettingItem::getZonesUserCanManage();
+        $zones = $this->zoneService->getZonesUserCanManage();
 
         if ($request->expectsJson()) {
             $formattedSettingItems = SettingItemModelResponse::formatSettingItems($settingItems, $reponseMode);
@@ -176,6 +181,35 @@ class SettingItemController extends Controller
         }
 
         return $this->apiErrorResponse();
+    }
+
+    /**
+     * Get items for a zone (for selecting items in set)
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getItemsForZone(Request $request): JsonResponse
+    {
+        $zoneId = $request->input('zone_id');
+        
+        if (!$zoneId) {
+            return $this->apiErrorResponse('Zone ID is required', 400);
+        }
+
+        try {
+            $items = $this->settingItemService->getItemsForZone($zoneId);
+
+            if ($request->expectsJson()) {
+                return $this->apiResponseWithContext([
+                    'items' => $items,
+                ]);
+            }
+
+            return $this->apiErrorResponse();
+        } catch (\Exception $e) {
+            return $this->apiErrorResponse($e->getMessage(), 400);
+        }
     }
 
     /**

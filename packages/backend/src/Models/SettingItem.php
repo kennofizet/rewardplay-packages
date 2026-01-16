@@ -22,8 +22,7 @@ class SettingItem extends BaseModel
      */
     public function getTable()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . 'rewardplay_settings_items';
+        return self::getPivotTableName('rewardplay_settings_items');
     }
 
     /**

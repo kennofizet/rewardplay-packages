@@ -4,6 +4,7 @@ namespace Kennofizet\RewardPlay\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
+use Kennofizet\RewardPlay\Models\Zone;
 
 class StoreSettingItemRequest extends FormRequest
 {
@@ -20,8 +21,7 @@ class StoreSettingItemRequest extends FormRequest
      */
     public function rules(): array
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $zonesTableName = $tablePrefix . 'rewardplay_zones';
+        $zonesTableName = (new Zone())->getTable();
         
         $itemTypes = array_keys(SettingItemConstant::ITEM_TYPE_NAMES);
         $allowedTypesString = implode(',', $itemTypes);

@@ -3,6 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Kennofizet\RewardPlay\Models\ServerManager;
+use Kennofizet\RewardPlay\Models\User;
 
 return new class extends Migration
 {
@@ -11,9 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $serverManagersTableName = $tablePrefix . 'rewardplay_server_managers';
-        $userTable = config('rewardplay.table_user', 'users');
+        $serverManagersTableName = (new ServerManager())->getTable();
+        $userTable = (new User())->getTable();
 
         Schema::create($serverManagersTableName, function (Blueprint $table) use ($userTable) {
             $table->id();
@@ -38,8 +39,7 @@ return new class extends Migration
      */
     public function down()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $serverManagersTableName = $tablePrefix . 'rewardplay_server_managers';
+        $serverManagersTableName = (new ServerManager())->getTable();
 
         Schema::dropIfExists($serverManagersTableName);
     }

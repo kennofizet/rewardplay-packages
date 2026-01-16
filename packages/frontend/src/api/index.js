@@ -66,6 +66,24 @@ export function createGameApi(backendUrl, token) {
       return api.put(`/api/rewardplay/setting-items/${id}`, data)
     },
     deleteSettingItem: (id) => api.delete(`/api/rewardplay/setting-items/${id}`),
+
+    // Setting Options CRUD
+    getSettingOptions: (params) => api.get('/api/rewardplay/setting-options', { params }),
+    getSettingOption: (id) => api.get(`/api/rewardplay/setting-options/${id}`),
+    createSettingOption: (data) => api.post('/api/rewardplay/setting-options', data),
+    updateSettingOption: (id, data) => api.put(`/api/rewardplay/setting-options/${id}`, data),
+    deleteSettingOption: (id) => api.delete(`/api/rewardplay/setting-options/${id}`),
+
+    // Stats
+    getConversionKeys: () => api.get('/api/rewardplay/stats/conversion-keys'),
+
+    // Setting Item Sets CRUD
+    getSettingItemSets: (params) => api.get('/api/rewardplay/setting-item-sets', { params }),
+    getSettingItemSet: (id) => api.get(`/api/rewardplay/setting-item-sets/${id}`),
+    getItemsForZone: (params) => api.get('/api/rewardplay/setting-items/items-for-zone', { params }),
+    createSettingItemSet: (data) => api.post('/api/rewardplay/setting-item-sets', data),
+    updateSettingItemSet: (id, data) => api.put(`/api/rewardplay/setting-item-sets/${id}`, data),
+    deleteSettingItemSet: (id) => api.delete(`/api/rewardplay/setting-item-sets/${id}`),
   }
 }
 

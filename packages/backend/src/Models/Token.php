@@ -21,8 +21,7 @@ class Token extends BaseModel
      */
     public function getTable()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . 'rewardplay_tokens';
+        return self::getPivotTableName('rewardplay_tokens');
     }
 
     /**

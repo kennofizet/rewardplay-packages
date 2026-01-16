@@ -133,7 +133,8 @@ class ValidateRewardPlayToken
     protected function resolveUserWithServer(int $userId, ?string $serverColumn = null)
     {
         // Dont use User model because it runing before set server id to request attributes
-        $table_user = config('rewardplay.table_user', 'users');
+        // But we can use getTable() method which just returns the table name from config
+        $table_user = (new \Kennofizet\RewardPlay\Models\User())->getTable();
         $user = DB::table($table_user)->where('id', $userId)
             ->first();
 

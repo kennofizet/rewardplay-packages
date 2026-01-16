@@ -5,6 +5,7 @@ namespace Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
+use Kennofizet\RewardPlay\Models\Zone;
 
 class SettingItemValidationService
 {
@@ -19,8 +20,7 @@ class SettingItemValidationService
      */
     public function validateSettingItem(array $data, ?\Illuminate\Http\UploadedFile $imageFile = null, ?int $id = null)
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $zonesTableName = $tablePrefix . 'rewardplay_zones';
+        $zonesTableName = (new Zone())->getTable();
 
         // Get allowed types (item types)
         $itemTypes = array_keys(SettingItemConstant::ITEM_TYPE_NAMES);

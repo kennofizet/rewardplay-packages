@@ -22,19 +22,25 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
 import SettingItemsListPage from './manage-setting/SettingItemsListPage.vue'
+import SettingOptionsListPage from './manage-setting/SettingOptionsListPage.vue'
+import SettingItemSetsListPage from './manage-setting/SettingItemSetsListPage.vue'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
 const menuItems = [
-  { key: 'setting-items', label: t('page.manageSetting.menu.settingItems') || 'Setting Items' }
+  { key: 'setting-items', label: t('page.manageSetting.menu.settingItems') || 'Setting Items' },
+  { key: 'setting-options', label: t('page.manageSetting.menu.settingOptions') || 'Setting Options' },
+  { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets') || 'Item Sets' }
 ]
 
 const currentPage = ref('setting-items')
 
 const currentPageComponent = computed(() => {
   const pageMap = {
-    'setting-items': SettingItemsListPage
+    'setting-items': SettingItemsListPage,
+    'setting-options': SettingOptionsListPage,
+    'setting-item-sets': SettingItemSetsListPage
   }
   return pageMap[currentPage.value] || SettingItemsListPage
 })

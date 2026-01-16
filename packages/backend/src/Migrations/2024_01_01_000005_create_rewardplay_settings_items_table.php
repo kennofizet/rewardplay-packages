@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Kennofizet\RewardPlay\Models\SettingItem;
 
 return new class extends Migration
 {
@@ -11,8 +12,7 @@ return new class extends Migration
      */
     public function up()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $settingsItemsTableName = $tablePrefix . 'rewardplay_settings_items';
+        $settingsItemsTableName = (new SettingItem())->getTable();
 
         Schema::create($settingsItemsTableName, function (Blueprint $table) {
             $table->id();
@@ -32,8 +32,7 @@ return new class extends Migration
      */
     public function down()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $settingsItemsTableName = $tablePrefix . 'rewardplay_settings_items';
+        $settingsItemsTableName = (new SettingItem())->getTable();
 
         Schema::dropIfExists($settingsItemsTableName);
     }

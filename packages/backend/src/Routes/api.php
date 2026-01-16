@@ -6,6 +6,9 @@ use Kennofizet\RewardPlay\Controllers\AuthController;
 use Kennofizet\RewardPlay\Controllers\RankingController;
 use Kennofizet\RewardPlay\Controllers\UserController;
 use Kennofizet\RewardPlay\Controllers\SettingItemController;
+use Kennofizet\RewardPlay\Controllers\SettingOptionController;
+use Kennofizet\RewardPlay\Controllers\SettingItemSetController;
+use Kennofizet\RewardPlay\Controllers\StatsController;
 use Kennofizet\RewardPlay\Middleware\ValidateRewardPlayToken;
 use Kennofizet\RewardPlay\Middleware\ValidatorRequestMiddleware;
 
@@ -40,11 +43,31 @@ Route::prefix($prefix)
         Route::get('/setting-items', [SettingItemController::class, 'index']);
         Route::get('/setting-items/types', [SettingItemController::class, 'getItemTypes']);
         Route::get('/setting-items/custom-images', [SettingItemController::class, 'getCustomImages']);
+        Route::get('/setting-items/items-for-zone', [SettingItemController::class, 'getItemsForZone']);
         Route::get('/setting-items/{id}', [SettingItemController::class, 'show']);
         Route::post('/setting-items', [SettingItemController::class, 'store']);
         Route::patch('/setting-items/{id}', [SettingItemController::class, 'update']); // Support FormData
         Route::put('/setting-items/{id}', [SettingItemController::class, 'update']);
         Route::delete('/setting-items/{id}', [SettingItemController::class, 'destroy']);
+
+        // Setting Options CRUD
+        Route::get('/setting-options', [SettingOptionController::class, 'index']);
+        Route::get('/setting-options/{id}', [SettingOptionController::class, 'show']);
+        Route::post('/setting-options', [SettingOptionController::class, 'store']);
+        Route::patch('/setting-options/{id}', [SettingOptionController::class, 'update']);
+        Route::put('/setting-options/{id}', [SettingOptionController::class, 'update']);
+        Route::delete('/setting-options/{id}', [SettingOptionController::class, 'destroy']);
+
+        // Stats
+        Route::get('/stats/conversion-keys', [StatsController::class, 'getConversionKeys']);
+
+        // Setting Item Sets CRUD
+        Route::get('/setting-item-sets', [SettingItemSetController::class, 'index']);
+        Route::get('/setting-item-sets/{id}', [SettingItemSetController::class, 'show']);
+        Route::post('/setting-item-sets', [SettingItemSetController::class, 'store']);
+        Route::patch('/setting-item-sets/{id}', [SettingItemSetController::class, 'update']);
+        Route::put('/setting-item-sets/{id}', [SettingItemSetController::class, 'update']);
+        Route::delete('/setting-item-sets/{id}', [SettingItemSetController::class, 'destroy']);
         Route::options('/manifest', function () {
             return response('', 200)
                 ->header('Access-Control-Allow-Origin', '*')

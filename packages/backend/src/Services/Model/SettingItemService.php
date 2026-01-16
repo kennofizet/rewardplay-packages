@@ -7,6 +7,7 @@ use Kennofizet\RewardPlay\Models\SettingItem\SettingItemRelationshipSetting;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Kennofizet\RewardPlay\Repositories\Model\SettingItemRepository;
 use Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation\SettingItemValidationService;
+use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
 
@@ -14,13 +15,16 @@ class SettingItemService
 {
     protected $settingItemRepository;
     protected $validation;
+    protected ZoneService $zoneService;
 
     public function __construct(
         SettingItemRepository $settingItemRepository,
-        SettingItemValidationService $validation
+        SettingItemValidationService $validation,
+        ZoneService $zoneService
     ) {
         $this->settingItemRepository = $settingItemRepository;
         $this->validation = $validation;
+        $this->zoneService = $zoneService;
     }
 
     /**
@@ -46,7 +50,7 @@ class SettingItemService
         $zoneId = $filters['zone_id'] ?? null;
         if (empty($zoneId)) {
             // Get zones user can manage and use first one
-            $zones = SettingItem::getZonesUserCanManage();
+            $zones = $this->zoneService->getZonesUserCanManage();
             if (!empty($zones)) {
                 $zoneId = $zones[0]['id'];
             }
@@ -153,6 +157,36 @@ class SettingItemService
         }
         
         return $this->settingItemRepository->delete($settingItem);
+    }
+
+    /**
+     * Get items for a zone (for selecting items in set)
+     * 
+     * @param int $zoneId
+     * @return array
+     * @throws \Exception
+     */
+    public function getItemsForZone(int $zoneId): array
+    {
+        if (!$zoneId) {
+            throw new \Exception('Zone ID is required');
+        }
+
+        // Get items from the zone
+        $items = SettingItem::byZone($zoneId)->get();
+
+        // Format items for response
+        $formattedItems = $items->map(function($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'slug' => $item->slug,
+                'type' => $item->type,
+                'image' => \Kennofizet\RewardPlay\Core\Model\BaseModelResponse::getImageFullUrl($item->image),
+            ];
+        })->toArray();
+
+        return $formattedItems;
     }
 }
 

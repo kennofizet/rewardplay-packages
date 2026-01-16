@@ -1,0 +1,22 @@
+<?php
+
+namespace Kennofizet\RewardPlay\Models\SettingOption;
+
+class SettingOptionRelationshipSetting
+{
+    /**
+     * Build array of relationships to eager load based on mode
+     * 
+     * @param string|null $mode
+     * @return array
+     */
+    public static function buildWithArray(?string $mode = null): array
+    {
+        $with = [];
+
+        // Always load zone relationship
+        $with[] = 'zone';
+
+        return $with;
+    }
+}

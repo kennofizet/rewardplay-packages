@@ -94,5 +94,28 @@ class ZoneService
         
         return $this->zoneRepository->delete($zone);
     }
+
+    /**
+     * Get zones that current user can manage
+     * 
+     * @return array
+     */
+    public function getZonesUserCanManage(): array
+    {
+        $zoneIds = BaseModelActions::currentUserManagedZoneIds();
+        if (empty($zoneIds)) {
+            return [];
+        }
+
+        $zones = Zone::byZoneIds($zoneIds)
+            ->get();
+
+        return $zones->map(function($zone) {
+            return [
+                'id' => $zone->id,
+                'name' => $zone->name,
+            ];
+        })->toArray();
+    }
 }
 

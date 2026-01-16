@@ -46,7 +46,7 @@ class BaseModel extends Model
                 $table = $builder->getModel()->getTable();
 
                 $array_skips = [
-                    config('rewardplay.table_user', 'users')
+                    (new \Kennofizet\RewardPlay\Models\User())->getTable()
                 ];
                 
                 if (self::tableHasColumn($table, HelperConstant::IS_DELETED_STATUS_COLUMN) && !in_array($table, $array_skips)) {
@@ -55,6 +55,19 @@ class BaseModel extends Model
             } catch (\Exception $e) {
             }
         });
+    }
+
+    /**
+     * Get table name with prefix
+     * Use this in all model's getTable() method
+     * 
+     * @param string $tableName - Table name without prefix (e.g., 'rewardplay_tokens', 'rewardplay_setting_item_set_items')
+     * @return string
+     */
+    protected static function getPivotTableName(string $tableName): string
+    {
+        $tablePrefix = config('rewardplay.table_prefix', '');
+        return $tablePrefix . $tableName;
     }
 
 }

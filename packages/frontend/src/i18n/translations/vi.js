@@ -23,6 +23,8 @@ export default {
     manageSetting: {
       menu: {
         settingItems: 'Mục Cài Đặt',
+        settingOptions: 'Tùy Chọn Cài Đặt',
+        settingItemSets: 'Bộ Vật Phẩm',
       },
       settingItems: {
         title: 'Mục Cài Đặt',
@@ -32,6 +34,26 @@ export default {
         allTypes: 'Tất Cả Loại',
         allZones: 'Tất Cả Vùng',
         selectType: 'Chọn Loại',
+        selectZone: 'Chọn Vùng',
+        loading: 'Đang tải...',
+        saving: 'Đang lưu...',
+        saveFailed: 'Thất bại',
+      },
+      settingOptions: {
+        title: 'Tùy Chọn Cài Đặt',
+        create: 'Tạo Mới',
+        edit: 'Chỉnh Sửa Tùy Chọn Cài Đặt',
+        searchPlaceholder: 'Tìm kiếm theo tên...',
+        loading: 'Đang tải...',
+        saving: 'Đang lưu...',
+        saveFailed: 'Thất bại',
+      },
+      settingItemSets: {
+        title: 'Bộ Vật Phẩm',
+        create: 'Tạo Mới',
+        edit: 'Chỉnh Sửa Bộ Vật Phẩm',
+        searchPlaceholder: 'Tìm kiếm theo tên...',
+        allZones: 'Tất Cả Vùng',
         selectZone: 'Chọn Vùng',
         loading: 'Đang tải...',
         saving: 'Đang lưu...',

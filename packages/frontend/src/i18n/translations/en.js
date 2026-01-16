@@ -23,6 +23,8 @@ export default {
     manageSetting: {
       menu: {
         settingItems: 'Setting Items',
+        settingOptions: 'Setting Options',
+        settingItemSets: 'Item Sets',
       },
       settingItems: {
         title: 'Setting Items',
@@ -32,6 +34,26 @@ export default {
         allTypes: 'All Types',
         allZones: 'All Zones',
         selectType: 'Select Type',
+        selectZone: 'Select Zone',
+        loading: 'Loading...',
+        saving: 'Saving...',
+        saveFailed: 'Failed',
+      },
+      settingOptions: {
+        title: 'Setting Options',
+        create: 'Create New',
+        edit: 'Edit Setting Option',
+        searchPlaceholder: 'Search by name...',
+        loading: 'Loading...',
+        saving: 'Saving...',
+        saveFailed: 'Failed',
+      },
+      settingItemSets: {
+        title: 'Item Sets',
+        create: 'Create New',
+        edit: 'Edit Item Set',
+        searchPlaceholder: 'Search by name...',
+        allZones: 'All Zones',
         selectZone: 'Select Zone',
         loading: 'Loading...',
         saving: 'Saving...',
