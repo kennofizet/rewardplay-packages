@@ -29,9 +29,9 @@ const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
 const menuItems = [
-  { key: 'setting-items', label: t('page.manageSetting.menu.settingItems') || 'Setting Items' },
-  { key: 'setting-options', label: t('page.manageSetting.menu.settingOptions') || 'Setting Options' },
-  { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets') || 'Item Sets' }
+  { key: 'setting-items', label: t('page.manageSetting.menu.settingItems') },
+  { key: 'setting-options', label: t('page.manageSetting.menu.settingOptions') },
+  { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets') }
 ]
 
 const currentPage = ref('setting-items')

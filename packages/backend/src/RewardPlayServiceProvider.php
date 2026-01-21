@@ -12,6 +12,11 @@ class RewardPlayServiceProvider extends ServiceProvider
             __DIR__.'/Config/rewardplay.php',
             'rewardplay'
         );
+        // Merge demo config so default demo data is available via config('rewardplay-demo')
+        $this->mergeConfigFrom(
+            __DIR__.'/Config/rewardplay-demo.php',
+            'rewardplay-demo'
+        );
     }
 
     public function boot()

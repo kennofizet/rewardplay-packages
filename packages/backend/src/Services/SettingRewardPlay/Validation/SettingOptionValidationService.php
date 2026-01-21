@@ -28,7 +28,10 @@ class SettingOptionValidationService
         // Validate rates structure if provided
         if (isset($data['rates']) && is_array($data['rates']) && !empty($data['rates'])) {
             foreach ($data['rates'] as $key => $value) {
-                if (!in_array($key, $allowedKeys)) {
+                // Allow duplicate keys from frontend by suffixing (e.g. power_2, cv_3)
+                $baseKey = preg_replace('/_\d+$/', '', (string)$key);
+
+                if (!in_array($baseKey, $allowedKeys)) {
                     $validator = Validator::make([], []);
                     $validator->errors()->add('rates', "Invalid conversion key: {$key}");
                     throw new ValidationException($validator);

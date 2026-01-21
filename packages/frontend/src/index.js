@@ -3,6 +3,7 @@ import RewardPlayPage from './pages/RewardPlayPage.vue'
 import ComingSoonPage from './pages/ComingSoonPage.vue'
 import LoadingSource from './components/LoadingSource.vue'
 import LoginScreen from './components/LoginScreen.vue'
+import * as StatHelpers from './utils/statHelpers'
 
 /**
  * Install game module
@@ -29,6 +30,10 @@ export function installGameModule(app, options = {}) {
   // Provide backendUrl so components (e.g., RewardPlayPage) can consume it without re-passing
   app.provide('backendUrl', backendUrl)
   app.config.globalProperties.$backendUrl = backendUrl
+
+  // Provide stat helpers globally
+  app.provide('statHelpers', StatHelpers)
+  app.config.globalProperties.$statHelpers = StatHelpers
 
   // Register components
   app.component('RewardPlayPage', RewardPlayPage)

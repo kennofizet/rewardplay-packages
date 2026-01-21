@@ -60,6 +60,7 @@ Route::prefix($prefix)
 
         // Stats
         Route::get('/stats/conversion-keys', [StatsController::class, 'getConversionKeys']);
+        Route::get('/stats/all', [StatsController::class, 'getAllStats']);
 
         // Setting Item Sets CRUD
         Route::get('/setting-item-sets', [SettingItemSetController::class, 'index']);

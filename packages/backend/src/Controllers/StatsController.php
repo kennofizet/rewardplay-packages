@@ -25,4 +25,21 @@ class StatsController extends Controller
 
         return $this->apiErrorResponse();
     }
+
+    /**
+     * Get all stats (merged conversion keys + custom group stats from setting_options)
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getAllStats(Request $request): JsonResponse
+    {
+        if ($request->expectsJson()) {
+            return $this->apiResponseWithContext([
+                'stats' => Stats::getAllStats(),
+            ]);
+        }
+
+        return $this->apiErrorResponse();
+    }
 }

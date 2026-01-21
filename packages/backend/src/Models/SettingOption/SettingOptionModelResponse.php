@@ -34,6 +34,11 @@ class SettingOptionModelResponse extends BaseModelResponse
                 'id' => $settingOption->id,
                 'name' => $settingOption->name,
                 'rates' => $settingOption->rates,
+                'zone_id' => $settingOption->zone_id,
+                'zone' => $settingOption->zone ? [
+                    'id' => $settingOption->zone->id,
+                    'name' => $settingOption->zone->name,
+                ] : null,
                 'created_at' => $settingOption->created_at,
                 'updated_at' => $settingOption->updated_at,
             ];
@@ -52,6 +57,11 @@ class SettingOptionModelResponse extends BaseModelResponse
             'id' => $settingOption->id,
             'name' => $settingOption->name,
             'rates' => $settingOption->rates,
+            'zone_id' => $settingOption->zone_id,
+            'zone' => $settingOption->zone ? [
+                'id' => $settingOption->zone->id,
+                'name' => $settingOption->zone->name,
+            ] : null,
         ];
     }
 

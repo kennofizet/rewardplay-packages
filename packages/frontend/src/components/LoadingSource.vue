@@ -183,7 +183,7 @@ const updateCanvas = () => {
   ctx.font = 'bold 48px Arial, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  const loadingTitle = props.loadingTitle || 'LOADING'
+  const loadingTitle = props.loadingTitle
   ctx.fillText(loadingTitle, width / 2, titleY)
   
   // Reset shadow
@@ -192,7 +192,7 @@ const updateCanvas = () => {
   // Draw subtitle
   ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
   ctx.font = '18px Arial, sans-serif'
-  const loadingSubtitle = props.loadingSubtitle || 'Preparing your gaming experience...'
+  const loadingSubtitle = props.loadingSubtitle
   ctx.fillText(loadingSubtitle, width / 2, titleY + 50)
 
   // Draw main loading bar with chunky game-like style

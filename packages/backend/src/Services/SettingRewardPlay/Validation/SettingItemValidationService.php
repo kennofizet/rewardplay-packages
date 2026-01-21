@@ -5,10 +5,14 @@ namespace Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
+use Kennofizet\RewardPlay\Models\SettingOption;
 use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
+use Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation\Traits\StatsCustomCheckTrait;
 
 class SettingItemValidationService
 {
+    use StatsCustomCheckTrait;
     /**
      * Validate create / update setting item data.
      * Permission checks are handled by middleware.
@@ -27,10 +31,9 @@ class SettingItemValidationService
         $allowedTypesString = implode(',', $itemTypes);
 
         $rules = [
-            'name' => 'required|string|max:255',
+            'name' => $id ? 'sometimes|required|string|max:255' : 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|string|in:' . $allowedTypesString,
-            'default_property' => 'nullable|json',
+            'type' => $id ? 'sometimes|required|string|in:' . $allowedTypesString : 'required|string|in:' . $allowedTypesString,
             'zone_id' => 'nullable|integer|exists:' . $zonesTableName . ',id',
         ];
 
@@ -40,10 +43,18 @@ class SettingItemValidationService
             $data['image'] = $imageFile;
         }
 
+        // \Log::info('data: ' . json_encode($data));
+
         $validator = Validator::make($data, $rules);
 
         if ($validator->fails()) {
             throw new ValidationException($validator);
+        }
+
+        $validatorStats = $this->statsCustomCheck($data['default_property']);
+
+        if(!$validatorStats['success']){
+            $validator->errors()->add('default_property', $validatorStats['message']);
         }
     }
 }

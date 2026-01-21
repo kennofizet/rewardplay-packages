@@ -45,7 +45,7 @@ class SettingItemSetController extends Controller
         $settingItemSets = $this->settingItemSetService->getSettingItemSets($filters, $reponseMode);
 
         // Get zones user can manage
-        $zones = $this->zoneService->getZonesUserCanManage();
+        $zones = $this->getZonesUserCanManage();
 
         if ($request->expectsJson()) {
             $formattedSettingItemSets = SettingItemSetModelResponse::formatSettingItemSets($settingItemSets, $reponseMode);
@@ -106,7 +106,7 @@ class SettingItemSetController extends Controller
                 'setting_item_set' => $formattedSettingItemSet,
             ], 201);
         } catch (\Exception $e) {
-            return $this->apiErrorResponse($e->getMessage(), 500);
+            return $this->handleException($e);
         }
     }
 
@@ -136,7 +136,7 @@ class SettingItemSetController extends Controller
                 'setting_item_set' => $formattedSettingItemSet,
             ]);
         } catch (\Exception $e) {
-            return $this->apiErrorResponse($e->getMessage(), 500);
+            return $this->handleException($e);
         }
     }
 

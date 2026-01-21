@@ -1,12 +1,6 @@
 <template>
   <TopCoinCardSkeleton v-if="loading" />
-  <div v-else-if="error" class="card top-coin-card error-state">
-    <div class="error-content">
-      <div class="error-icon">⚠️</div>
-      <div class="error-message">{{ error }}</div>
-      <button class="error-retry" @click="$emit('retry')">{{ t('page.ranking.retry') || 'Retry' }}</button>
-    </div>
-  </div>
+  <ErrorState v-else-if="error" :message="error" @retry="$emit('retry')" />
   <div v-else class="card top-coin-card">
     <div class="card__header">
       <h3 class="card__title">{{ t('component.topCoin.title') }}</h3>
@@ -42,6 +36,7 @@ import { ref, inject, computed } from 'vue'
 import RankingItem from './RankingItem.vue'
 import CustomSelect from '../CustomSelect.vue'
 import TopCoinCardSkeleton from './TopCoinCardSkeleton.vue'
+import ErrorState from '../ui/ErrorState.vue'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
@@ -137,44 +132,4 @@ const handlePeriodChange = () => {
   letter-spacing: 0.02em;
 }
 
-.error-state {
-  min-height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.error-content {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.error-icon {
-  font-size: 3rem;
-  margin-bottom: 16px;
-}
-
-.error-message {
-  color: #ff6b6b;
-  font-size: 1rem;
-  margin-bottom: 20px;
-}
-
-.error-retry {
-  background: linear-gradient(135deg, #ff8c00 0%, #ffa366 100%);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
-}
-
-.error-retry:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 140, 66, 0.4);
-}
 </style>

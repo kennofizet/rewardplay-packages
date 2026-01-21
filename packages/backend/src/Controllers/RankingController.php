@@ -4,32 +4,20 @@ namespace Kennofizet\RewardPlay\Controllers;
 
 use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
-use Kennofizet\RewardPlay\Services\TokenService;
 
 class RankingController extends Controller
 {
-    protected $tokenService;
-
-    public function __construct(TokenService $tokenService)
-    {
-        $this->tokenService = $tokenService;
-    }
 
     /**
      * Get ranking data
      */
     public function getRanking(Request $request)
     {
-        $token = $request->header('X-RewardPlay-Token');
+        // Middleware ValidateRewardPlayToken already validated token and attached user id
+        $userId = $request->attributes->get('rewardplay_user_id');
 
-        if (!$token) {
-            return $this->apiErrorResponse('Token is required', 401);
-        }
-
-        $user = $this->tokenService->checkUser($token);
-
-        if (!$user) {
-            return $this->apiErrorResponse('Invalid or inactive token', 401);
+        if (empty($userId)) {
+            return $this->apiErrorResponse('User not authenticated', 401);
         }
 
         // Fake ranking data

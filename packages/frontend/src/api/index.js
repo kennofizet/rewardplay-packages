@@ -55,9 +55,12 @@ export function createGameApi(backendUrl, token) {
       return api.post('/api/rewardplay/setting-items', data)
     },
     updateSettingItem: (id, data) => {
-      // If data is FormData, use PATCH with multipart/form-data, otherwise use PUT with JSON
+      // Otherwise use PUT with JSON
       if (data instanceof FormData) {
-        return api.patch(`/api/rewardplay/setting-items/${id}`, data, {
+        if (!data.has('_method')) {
+          data.append('_method', 'PUT')
+        }
+        return api.post(`/api/rewardplay/setting-items/${id}`, data, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -76,6 +79,7 @@ export function createGameApi(backendUrl, token) {
 
     // Stats
     getConversionKeys: () => api.get('/api/rewardplay/stats/conversion-keys'),
+    getAllStats: () => api.get('/api/rewardplay/stats/all'),
 
     // Setting Item Sets CRUD
     getSettingItemSets: (params) => api.get('/api/rewardplay/setting-item-sets', { params }),

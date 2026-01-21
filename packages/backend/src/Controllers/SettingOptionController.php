@@ -45,7 +45,7 @@ class SettingOptionController extends Controller
         $settingOptions = $this->settingOptionService->getSettingOptions($filters, $reponseMode);
 
         // Get zones user can manage
-        $zones = $this->zoneService->getZonesUserCanManage();
+        $zones = $this->getZonesUserCanManage();
 
         if ($request->expectsJson()) {
             $formattedSettingOptions = SettingOptionModelResponse::formatSettingOptions($settingOptions, $reponseMode);
@@ -105,7 +105,7 @@ class SettingOptionController extends Controller
                 'setting_option' => $formattedSettingOption,
             ], 201);
         } catch (\Exception $e) {
-            return $this->apiErrorResponse($e->getMessage(), 500);
+            return $this->handleException($e);
         }
     }
 
@@ -134,7 +134,7 @@ class SettingOptionController extends Controller
                 'setting_option' => $formattedSettingOption,
             ]);
         } catch (\Exception $e) {
-            return $this->apiErrorResponse($e->getMessage(), 500);
+            return $this->handleException($e);
         }
     }
 

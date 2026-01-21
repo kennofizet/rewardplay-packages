@@ -1,12 +1,6 @@
 <template>
   <TopMeCardSkeleton v-if="loading" />
-  <div v-else-if="error" class="card top-me-card error-state">
-    <div class="error-content">
-      <div class="error-icon">⚠️</div>
-      <div class="error-message">{{ error }}</div>
-      <button class="error-retry" @click="$emit('retry')">{{ t('page.ranking.retry') || 'Retry' }}</button>
-    </div>
-  </div>
+  <ErrorState v-else-if="error" :message="error" @retry="$emit('retry')" />
   <div v-else class="card top-me-card">
     <div class="card__header">
       <span class="card__label">{{ t('component.topMe.title') }}</span>
@@ -27,6 +21,7 @@
 <script setup>
 import { inject } from 'vue'
 import TopMeCardSkeleton from './TopMeCardSkeleton.vue'
+import ErrorState from '../ui/ErrorState.vue'
 
 const props = defineProps({
   rank: {
@@ -102,44 +97,4 @@ defineEmits(['retry'])
   color: #ff8c00;
 }
 
-.error-state {
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.error-content {
-  text-align: center;
-  padding: 20px;
-}
-
-.error-icon {
-  font-size: 2rem;
-  margin-bottom: 12px;
-}
-
-.error-message {
-  color: #ff6b6b;
-  font-size: 0.9rem;
-  margin-bottom: 16px;
-}
-
-.error-retry {
-  background: linear-gradient(135deg, #ff8c00 0%, #ffa366 100%);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
-}
-
-.error-retry:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 140, 66, 0.4);
-}
 </style>

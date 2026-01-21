@@ -1,9 +1,9 @@
 <template>
   <div class="setting-options-list-page">
     <div class="page-header">
-      <h2>{{ t('page.manageSetting.settingOptions.title') || 'Setting Options' }}</h2>
+      <h2>{{ t('page.manageSetting.settingOptions.title') }}</h2>
       <button class="btn-primary" @click="handleCreate">
-        {{ t('page.manageSetting.settingOptions.create') || 'Create New' }}
+        {{ t('page.manageSetting.settingOptions.create') }}
       </button>
     </div>
 
@@ -11,21 +11,21 @@
       <input 
         v-model="filters.search"
         type="text" 
-        :placeholder="t('page.manageSetting.settingOptions.searchPlaceholder') || 'Search by name...'"
+        :placeholder="t('page.manageSetting.settingOptions.searchPlaceholder')"
         class="search-input"
         @input="handleSearch"
       />
       <CustomSelect
         v-model="filters.zone_id"
         :options="zoneOptionsWithEmpty"
-        :placeholder="t('page.manageSetting.settingOptions.allZones') || 'All Zones'"
+        :placeholder="t('page.manageSetting.settingOptions.allZones')"
         @change="loadSettingOptions"
         trigger-class="zone-select"
       />
     </div>
 
     <div v-if="loading" class="loading">
-      {{ t('page.manageSetting.settingOptions.loading') || 'Loading...' }}
+      {{ t('page.manageSetting.settingOptions.loading') }}
     </div>
 
     <div v-if="error" class="error">
@@ -36,11 +36,11 @@
       <table class="settings-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Zone</th>
-            <th>Rates</th>
-            <th>Actions</th>
+            <th>{{ t('page.manageSetting.settingOptions.table.id') }}</th>
+            <th>{{ t('page.manageSetting.settingOptions.table.name') }}</th>
+            <th>{{ t('page.manageSetting.settingOptions.table.zone') }}</th>
+            <th>{{ t('page.manageSetting.settingOptions.table.rates') }}</th>
+            <th>{{ t('page.manageSetting.settingOptions.table.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -49,11 +49,11 @@
             <td>{{ option.name }}</td>
             <td>{{ option.zone ? option.zone.name : '-' }}</td>
             <td>
-              <pre class="rates-preview">{{ formatRates(option.rates) }}</pre>
+              <StatMapPreview :value="option.rates" :max-items="4" />
             </td>
             <td class="actions-cell">
-              <button class="btn-edit" @click="handleEdit(option)">Edit</button>
-              <button class="btn-delete" @click="handleDelete(option)">Delete</button>
+              <button class="btn-edit" @click="handleEdit(option)">{{ t('page.manageSetting.settingOptions.actions.edit') }}</button>
+              <button class="btn-delete" @click="handleDelete(option)">{{ t('page.manageSetting.settingOptions.actions.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -64,14 +64,14 @@
           :disabled="pagination.current_page === 1"
           @click="changePage(pagination.current_page - 1)"
         >
-          Previous
+          {{ t('page.manageSetting.settingOptions.pagination.prev') }}
         </button>
-        <span>Page {{ pagination.current_page }} of {{ pagination.last_page }}</span>
+        <span>{{ t('page.manageSetting.settingOptions.pagination.page') }} {{ pagination.current_page }} {{ t('page.manageSetting.settingOptions.pagination.of') }} {{ pagination.last_page }}</span>
         <button 
           :disabled="pagination.current_page === pagination.last_page"
           @click="changePage(pagination.current_page + 1)"
         >
-          Next
+          {{ t('page.manageSetting.settingOptions.pagination.next') }}
         </button>
       </div>
     </div>
@@ -80,63 +80,74 @@
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>{{ editingOption ? (t('page.manageSetting.settingOptions.edit') || 'Edit Setting Option') : (t('page.manageSetting.settingOptions.create') || 'Create Setting Option') }}</h3>
+          <h3>{{ editingOption ? t('page.manageSetting.settingOptions.edit') : t('page.manageSetting.settingOptions.createModal') }}</h3>
           <button class="btn-close" @click="closeModal">×</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Zone *</label>
+            <label>{{ t('page.manageSetting.settingOptions.form.zone') }}</label>
             <CustomSelect
               v-model="formData.zone_id"
               :options="zoneOptions"
-              :placeholder="t('page.manageSetting.settingOptions.selectZone') || 'Select Zone'"
+              :placeholder="t('page.manageSetting.settingOptions.selectZone')"
             />
           </div>
           <div class="form-group">
-            <label>Name *</label>
+            <label>{{ t('page.manageSetting.settingOptions.form.name') }}</label>
             <input v-model="formData.name" type="text" required />
           </div>
           <div class="form-group">
-            <label>Rates (JSON)</label>
-            <div class="rates-editor">
-              <div class="rates-keys">
-                <div 
-                  v-for="key in conversionKeys" 
-                  :key="key.key"
-                  class="rate-key-item"
+            <label>{{ t('page.manageSetting.settingOptions.form.rates') }}</label>
+            <div class="rates-list">
+              <div 
+                v-for="(rate, index) in ratesList" 
+                :key="index"
+                class="rate-item"
+              >
+                <CustomSelect
+                  v-model="rate.key"
+                  :options="rateKeyOptions"
+                  :placeholder="t('page.manageSetting.settingOptions.selectKey')"
+                  @change="handleRateKeyChange(index)"
+                  trigger-class="rate-key-select"
+                />
+                <input 
+                  v-model.number="rate.value"
+                  type="number"
+                  step="0.01"
+                  :placeholder="t('page.manageSetting.settingOptions.valuePlaceholder')"
+                  class="rate-value-input"
+                />
+                <button 
+                  type="button"
+                  class="btn-remove-rate"
+                  @click="removeRate(index)"
+                  :title="t('page.manageSetting.settingOptions.removeRate')"
                 >
-                  <label>{{ key.name }} ({{ key.key }}):</label>
-                  <input 
-                    v-model.number="formData.rates[key.key]"
-                    type="number"
-                    step="0.01"
-                    :placeholder="key.name"
-                  />
-                </div>
+                  ×
+                </button>
               </div>
-              <div class="rates-json">
-                <label>JSON Preview:</label>
-                <textarea 
-                  v-model="formData.rates_json" 
-                  rows="10" 
-                  placeholder='{"power": 1.5, "cv": 2.0, ...}'
-                  @input="handleRatesJsonChange"
-                ></textarea>
-                <small class="form-hint">Edit JSON directly or use fields above</small>
-              </div>
+              <button 
+                type="button"
+                class="btn-add-rate"
+                @click="addRate"
+              >
+                + {{ t('page.manageSetting.settingOptions.addOption') }}
+              </button>
             </div>
+            <small class="form-hint">{{ t('page.manageSetting.settingOptions.ratesHint') }}</small>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeModal" :disabled="saveLoading">Cancel</button>
+          <button class="btn-secondary" @click="closeModal" :disabled="saveLoading">{{ t('page.manageSetting.settingOptions.actions.cancel') }}</button>
           <button 
             class="btn-primary" 
             :class="{ 'btn-loading': saveLoading, 'btn-fail': saveFailed }"
             @click="handleSave"
             :disabled="saveLoading || !formData.name || !formData.zone_id"
           >
-            <span v-if="saveLoading">{{ t('page.manageSetting.settingOptions.saving') || 'Saving...' }}</span>
-            <span v-else-if="saveFailed">{{ t('page.manageSetting.settingOptions.saveFailed') || 'Failed' }}</span>
+            <span v-if="saveLoading">{{ t('page.manageSetting.settingOptions.saving') }}</span>
+            <span v-else-if="saveFailed">{{ t('page.manageSetting.settingOptions.saveFailed') }}</span>
             <span v-else>{{ editingOption ? 'Update' : 'Create' }}</span>
           </button>
         </div>
@@ -148,10 +159,12 @@
 <script setup>
 import { ref, onMounted, inject, computed, watch } from 'vue'
 import CustomSelect from '../../../components/CustomSelect.vue'
+import StatMapPreview from '../../../components/StatMapPreview.vue'
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
+const statHelpers = inject('statHelpers', null)
 
 const loading = ref(false)
 const loadingKeys = ref(false)
@@ -175,9 +188,17 @@ const zoneOptions = computed(() => {
 
 const zoneOptionsWithEmpty = computed(() => {
   return [
-    { value: '', label: t('page.manageSetting.settingOptions.allZones') || 'All Zones' },
+    { value: '', label: t('page.manageSetting.settingOptions.allZones') },
     ...zoneOptions.value
   ]
+})
+
+const rateKeyOptions = computed(() => {
+  const options = conversionKeys.value.map(key => ({
+    value: key.key,
+    label: `${key.name} (${key.key})`
+  }))
+  return options
 })
 
 const filters = ref({
@@ -194,29 +215,37 @@ const formData = ref({
   rates_json: ''
 })
 
+const ratesList = ref([])
+
 const formatRates = (rates) => {
   if (!rates || typeof rates !== 'object') return '{}'
   return JSON.stringify(rates, null, 2)
 }
 
-const handleRatesJsonChange = () => {
-  try {
-    const parsed = JSON.parse(formData.value.rates_json || '{}')
-    formData.value.rates = parsed
-  } catch (e) {
-    // Invalid JSON, ignore
-  }
+const addRate = () => {
+  ratesList.value.push({
+    key: '',
+    value: null
+  })
 }
 
-const syncRatesToJson = () => {
-  // Remove null/undefined values
-  const cleanRates = {}
-  Object.keys(formData.value.rates).forEach(key => {
-    if (formData.value.rates[key] !== null && formData.value.rates[key] !== undefined && formData.value.rates[key] !== '') {
-      cleanRates[key] = formData.value.rates[key]
-    }
-  })
+const removeRate = (index) => {
+  ratesList.value.splice(index, 1)
+  syncRatesFromList()
+}
+
+const handleRateKeyChange = (index) => {
+  syncRatesFromList()
+}
+
+const syncRatesFromList = () => {
+  const cleanRates = statHelpers ? statHelpers.listToMap(ratesList.value, conversionKeys.value, { customPrefix: 'custom_key_' }) : {}
+  formData.value.rates = cleanRates
   formData.value.rates_json = JSON.stringify(cleanRates, null, 2)
+}
+
+const syncRatesToList = () => {
+  ratesList.value = statHelpers ? statHelpers.mapToList(formData.value.rates, conversionKeys.value, { customPrefix: 'custom_key_' }) : []
 }
 
 // Watch rates changes and sync to JSON
@@ -232,7 +261,7 @@ const watchRates = () => {
 
 const loadSettingOptions = async () => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingOptions.errors.apiNotAvailable')
     return
   }
 
@@ -303,10 +332,7 @@ const handleCreate = () => {
     rates: {},
     rates_json: '{}'
   }
-  // Initialize rates with all keys
-  conversionKeys.value.forEach(key => {
-    formData.value.rates[key.key] = null
-  })
+  ratesList.value = []
   showModal.value = true
 }
 
@@ -320,13 +346,7 @@ const handleEdit = (option) => {
     rates: option.rates ? { ...option.rates } : {},
     rates_json: formatRates(option.rates)
   }
-  // Initialize missing keys
-  conversionKeys.value.forEach(key => {
-    if (!(key.key in formData.value.rates)) {
-      formData.value.rates[key.key] = null
-    }
-  })
-  syncRatesToJson()
+  syncRatesToList()
   showModal.value = true
 }
 
@@ -350,38 +370,30 @@ const loadConversionKeys = async () => {
 
 const handleSave = async () => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingOptions.errors.apiNotAvailable')
     return
   }
 
   if (!formData.value.name) {
-    error.value = 'Name is required'
+    error.value = t('page.manageSetting.settingOptions.errors.nameRequired')
     return
   }
+
+  // Sync rates from list before saving
+  syncRatesFromList()
 
   saveLoading.value = true
   saveFailed.value = false
   error.value = null
 
   try {
-    // Parse rates from JSON or use rates object
-    let rates = {}
-    if (formData.value.rates_json) {
-      try {
-        rates = JSON.parse(formData.value.rates_json)
-      } catch (e) {
-        error.value = 'Invalid JSON in Rates'
-        saveLoading.value = false
-        return
+    // Use rates object, remove null/undefined values
+    const rates = {}
+    Object.keys(formData.value.rates).forEach(key => {
+      if (formData.value.rates[key] !== null && formData.value.rates[key] !== undefined && formData.value.rates[key] !== '') {
+        rates[key] = formData.value.rates[key]
       }
-    } else {
-      // Use rates object, remove null/undefined values
-      Object.keys(formData.value.rates).forEach(key => {
-        if (formData.value.rates[key] !== null && formData.value.rates[key] !== undefined && formData.value.rates[key] !== '') {
-          rates[key] = formData.value.rates[key]
-        }
-      })
-    }
+    })
 
     const data = {
       name: formData.value.name,
@@ -414,11 +426,11 @@ const handleSave = async () => {
 
 const handleDelete = async (option) => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingOptions.errors.apiNotAvailable')
     return
   }
 
-  if (!confirm(`Are you sure you want to delete "${option.name}"?`)) {
+  if (!confirm(t('page.manageSetting.settingOptions.confirm.delete', `Are you sure you want to delete "${option.name}"?`).replace('{name}', option.name))) {
     return
   }
 
@@ -447,11 +459,12 @@ const closeModal = () => {
     rates: {},
     rates_json: ''
   }
+  ratesList.value = []
 }
 
-// Watch rates changes and sync to JSON
-watch(() => formData.value.rates, () => {
-  syncRatesToJson()
+// Watch ratesList changes and sync to rates object
+watch(() => ratesList.value, () => {
+  syncRatesFromList()
 }, { deep: true })
 
 onMounted(() => {
@@ -534,17 +547,7 @@ onMounted(() => {
   background: #1a2332;
 }
 
-.rates-preview {
-  max-width: 300px;
-  max-height: 100px;
-  overflow: auto;
-  margin: 0;
-  padding: 5px;
-  background: #1a2332;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #d0d4d6;
-}
+/* legacy JSON preview (replaced by StatMapPreview) */
 
 .actions-cell {
   white-space: nowrap;
@@ -740,40 +743,68 @@ onMounted(() => {
   color: #999;
 }
 
-.rates-editor {
+.rates-list {
   display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.rates-keys {
+.rate-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.rate-key-select {
   flex: 1;
-  min-width: 300px;
+  min-width: 200px;
 }
 
-.rate-key-item {
-  margin-bottom: 15px;
-}
-
-.rate-key-item label {
-  display: block;
-  margin-bottom: 5px;
-  color: #d0d4d6;
-  font-size: 13px;
-}
-
-.rate-key-item input {
-  width: 100%;
-  padding: 8px;
+.rate-value-input {
+  flex: 1;
+  min-width: 150px;
+  padding: 10px;
   background: #253344;
   border: 1px solid #1a2332;
   color: #d0d4d6;
   font-size: 14px;
 }
 
-.rates-json {
-  flex: 1;
-  min-width: 300px;
+.btn-remove-rate {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s;
+}
+
+.btn-remove-rate:hover {
+  background: #ee5a5a;
+}
+
+.btn-add-rate {
+  padding: 10px 16px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.25s;
+  align-self: flex-start;
+}
+
+.btn-add-rate:hover {
+  background: #357abd;
 }
 
 .modal-footer {

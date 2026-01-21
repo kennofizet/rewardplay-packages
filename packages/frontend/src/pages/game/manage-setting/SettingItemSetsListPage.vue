@@ -1,9 +1,9 @@
 <template>
   <div class="setting-item-sets-list-page">
     <div class="page-header">
-      <h2>{{ t('page.manageSetting.settingItemSets.title') || 'Item Sets' }}</h2>
+      <h2>{{ t('page.manageSetting.settingItemSets.title') }}</h2>
       <button class="btn-primary" @click="handleCreate">
-        {{ t('page.manageSetting.settingItemSets.create') || 'Create New' }}
+        {{ t('page.manageSetting.settingItemSets.create') }}
       </button>
     </div>
 
@@ -11,21 +11,21 @@
       <input 
         v-model="filters.search"
         type="text" 
-        :placeholder="t('page.manageSetting.settingItemSets.searchPlaceholder') || 'Search by name...'"
+        :placeholder="t('page.manageSetting.settingItemSets.searchPlaceholder')"
         class="search-input"
         @input="handleSearch"
       />
       <CustomSelect
         v-model="filters.zone_id"
         :options="zoneOptionsWithEmpty"
-        :placeholder="t('page.manageSetting.settingItemSets.allZones') || 'All Zones'"
+        :placeholder="t('page.manageSetting.settingItemSets.allZones')"
         @change="loadSettingItemSets"
         trigger-class="zone-select"
       />
     </div>
 
     <div v-if="loading" class="loading">
-      {{ t('page.manageSetting.settingItemSets.loading') || 'Loading...' }}
+      {{ t('page.manageSetting.settingItemSets.loading') }}
     </div>
 
     <div v-if="error" class="error">
@@ -36,13 +36,13 @@
       <table class="settings-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Zone</th>
-            <th>Items</th>
-            <th>Set Bonuses</th>
-            <th>Description</th>
-            <th>Actions</th>
+            <th>{{ t('page.manageSetting.settingItemSets.table.id') }}</th>
+            <th>{{ t('page.manageSetting.settingItemSets.table.name') }}</th>
+            <th>{{ t('page.manageSetting.settingItemSets.table.zone') }}</th>
+            <th>{{ t('page.manageSetting.settingItemSets.table.items') }}</th>
+            <th>{{ t('page.manageSetting.settingItemSets.table.setBonuses') }}</th>
+            <th>{{ t('page.manageSetting.settingItemSets.table.description') }}</th>
+            <th>{{ t('page.manageSetting.settingItemSets.table.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -51,7 +51,7 @@
             <td>{{ set.name }}</td>
             <td>{{ set.zone ? set.zone.name : '-' }}</td>
             <td>
-              <span class="items-count">{{ set.items_count || 0 }} items</span>
+              <span class="items-count">{{ set.items_count || 0 }} {{ t('page.manageSetting.settingItemSets.labels.items') }}</span>
               <div v-if="set.items && set.items.length > 0" class="items-preview">
                 <span v-for="(item, idx) in set.items.slice(0, 3)" :key="item.id" class="item-tag">
                   {{ item.name }}
@@ -60,12 +60,12 @@
               </div>
             </td>
             <td>
-              <pre class="bonuses-preview">{{ formatBonuses(set.set_bonuses) }}</pre>
+              <StatMapPreview :value="set.set_bonuses" :max-items-per-group="3" />
             </td>
             <td>{{ truncateDescription(set.description) }}</td>
             <td class="actions-cell">
-              <button class="btn-edit" @click="handleEdit(set)">Edit</button>
-              <button class="btn-delete" @click="handleDelete(set)">Delete</button>
+              <button class="btn-edit" @click="handleEdit(set)">{{ t('page.manageSetting.settingItemSets.actions.edit') }}</button>
+              <button class="btn-delete" @click="handleDelete(set)">{{ t('page.manageSetting.settingItemSets.actions.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -76,14 +76,14 @@
           :disabled="pagination.current_page === 1"
           @click="changePage(pagination.current_page - 1)"
         >
-          Previous
+          {{ t('page.manageSetting.settingItemSets.pagination.prev') }}
         </button>
-        <span>Page {{ pagination.current_page }} of {{ pagination.last_page }}</span>
+        <span>{{ t('page.manageSetting.settingItemSets.pagination.page') }} {{ pagination.current_page }} {{ t('page.manageSetting.settingItemSets.pagination.of') }} {{ pagination.last_page }}</span>
         <button 
           :disabled="pagination.current_page === pagination.last_page"
           @click="changePage(pagination.current_page + 1)"
         >
-          Next
+          {{ t('page.manageSetting.settingItemSets.pagination.next') }}
         </button>
       </div>
     </div>
@@ -92,30 +92,30 @@
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>{{ editingSet ? (t('page.manageSetting.settingItemSets.edit') || 'Edit Item Set') : (t('page.manageSetting.settingItemSets.create') || 'Create Item Set') }}</h3>
+          <h3>{{ editingSet ? t('page.manageSetting.settingItemSets.edit') : t('page.manageSetting.settingItemSets.createModal') }}</h3>
           <button class="btn-close" @click="closeModal">×</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Zone *</label>
+            <label>{{ t('page.manageSetting.settingItemSets.form.zone') }}</label>
             <CustomSelect
               v-model="formData.zone_id"
               :options="zoneOptions"
-              :placeholder="t('page.manageSetting.settingItemSets.selectZone') || 'Select Zone'"
+              :placeholder="t('page.manageSetting.settingItemSets.selectZone')"
               @change="handleZoneChange"
             />
           </div>
           <div class="form-group">
-            <label>Name *</label>
+            <label>{{ t('page.manageSetting.settingItemSets.form.name') }}</label>
             <input v-model="formData.name" type="text" required />
           </div>
           <div class="form-group">
-            <label>Description</label>
+            <label>{{ t('page.manageSetting.settingItemSets.form.description') }}</label>
             <textarea v-model="formData.description" rows="3"></textarea>
           </div>
           <div class="form-group">
-            <label>Items *</label>
-            <div v-if="loadingItems" class="loading-items">Loading items...</div>
+            <label>{{ t('page.manageSetting.settingItemSets.form.items') }}</label>
+            <div v-if="loadingItems" class="loading-items">{{ t('page.manageSetting.settingItemSets.loadingItems') }}</div>
             <div v-else class="items-selector">
               <div 
                 v-for="item in availableItems" 
@@ -134,55 +134,53 @@
                 </label>
               </div>
               <div v-if="availableItems.length === 0" class="no-items">
-                No items available in this zone. Please select a zone first.
+                {{ t('page.manageSetting.settingItemSets.noItems') }}
               </div>
             </div>
           </div>
           <div class="form-group">
-            <label>Set Bonuses (JSON)</label>
-            <div class="bonuses-editor">
-              <div class="bonus-section">
-                <label>2 Items Bonus:</label>
-                <textarea 
-                  v-model="formData.bonus_2_json" 
-                  rows="4" 
-                  placeholder='{"power": 10, "cv": 5}'
-                  @input="handleBonusJsonChange(2)"
-                ></textarea>
-              </div>
-              <div class="bonus-section">
-                <label>3 Items Bonus:</label>
-                <textarea 
-                  v-model="formData.bonus_3_json" 
-                  rows="4" 
-                  placeholder='{"power": 20, "cv": 10}'
-                  @input="handleBonusJsonChange(3)"
-                ></textarea>
-              </div>
-              <div class="bonus-section">
-                <label>Full Set Bonus:</label>
-                <textarea 
-                  v-model="formData.bonus_full_json" 
-                  rows="4" 
-                  placeholder='{"power": 50, "cv": 25}'
-                  @input="handleBonusJsonChange('full')"
-                ></textarea>
-              </div>
+            <label>{{ t('page.manageSetting.settingItemSets.form.setBonuses') }}</label>
+            <div v-if="formData.item_ids.length === 0" class="no-items-message">
+              {{ t('page.manageSetting.settingItemSets.noItemsForBonus') }}
             </div>
-            <small class="form-hint">Enter valid JSON format for each bonus level</small>
+            <div v-else class="bonuses-editor">
+              <div v-if="loadingKeys" class="loading-stats">
+                {{ t('page.manageSetting.settingItemSets.loadingKeys') }}
+              </div>
+              <div v-else-if="bonusKeyOptions.length === 0" class="no-stats-message">
+                {{ t('page.manageSetting.settingItemSets.noStats') }}
+              </div>
+              <template v-else>
+                <BonusSection
+                  v-for="bonusLevel in availableBonusLevels"
+                  :key="bonusLevel.key"
+                  :label="bonusLevel.label"
+                  :bonuses="bonusesList[bonusLevel.key] || []"
+                  :bonus-key-options="bonusKeyOptions"
+                  :select-key-placeholder="t('page.manageSetting.settingItemSets.selectKey')"
+                  :value-placeholder="t('page.manageSetting.settingItemSets.valuePlaceholder')"
+                  :add-option-label="t('page.manageSetting.settingItemSets.addOption')"
+                  :remove-label="t('page.manageSetting.settingItemSets.removeBonus')"
+                  @add="() => addBonus(bonusLevel.key)"
+                  @remove="(index) => removeBonus(bonusLevel.key, index)"
+                  @key-change="(index) => handleBonusKeyChange(bonusLevel.key, index)"
+                />
+              </template>
+            </div>
+            <small class="form-hint">{{ t('page.manageSetting.settingItemSets.bonusesHint') }}</small>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeModal" :disabled="saveLoading">Cancel</button>
+          <button class="btn-secondary" @click="closeModal" :disabled="saveLoading">{{ t('page.manageSetting.settingItemSets.actions.cancel') }}</button>
           <button 
             class="btn-primary" 
             :class="{ 'btn-loading': saveLoading, 'btn-fail': saveFailed }"
             @click="handleSave"
             :disabled="saveLoading || !formData.name || !formData.zone_id || formData.item_ids.length === 0"
           >
-            <span v-if="saveLoading">{{ t('page.manageSetting.settingItemSets.saving') || 'Saving...' }}</span>
-            <span v-else-if="saveFailed">{{ t('page.manageSetting.settingItemSets.saveFailed') || 'Failed' }}</span>
-            <span v-else>{{ editingSet ? 'Update' : 'Create' }}</span>
+            <span v-if="saveLoading">{{ t('page.manageSetting.settingItemSets.saving') }}</span>
+            <span v-else-if="saveFailed">{{ t('page.manageSetting.settingItemSets.saveFailed') }}</span>
+            <span v-else>{{ editingSet ? t('page.manageSetting.settingItemSets.actions.update') : t('page.manageSetting.settingItemSets.actions.create') }}</span>
           </button>
         </div>
       </div>
@@ -191,17 +189,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject, computed } from 'vue'
+import { ref, onMounted, inject, computed, watch, nextTick } from 'vue'
 import CustomSelect from '../../../components/CustomSelect.vue'
+import BonusSection from '../../../components/BonusSection.vue'
+import StatMapPreview from '../../../components/StatMapPreview.vue'
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
+const statHelpers = inject('statHelpers', null)
 
 const loading = ref(false)
 const loadingItems = ref(false)
+const loadingKeys = ref(false)
 const error = ref(null)
 const settingItemSets = ref([])
+const conversionKeys = ref([])
 const zones = ref([])
 const availableItems = ref([])
 const pagination = ref(null)
@@ -220,7 +223,7 @@ const zoneOptions = computed(() => {
 
 const zoneOptionsWithEmpty = computed(() => {
   return [
-    { value: '', label: t('page.manageSetting.settingItemSets.allZones') || 'All Zones' },
+    { value: '', label: t('page.manageSetting.settingItemSets.allZones') },
     ...zoneOptions.value
   ]
 })
@@ -237,37 +240,159 @@ const formData = ref({
   description: '',
   zone_id: '',
   item_ids: [],
-  bonus_2_json: '',
-  bonus_3_json: '',
-  bonus_full_json: ''
+  set_bonuses: {}
 })
+
+const bonusesList = ref({})
+
+// Computed property for available bonus levels based on item count
+const availableBonusLevels = computed(() => {
+  const itemCount = formData.value.item_ids.length
+  const levels = []
+  
+  if (itemCount === 0) {
+    return []
+  }
+  
+  // Add bonus levels from 1 to item count
+  for (let i = 1; i <= itemCount; i++) {
+    levels.push({
+      key: i,
+      label: `${i} ${i === 1 ? 'Item' : 'Items'} Bonus:`
+    })
+  }
+  
+  // Always add full set bonus
+  levels.push({
+    key: 'full',
+    label: 'Full Set Bonus:'
+  })
+  
+  return levels
+})
+
+// Define sync functions before watcher to avoid initialization errors
+// Use centralized statHelpers to convert lists to map objects and preserve custom stat behavior
+function syncBonusesFromList() {
+  const setBonuses = {}
+  Object.keys(bonusesList.value).forEach(levelKey => {
+    const list = bonusesList.value[levelKey] || []
+    const mapped = statHelpers ? statHelpers.listToMap(list, conversionKeys.value, { customPrefix: 'custom_key_' }) : {}
+    if (Object.keys(mapped).length > 0) setBonuses[levelKey] = mapped
+  })
+  formData.value.set_bonuses = setBonuses
+}
+
+// Watch item_ids to initialize/cleanup bonus levels
+watch(() => formData.value.item_ids.length, (newCount, oldCount) => {
+  // Initialize bonus lists for new levels
+  availableBonusLevels.value.forEach(level => {
+    if (!bonusesList.value[level.key]) {
+      bonusesList.value[level.key] = []
+    }
+  })
+  
+  // Remove bonus lists for levels that are no longer valid
+  Object.keys(bonusesList.value).forEach(key => {
+    const isValidLevel = availableBonusLevels.value.some(level => level.key.toString() === key.toString())
+    if (!isValidLevel) {
+      delete bonusesList.value[key]
+    }
+  })
+  
+  syncBonusesFromList()
+}, { immediate: true })
+
+// Watch conversionKeys to update custom stat selections when stats load
+watch(() => conversionKeys.value.length, (newLength, oldLength) => {
+  // Only trigger if stats were just loaded (length changed from 0 to > 0)
+  if (newLength > 0 && oldLength === 0 && editingSet.value && formData.value.set_bonuses) {
+    // Re-sync bonuses to update custom stat keys and values
+    syncBonusesToList()
+  }
+})
+
+const bonusKeyOptions = computed(() => {
+  const options = conversionKeys.value.map(stat => {
+    // Custom stats have a 'value' property - show only name
+    if (stat.value !== undefined) {
+      return {
+        value: stat.key,
+        label: stat.name,
+        isCustom: true,
+        customValue: stat.value
+      }
+    }
+    // Regular stats - show name and key
+    return {
+      value: stat.key,
+      label: `${stat.name} (${stat.key})`,
+      isCustom: false
+    }
+  })
+  return options
+})
+
+// Delegate custom stat helpers to shared statHelpers
+const isCustomStat = (key) => statHelpers ? statHelpers.isCustomStat(conversionKeys.value, key) : false
+const getCustomStatValue = (key) => statHelpers ? statHelpers.getCustomStatValue(conversionKeys.value, key) : null
 
 const formatBonuses = (bonuses) => {
   if (!bonuses || typeof bonuses !== 'object') return '{}'
   return JSON.stringify(bonuses, null, 2)
 }
 
-const handleBonusJsonChange = (level) => {
-  // Validate JSON and update set_bonuses
-  try {
-    const bonuses = {}
-    if (formData.value.bonus_2_json) {
-      bonuses[2] = JSON.parse(formData.value.bonus_2_json)
-    }
-    if (formData.value.bonus_3_json) {
-      bonuses[3] = JSON.parse(formData.value.bonus_3_json)
-    }
-    if (formData.value.bonus_full_json) {
-      bonuses.full = JSON.parse(formData.value.bonus_full_json)
-    }
-  } catch (e) {
-    // Invalid JSON, ignore
+const addBonus = (level) => {
+  // Ensure the array exists for this level
+  if (!bonusesList.value[level]) {
+    bonusesList.value[level] = []
   }
+  bonusesList.value[level].push({
+    key: '',
+    value: null,
+    isCustom: false
+  })
 }
+
+const removeBonus = (level, index) => {
+  bonusesList.value[level].splice(index, 1)
+  syncBonusesFromList()
+}
+
+const handleBonusKeyChange = (level, index) => {
+  const bonus = bonusesList.value[level][index]
+  const customValue = getCustomStatValue(bonus.key)
+  if (customValue !== null) {
+    bonus.value = customValue
+    bonus.isCustom = true
+  } else {
+    bonus.isCustom = false
+    if (bonus.value === null || bonus.value === undefined) bonus.value = null
+  }
+  syncBonusesFromList()
+}
+
+const syncBonusesToList = () => {
+  bonusesList.value = {}
+  if (formData.value.set_bonuses && typeof formData.value.set_bonuses === 'object') {
+    Object.keys(formData.value.set_bonuses).forEach(levelKey => {
+      bonusesList.value[levelKey] = statHelpers ? statHelpers.mapToList(formData.value.set_bonuses[levelKey], conversionKeys.value, { customPrefix: 'custom_key_' }) : []
+    })
+  }
+
+  // Initialize empty lists for available levels
+  availableBonusLevels.value.forEach(level => {
+    if (!bonusesList.value[level.key]) {
+      bonusesList.value[level.key] = []
+    }
+  })
+}
+
+// syncBonusesFromList is declared above as a hoisted function
 
 const loadSettingItemSets = async () => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingItemSets.errors.apiNotAvailable')
     return
   }
 
@@ -365,10 +490,9 @@ const handleCreate = () => {
     description: '',
     zone_id: zones.value.length > 0 ? zones.value[0].id : '',
     item_ids: [],
-    bonus_2_json: '',
-    bonus_3_json: '',
-    bonus_full_json: ''
+    set_bonuses: {}
   }
+  bonusesList.value = {}
   if (formData.value.zone_id) {
     loadItemsForZone(formData.value.zone_id)
   }
@@ -384,10 +508,15 @@ const handleEdit = async (set) => {
     description: set.description || '',
     zone_id: set.zone_id || '',
     item_ids: set.items ? set.items.map(item => item.id) : [],
-    bonus_2_json: set.set_bonuses && set.set_bonuses[2] ? JSON.stringify(set.set_bonuses[2], null, 2) : '',
-    bonus_3_json: set.set_bonuses && set.set_bonuses[3] ? JSON.stringify(set.set_bonuses[3], null, 2) : '',
-    bonus_full_json: set.set_bonuses && set.set_bonuses.full ? JSON.stringify(set.set_bonuses.full, null, 2) : ''
+    set_bonuses: set.set_bonuses || {}
   }
+  
+  // Ensure stats are loaded before syncing bonuses (needed for custom stats)
+  if (conversionKeys.value.length === 0) {
+    await loadStats()
+  }
+  
+  syncBonusesToList()
   if (formData.value.zone_id) {
     await loadItemsForZone(formData.value.zone_id)
   }
@@ -396,22 +525,22 @@ const handleEdit = async (set) => {
 
 const handleSave = async () => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingItemSets.errors.apiNotAvailable')
     return
   }
 
   if (!formData.value.name) {
-    error.value = 'Name is required'
+    error.value = t('page.manageSetting.settingItemSets.errors.nameRequired')
     return
   }
 
   if (!formData.value.zone_id) {
-    error.value = 'Zone is required'
+    error.value = t('page.manageSetting.settingItemSets.errors.zoneRequired')
     return
   }
 
   if (formData.value.item_ids.length === 0) {
-    error.value = 'At least one item is required'
+    error.value = t('page.manageSetting.settingItemSets.errors.itemsRequired')
     return
   }
 
@@ -419,42 +548,15 @@ const handleSave = async () => {
   saveFailed.value = false
   error.value = null
 
-  try {
-    // Build set_bonuses from JSON fields
-    const setBonuses = {}
-    if (formData.value.bonus_2_json) {
-      try {
-        setBonuses[2] = JSON.parse(formData.value.bonus_2_json)
-      } catch (e) {
-        error.value = 'Invalid JSON in 2 Items Bonus'
-        saveLoading.value = false
-        return
-      }
-    }
-    if (formData.value.bonus_3_json) {
-      try {
-        setBonuses[3] = JSON.parse(formData.value.bonus_3_json)
-      } catch (e) {
-        error.value = 'Invalid JSON in 3 Items Bonus'
-        saveLoading.value = false
-        return
-      }
-    }
-    if (formData.value.bonus_full_json) {
-      try {
-        setBonuses.full = JSON.parse(formData.value.bonus_full_json)
-      } catch (e) {
-        error.value = 'Invalid JSON in Full Set Bonus'
-        saveLoading.value = false
-        return
-      }
-    }
+  // Sync bonuses from list before saving
+  syncBonusesFromList()
 
+  try {
     const data = {
       name: formData.value.name,
       description: formData.value.description || null,
       zone_id: formData.value.zone_id,
-      set_bonuses: Object.keys(setBonuses).length > 0 ? setBonuses : null,
+      set_bonuses: formData.value.set_bonuses && Object.keys(formData.value.set_bonuses).length > 0 ? formData.value.set_bonuses : null,
       item_ids: formData.value.item_ids
     }
 
@@ -483,11 +585,11 @@ const handleSave = async () => {
 
 const handleDelete = async (set) => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingItemSets.errors.apiNotAvailable')
     return
   }
 
-  if (!confirm(`Are you sure you want to delete "${set.name}"?`)) {
+  if (!confirm(t('page.manageSetting.settingItemSets.confirm.delete', `Are you sure you want to delete "${set.name}"?`).replace('{name}', set.name))) {
     return
   }
 
@@ -515,10 +617,9 @@ const closeModal = () => {
     description: '',
     zone_id: '',
     item_ids: [],
-    bonus_2_json: '',
-    bonus_3_json: '',
-    bonus_full_json: ''
+    set_bonuses: {}
   }
+  bonusesList.value = {}
   availableItems.value = []
 }
 
@@ -527,8 +628,29 @@ const truncateDescription = (description) => {
   return description.length > 100 ? description.substring(0, 100) + '...' : description
 }
 
+const loadStats = async () => {
+  if (!gameApi) {
+    return
+  }
+
+  loadingKeys.value = true
+  try {
+    const response = await gameApi.getAllStats()
+    if (response.data && response.data.datas && response.data.datas.stats) {
+      conversionKeys.value = response.data.datas.stats
+    } else {
+      console.warn('Stats response structure unexpected:', response.data)
+    }
+  } catch (err) {
+    console.error('Error loading stats:', err)
+  } finally {
+    loadingKeys.value = false
+  }
+}
+
 onMounted(() => {
   loadSettingItemSets()
+  loadStats()
 })
 </script>
 
@@ -633,17 +755,7 @@ onMounted(() => {
   color: #f6a901;
 }
 
-.bonuses-preview {
-  max-width: 200px;
-  max-height: 100px;
-  overflow: auto;
-  margin: 0;
-  padding: 5px;
-  background: #1a2332;
-  border-radius: 4px;
-  font-size: 11px;
-  color: #d0d4d6;
-}
+/* legacy JSON preview (replaced by StatMapPreview) */
 
 .actions-cell {
   white-space: nowrap;
@@ -902,25 +1014,33 @@ onMounted(() => {
   color: #999;
 }
 
+.no-items-message {
+  padding: 15px;
+  background: #1a2332;
+  border: 1px solid #253344;
+  border-radius: 4px;
+  color: #999;
+  text-align: center;
+  font-size: 14px;
+}
+
+.loading-stats,
+.no-stats-message {
+  padding: 15px;
+  background: #1a2332;
+  border: 1px solid #253344;
+  border-radius: 4px;
+  color: #999;
+  text-align: center;
+  font-size: 14px;
+}
+
 .bonuses-editor {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 15px;
 }
 
-.bonus-section {
-  display: flex;
-  flex-direction: column;
-}
-
-.bonus-section label {
-  margin-bottom: 5px;
-  font-size: 13px;
-}
-
-.bonus-section textarea {
-  min-height: 80px;
-}
 
 .modal-footer {
   display: flex;

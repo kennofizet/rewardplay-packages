@@ -103,6 +103,9 @@ class SettingItemService
      */
     public function createSettingItem(array $data, ?UploadedFile $imageFile = null): SettingItem
     {
+        // Normalize potential JSON fields
+        $data = $this->normalizeDefaultProperty($data);
+
         // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile);
         
@@ -121,6 +124,9 @@ class SettingItemService
      */
     public function updateSettingItem(int $id, array $data, ?UploadedFile $imageFile = null): ?SettingItem
     {
+        // Normalize potential JSON fields
+        $data = $this->normalizeDefaultProperty($data);
+
         // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile, $id);
         
@@ -148,9 +154,10 @@ class SettingItemService
         }
         
         // Permission check: validate that item's zone is in user's managed zones
-        // This is done by checking if zone_id is in managed zones (from middleware)
+        // Use ZoneService which centralizes zone->managed logic instead of calling BaseModelActions directly
         if (!empty($settingItem->zone_id)) {
-            $managedZoneIds = \Kennofizet\RewardPlay\Core\Model\BaseModelActions::currentUserManagedZoneIds();
+            $zones = $this->zoneService->getZonesUserCanManage();
+            $managedZoneIds = array_column($zones, 'id');
             if (!in_array($settingItem->zone_id, $managedZoneIds)) {
                 throw new \Exception('You do not have permission to manage this zone');
             }
@@ -187,6 +194,25 @@ class SettingItemService
         })->toArray();
 
         return $formattedItems;
+    }
+
+    /**
+     * Normalize default_property when it's passed as JSON string from FormData
+     * Extracted to avoid duplicated code in create/update methods.
+     *
+     * @param array $data
+     * @return array
+     */
+    private function normalizeDefaultProperty(array $data): array
+    {
+        if (isset($data['default_property']) && is_string($data['default_property'])) {
+            $decoded = json_decode($data['default_property'], true);
+            if (is_array($decoded)) {
+                $data['default_property'] = $decoded;
+            }
+        }
+
+        return $data;
     }
 }
 

@@ -1,9 +1,9 @@
 <template>
   <div class="setting-items-list-page">
     <div class="page-header">
-      <h2>{{ t('page.manageSetting.settingItems.title') || 'Setting Items' }}</h2>
+      <h2>{{ t('page.manageSetting.settingItems.title') }}</h2>
       <button class="btn-primary" @click="handleCreate">
-        {{ t('page.manageSetting.settingItems.create') || 'Create New' }}
+        {{ t('page.manageSetting.settingItems.create') }}
       </button>
     </div>
 
@@ -11,28 +11,28 @@
       <input 
         v-model="filters.search"
         type="text" 
-        :placeholder="t('page.manageSetting.settingItems.searchPlaceholder') || 'Search by name or description...'"
+        :placeholder="t('page.manageSetting.settingItems.searchPlaceholder')"
         class="search-input"
         @input="handleSearch"
       />
       <CustomSelect
         v-model="filters.zone_id"
         :options="zoneOptionsWithEmpty"
-        :placeholder="t('page.manageSetting.settingItems.allZones') || 'All Zones'"
+        :placeholder="t('page.manageSetting.settingItems.allZones')"
         @change="loadSettingItems"
         trigger-class="zone-select"
       />
       <CustomSelect
         v-model="filters.type"
         :options="typeOptionsWithEmpty"
-        :placeholder="t('page.manageSetting.settingItems.allTypes') || 'All Types'"
+        :placeholder="t('page.manageSetting.settingItems.allTypes')"
         @change="loadSettingItems"
         trigger-class="type-select"
       />
     </div>
 
     <div v-if="loading" class="loading">
-      {{ t('page.manageSetting.settingItems.loading') || 'Loading...' }}
+      {{ t('page.manageSetting.settingItems.loading') }}
     </div>
 
     <div v-if="error" class="error">
@@ -43,14 +43,15 @@
       <table class="settings-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Slug</th>
-            <th>Type</th>
-            <th>Zone</th>
-            <th>Image</th>
-            <th>Description</th>
-            <th>Actions</th>
+            <th>{{ t('page.manageSetting.settingItems.table.id') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.name') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.slug') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.type') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.zone') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.image') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.defaultProperty') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.description') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -61,13 +62,16 @@
             <td>{{ item.type }}</td>
             <td>{{ item.zone ? item.zone.name : '-' }}</td>
             <td>
-              <img v-if="item.image" :src="getImageUrl(item.image)" alt="" class="item-image" />
+              <img v-if="item.image" :src="item.image" alt="" class="item-image" />
               <span v-else>-</span>
+            </td>
+            <td>
+              <StatMapPreview :value="item.default_property" :max-items="3" />
             </td>
             <td>{{ truncateDescription(item.description) }}</td>
             <td class="actions-cell">
-              <button class="btn-edit" @click="handleEdit(item)">Edit</button>
-              <button class="btn-delete" @click="handleDelete(item)">Delete</button>
+              <button class="btn-edit" @click="handleEdit(item)">{{ t('page.manageSetting.settingItems.actions.edit') }}</button>
+              <button class="btn-delete" @click="handleDelete(item)">{{ t('page.manageSetting.settingItems.actions.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -78,14 +82,14 @@
           :disabled="pagination.current_page === 1"
           @click="changePage(pagination.current_page - 1)"
         >
-          Previous
+          {{ t('page.manageSetting.settingItems.pagination.prev') }}
         </button>
-        <span>Page {{ pagination.current_page }} of {{ pagination.last_page }}</span>
+        <span>{{ t('page.manageSetting.settingItems.pagination.page') }} {{ pagination.current_page }} {{ t('page.manageSetting.settingItems.pagination.of') }} {{ pagination.last_page }}</span>
         <button 
           :disabled="pagination.current_page === pagination.last_page"
           @click="changePage(pagination.current_page + 1)"
         >
-          Next
+          {{ t('page.manageSetting.settingItems.pagination.next') }}
         </button>
       </div>
     </div>
@@ -94,20 +98,20 @@
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>{{ editingItem ? (t('page.manageSetting.settingItems.edit') || 'Edit Setting Item') : (t('page.manageSetting.settingItems.create') || 'Create Setting Item') }}</h3>
+          <h3>{{ editingItem ? t('page.manageSetting.settingItems.edit') : t('page.manageSetting.settingItems.createModal') }}</h3>
           <button class="btn-close" @click="closeModal">×</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Zone *</label>
+            <label>{{ t('page.manageSetting.settingItems.form.zone') }}</label>
             <CustomSelect
               v-model="formData.zone_id"
               :options="zoneOptions"
-              :placeholder="t('page.manageSetting.settingItems.selectZone') || 'Select Zone'"
+              :placeholder="t('page.manageSetting.settingItems.selectZone')"
             />
           </div>
           <div class="form-group">
-            <label>Name *</label>
+            <label>{{ t('page.manageSetting.settingItems.form.name') }}</label>
             <input v-model="formData.name" type="text" required />
           </div>
           <div class="form-group">
@@ -115,41 +119,86 @@
             <CustomSelect
               v-model="formData.type"
               :options="typeOptions"
-              :placeholder="t('page.manageSetting.settingItems.selectType') || 'Select Type'"
+              :placeholder="t('page.manageSetting.settingItems.selectType')"
               :disabled="loadingTypes"
             />
-            <div v-if="loadingTypes" class="loading-types">Loading types...</div>
+            <div v-if="loadingTypes" class="loading-types">{{ t('page.manageSetting.settingItems.loadingTypes') }}</div>
           </div>
           <div class="form-group">
-            <label>Description</label>
+            <label>{{ t('page.manageSetting.settingItems.form.description') }}</label>
             <textarea v-model="formData.description" rows="3"></textarea>
           </div>
           <div class="form-group">
-            <label>Default Property (JSON)</label>
-            <textarea v-model="formData.default_property_json" rows="5" placeholder='{"key": "value"}'></textarea>
-            <small class="form-hint">Enter valid JSON format</small>
+            <label>{{ t('page.manageSetting.settingItems.form.defaultProperty') }}</label>
+            <div class="rates-list">
+              <div 
+                v-for="(prop, index) in defaultPropertiesList" 
+                :key="index"
+                class="rate-item"
+              >
+                <CustomSelect
+                  v-model="prop.key"
+                  :options="propertyKeyOptions"
+                  :placeholder="t('page.manageSetting.settingItems.selectKey')"
+                  @change="handlePropertyKeyChange(index)"
+                  trigger-class="rate-key-select"
+                />
+                <input 
+                  v-if="!prop.isCustom"
+                  v-model.number="prop.value"
+                  type="number"
+                  step="0.01"
+                  :placeholder="t('page.manageSetting.settingItems.valuePlaceholder')"
+                  class="rate-value-input"
+                />
+                <div 
+                  v-else-if="prop.isCustom"
+                  class="property-custom-value"
+                  :title="getPresetValuesTooltip(prop.key)"
+                >
+                  <span class="custom-value-label">Preset Values</span>
+                  <span class="custom-value-count">{{ getPresetValuesCount(prop.key) }} stats</span>
+                </div>
+                <button 
+                  type="button"
+                  class="btn-remove-rate"
+                  @click="removeProperty(index)"
+                  :title="t('page.manageSetting.settingItems.removeProperty')"
+                >
+                  ×
+                </button>
+              </div>
+              <button 
+                type="button"
+                class="btn-add-rate"
+                @click="addProperty"
+              >
+                <span class="btn-add-icon">+</span>
+                <span>{{ t('page.manageSetting.settingItems.addOption') }}</span>
+              </button>
+            </div>
           </div>
           <div class="form-group">
-            <label>Image</label>
+            <label>{{ t('page.manageSetting.settingItems.form.image') }}</label>
             <input type="file" accept="image/*" @change="handleImageChange" />
             <div v-if="formData.image_preview" class="image-preview">
               <img :src="formData.image_preview" alt="Preview" />
             </div>
             <div v-else-if="editingItem && editingItem.image" class="image-preview">
-              <img :src="getImageUrl(editingItem.image)" alt="Current" />
+              <img :src="editingItem.image" alt="Current" />
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeModal" :disabled="saveLoading">Cancel</button>
+          <button class="btn-secondary" @click="closeModal" :disabled="saveLoading">{{ t('page.manageSetting.settingItems.actions.cancel') }}</button>
           <button 
             class="btn-primary" 
             :class="{ 'btn-loading': saveLoading, 'btn-fail': saveFailed }"
             @click="handleSave"
             :disabled="saveLoading || !formData.type || !formData.zone_id || !formData.name"
           >
-            <span v-if="saveLoading">{{ t('page.manageSetting.settingItems.saving') || 'Saving...' }}</span>
-            <span v-else-if="saveFailed">{{ t('page.manageSetting.settingItems.saveFailed') || 'Failed' }}</span>
+            <span v-if="saveLoading">{{ t('page.manageSetting.settingItems.saving') }}</span>
+            <span v-else-if="saveFailed">{{ t('page.manageSetting.settingItems.saveFailed') }}</span>
             <span v-else>{{ editingItem ? 'Update' : 'Create' }}</span>
           </button>
         </div>
@@ -159,17 +208,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject, computed } from 'vue'
+import { ref, onMounted, inject, computed, watch } from 'vue'
 import CustomSelect from '../../../components/CustomSelect.vue'
+import StatMapPreview from '../../../components/StatMapPreview.vue'
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
-
+const statHelpers = inject('statHelpers', null)
 const loading = ref(false)
 const loadingTypes = ref(false)
+const loadingKeys = ref(false)
 const error = ref(null)
 const settingItems = ref([])
+const conversionKeys = ref([])
 const itemTypes = ref([])
 const zones = ref([])
 const pagination = ref(null)
@@ -177,6 +229,7 @@ const showModal = ref(false)
 const editingItem = ref(null)
 const saveLoading = ref(false)
 const saveFailed = ref(false)
+const defaultPropertiesList = ref([])
 const selectedImageFile = ref(null)
 
 const zoneOptions = computed(() => {
@@ -187,6 +240,13 @@ const zoneOptions = computed(() => {
   return options
 })
 
+const zoneOptionsWithEmpty = computed(() => {
+  return [
+    { value: '', label: t('page.manageSetting.settingItems.allZones') },
+    ...zoneOptions.value
+  ]
+})
+
 const typeOptions = computed(() => {
   const options = itemTypes.value.map(itemType => ({
     value: itemType.type,
@@ -195,19 +255,68 @@ const typeOptions = computed(() => {
   return options
 })
 
-const zoneOptionsWithEmpty = computed(() => {
-  return [
-    { value: '', label: t('page.manageSetting.settingItems.allZones') || 'All Zones' },
-    ...zoneOptions.value
-  ]
-})
-
 const typeOptionsWithEmpty = computed(() => {
   return [
-    { value: '', label: t('page.manageSetting.settingItems.allTypes') || 'All Types' },
+    { value: '', label: t('page.manageSetting.settingItems.allTypes') },
     ...typeOptions.value
   ]
 })
+
+const propertyKeyOptions = computed(() => {
+  const options = conversionKeys.value.map(stat => {
+    if (stat.value !== undefined) {
+      return {
+        value: stat.key,
+        label: stat.name,
+        isCustom: true,
+        customValue: stat.value
+      }
+    }
+    return {
+      value: stat.key,
+      label: `${stat.name} (${stat.key})`,
+      isCustom: false
+    }
+  })
+  return options
+})
+
+const isCustomStat = (key) => statHelpers ? statHelpers.isCustomStat(conversionKeys.value, key) : false
+const getCustomStatValue = (key) => statHelpers ? statHelpers.getCustomStatValue(conversionKeys.value, key) : null
+const getPresetValuesCount = (key) => statHelpers ? statHelpers.getPresetValuesCount(conversionKeys.value, key) : 0
+const getPresetValuesTooltip = (key) => statHelpers ? statHelpers.getPresetValuesTooltip(conversionKeys.value, key) : 'Preset Values (no value set)'
+
+const syncDefaultPropertiesToList = () => {
+  // Convert default_property map into editable list items
+  defaultPropertiesList.value = statHelpers ? statHelpers.mapToList(formData.value.default_property, conversionKeys.value, { customPrefix: 'custom_key_' }) : []
+}
+
+const handlePropertyKeyChange = (index) => {
+  const prop = defaultPropertiesList.value[index]
+  if (!prop) return
+  const customStatValue = getCustomStatValue(prop.key)
+  const isCustomKeyPrefix = prop.key && prop.key.startsWith('custom_key_')
+
+  if (customStatValue !== null || isCustomKeyPrefix) {
+    prop.isCustom = true
+    prop.value = customStatValue
+  } else {
+    prop.isCustom = false
+    if (prop.value === null || prop.value === undefined) prop.value = null
+  }
+}
+
+const addProperty = () => {
+  defaultPropertiesList.value.push({
+    key: '',
+    value: null,
+    isCustom: false
+  })
+}
+
+const removeProperty = (index) => {
+  defaultPropertiesList.value.splice(index, 1)
+}
 
 const filters = ref({
   search: '',
@@ -221,23 +330,13 @@ const formData = ref({
   name: '',
   description: '',
   type: '',
-  default_property_json: '',
+  default_property: {},
   zone_id: '',
   image_preview: null
 })
 
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return ''
-  if (imagePath.startsWith('http')) return imagePath
-  return `/${imagePath}`
-}
 
 const loadSettingItems = async () => {
-  if (!gameApi) {
-    error.value = 'Game API not available'
-    return
-  }
-
   loading.value = true
   error.value = null
 
@@ -308,14 +407,15 @@ const handleCreate = () => {
     name: '',
     description: '',
     type: '',
-    default_property_json: '',
+    default_property: {},
     zone_id: zones.value.length > 0 ? zones.value[0].id : '',
     image_preview: null
   }
+  defaultPropertiesList.value = []
   showModal.value = true
 }
 
-const handleEdit = (item) => {
+const handleEdit = async (item) => {
   editingItem.value = item
   saveLoading.value = false
   saveFailed.value = false
@@ -324,10 +424,15 @@ const handleEdit = (item) => {
     name: item.name || '',
     description: item.description || '',
     type: item.type || '',
-    default_property_json: item.default_property ? JSON.stringify(item.default_property, null, 2) : '',
+    default_property: item.default_property ? { ...item.default_property } : {},
     zone_id: item.zone_id || '',
     image_preview: null
   }
+  // Ensure stats are loaded before syncing properties (needed for custom stats)
+  if (conversionKeys.value.length === 0) {
+    await loadStats()
+  }
+  syncDefaultPropertiesToList()
   showModal.value = true
 }
 
@@ -361,24 +466,51 @@ const loadItemTypes = async () => {
   }
 }
 
+const loadStats = async () => {
+  if (!gameApi) {
+    return
+  }
+
+  loadingKeys.value = true
+  try {
+    const response = await gameApi.getAllStats()
+    if (response.data && response.data.datas && response.data.datas.stats) {
+      conversionKeys.value = response.data.datas.stats
+    }
+  } catch (err) {
+    console.error('Error loading stats:', err)
+  } finally {
+    loadingKeys.value = false
+  }
+}
+
+// Watch conversionKeys to update custom stat selections when stats load
+watch(() => conversionKeys.value.length, (newLength, oldLength) => {
+  // Only trigger if stats were just loaded (length changed from 0 to > 0)
+  if (newLength > 0 && oldLength === 0 && editingItem.value && formData.value.default_property) {
+    // Re-sync properties to update custom stat flags
+    syncDefaultPropertiesToList()
+  }
+})
+
 const handleSave = async () => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingItems.errors.apiNotAvailable')
     return
   }
 
   if (!formData.value.name) {
-    error.value = 'Name is required'
+    error.value = t('page.manageSetting.settingItems.errors.nameRequired')
     return
   }
 
   if (!formData.value.type) {
-    error.value = 'Type is required'
+    error.value = t('page.manageSetting.settingItems.errors.typeRequired')
     return
   }
 
   if (!formData.value.zone_id) {
-    error.value = 'Zone is required'
+    error.value = t('page.manageSetting.settingItems.errors.zoneRequired')
     return
   }
 
@@ -387,22 +519,61 @@ const handleSave = async () => {
   error.value = null
 
   try {
+    // Build default_property from list (allow duplicate keys by suffixing)
+    const defaultPropertyClean = {}
+    const keyCounters = {}
+    
+    defaultPropertiesList.value.forEach(prop => {
+      // Only include properties that have a key
+      if (!prop.key) {
+        return
+      }
+      
+      // Skip if value is invalid (null, undefined, or empty string)
+      if (prop.value === null || prop.value === undefined || prop.value === '') {
+        return
+      }
+      
+      // For custom stats, ensure the key exists in conversionKeys and use exact format
+      let keyToUse = prop.key
+      if (prop.isCustom && keyToUse.startsWith('custom_key_')) {
+        // Verify the key exists in conversionKeys to ensure we use the correct format
+        const matchingStat = conversionKeys.value.find(s => s.key === keyToUse)
+        if (matchingStat) {
+          // Use the exact key from conversionKeys
+          keyToUse = matchingStat.key
+        }
+        // If not found in conversionKeys, still use the key as-is (might be manually entered custom key)
+      }
+      
+      // Track key usage to allow duplicates by suffixing
+      if (!keyCounters[keyToUse]) {
+        keyCounters[keyToUse] = 0
+      }
+      keyCounters[keyToUse]++
+      const uniqueKey = keyCounters[keyToUse] === 1 ? keyToUse : `${keyToUse}_${keyCounters[keyToUse]}`
+      
+      if (prop.isCustom && keyToUse.startsWith('custom_key_')) {
+        defaultPropertyClean[uniqueKey] = prop.value
+      }else{
+        // Parse value as number (both custom and regular stats use numeric values for items)
+        const numValue = typeof prop.value === 'number' ? prop.value : parseFloat(prop.value)
+        
+        // Only add if the value is a valid number
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          defaultPropertyClean[uniqueKey] = numValue
+        }
+      }
+    })
+
     const formDataToSend = new FormData()
     formDataToSend.append('name', formData.value.name)
     formDataToSend.append('description', formData.value.description || '')
     formDataToSend.append('type', formData.value.type)
     formDataToSend.append('zone_id', formData.value.zone_id)
 
-    // Parse and add default_property if valid JSON
-    if (formData.value.default_property_json) {
-      try {
-        const parsed = JSON.parse(formData.value.default_property_json)
-        formDataToSend.append('default_property', JSON.stringify(parsed))
-      } catch (e) {
-        error.value = 'Invalid JSON in Default Property'
-        saveLoading.value = false
-        return
-      }
+    if (Object.keys(defaultPropertyClean).length > 0) {
+      formDataToSend.append('default_property', JSON.stringify(defaultPropertyClean))
     }
 
     // Add image file if selected
@@ -435,11 +606,11 @@ const handleSave = async () => {
 
 const handleDelete = async (item) => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingItems.errors.apiNotAvailable')
     return
   }
 
-  if (!confirm(`Are you sure you want to delete "${item.name}"?`)) {
+  if (!confirm(t('page.manageSetting.settingItems.confirm.delete', `Are you sure you want to delete "${item.name}"?`).replace('{name}', item.name))) {
     return
   }
 
@@ -467,10 +638,11 @@ const closeModal = () => {
     name: '',
     description: '',
     type: '',
-    default_property_json: '',
+    default_property: {},
     zone_id: '',
     image_preview: null
   }
+  defaultPropertiesList.value = []
 }
 
 const truncateDescription = (description) => {
@@ -481,6 +653,7 @@ const truncateDescription = (description) => {
 onMounted(() => {
   loadSettingItems()
   loadItemTypes()
+  loadStats()
 })
 </script>
 
@@ -568,6 +741,102 @@ onMounted(() => {
   max-height: 50px;
   object-fit: cover;
   border-radius: 4px;
+}
+
+.rates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rate-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rate-key-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.rate-value-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  background: #253344;
+  border: 1px solid #1a2332;
+  color: #d0d4d6;
+  font-size: 14px;
+}
+
+.property-custom-value {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: #1a2332;
+  border: 1px solid #253344;
+  border-radius: 4px;
+  cursor: help;
+}
+
+.custom-value-label {
+  font-size: 12px;
+  color: #f6a901;
+  font-weight: 500;
+}
+
+.custom-value-count {
+  font-size: 11px;
+  color: #999;
+}
+
+.btn-remove-rate {
+  padding: 8px 12px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-remove-rate:hover {
+  background: #ee5a5a;
+}
+
+.btn-add-rate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #253344;
+  border: 2px dashed #1a2332;
+  color: #d0d4d6;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.btn-add-rate:hover {
+  background: #1a2332;
+  border-color: #f6a901;
+  color: #f6a901;
+}
+
+.btn-add-icon {
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
 }
 
 .actions-cell {
