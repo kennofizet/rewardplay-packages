@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, inject } from 'vue'
+import { ref, inject, onMounted } from 'vue'
 import Sector from '../../components/game/Sector.vue'
 import WeekDay from '../../components/game/WeekDay.vue'
 import RewardItem from '../../components/game/RewardItem.vue'
@@ -55,6 +55,21 @@ import RewardCard from '../../components/game/RewardCard.vue'
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
+
+const selectedZone = ref(null)
+
+onMounted(async () => {
+  // Try to restore previously selected zone (selection happens after login elsewhere)
+  try {
+    const stored = localStorage.getItem('selected_zone')
+    if (stored) {
+      selectedZone.value = JSON.parse(stored)
+      if (gameApi && gameApi.setZone) gameApi.setZone(selectedZone.value)
+    }
+  } catch (e) {
+    // ignore malformed storage
+  }
+})
 
 const weekDays = ref([
   { day: 1, completed: true, past: true, current: false, rewards: [] },
@@ -159,14 +174,19 @@ const handleCollect = async (reward) => {
   }
   
   try {
-    // TODO: Call API to collect reward
-    // const response = await gameApi.collectDailyReward(reward.id)
+    // TODO: Call API to collect reward. Always include zone_id when available.
+    const params = { reward_id: reward.id }
+    if (selectedZone.value) params.zone_id = selectedZone.value.id
+    // const response = await gameApi.collectDailyReward(params)
     reward.isCollected = true
     reward.isCurrent = false
   } catch (error) {
     console.error('Error collecting reward:', error)
   }
 }
+
+// Zone selection is handled after login on the main game entry (RewardPlayPage).
+// Here we just keep any previously-selected zone available for actions.
 </script>
 
 <style scoped>

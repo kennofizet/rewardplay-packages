@@ -7,6 +7,7 @@
       <div class="wrapper">
         <div class="header">
           <TopMenu 
+            :is-manager="isManager"
             @page-change="$emit('page-change', $event)"
             @icon-click="$emit('icon-click', $event)"
           />
@@ -28,6 +29,11 @@ const props = defineProps({
   rotate: {
     type: Boolean,
     default: true
+  }
+  ,
+  isManager: {
+    type: Boolean,
+    default: false
   }
 })
 

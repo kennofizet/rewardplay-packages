@@ -609,11 +609,11 @@ const checkUser = async () => {
     
     if (response.data.success) {
       status.value = 'success'
+      // Determine is_manager flag from response (if present)
+      const isManager = !!(response.data?.datas?.is_manager)
       // Wait a moment to show success icon
       setTimeout(() => {
-        emit('login-success', {
-          ...response.data.datas.user
-        })
+        emit('login-success', { is_manager: isManager })
       }, 500)
     } else {
       status.value = 'error'

@@ -24,6 +24,7 @@ import { ref, computed, inject } from 'vue'
 import SettingItemsListPage from './manage-setting/SettingItemsListPage.vue'
 import SettingOptionsListPage from './manage-setting/SettingOptionsListPage.vue'
 import SettingItemSetsListPage from './manage-setting/SettingItemSetsListPage.vue'
+import ManageZonesPage from './manage-setting/ManageZonesPage.vue'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
@@ -32,6 +33,7 @@ const menuItems = [
   { key: 'setting-items', label: t('page.manageSetting.menu.settingItems') },
   { key: 'setting-options', label: t('page.manageSetting.menu.settingOptions') },
   { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets') }
+  ,{ key: 'manage-zones', label: t('page.manageSetting.menu.manageZones') }
 ]
 
 const currentPage = ref('setting-items')
@@ -41,6 +43,7 @@ const currentPageComponent = computed(() => {
     'setting-items': SettingItemsListPage,
     'setting-options': SettingOptionsListPage,
     'setting-item-sets': SettingItemSetsListPage
+    ,  'manage-zones': ManageZonesPage
   }
   return pageMap[currentPage.value] || SettingItemsListPage
 })

@@ -101,4 +101,17 @@ trait BaseModelActions
         $managedZoneIds = self::currentUserManagedZoneIds();
         return in_array($zoneId, $managedZoneIds);
     }
+
+    /**
+     * Get pivot table name with configured prefix.
+     * This is used by pivot models to compute their table name consistently.
+     *
+     * @param string $tableName
+     * @return string
+     */
+    protected static function getPivotTableName(string $tableName): string
+    {
+        $tablePrefix = config('rewardplay.table_prefix', '');
+        return $tablePrefix . $tableName;
+    }
 }

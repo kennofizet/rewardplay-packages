@@ -25,6 +25,7 @@ export default {
         settingItems: 'Mục Cài Đặt',
         settingOptions: 'Tùy Chọn Cài Đặt',
         settingItemSets: 'Bộ Vật Phẩm',
+        manageZones: 'Quản Lý Vùng',
       },
       settingItems: {
         title: 'Mục Cài Đặt',
@@ -198,6 +199,31 @@ export default {
         confirm: {
           delete: 'Bạn có chắc muốn xóa "{name}"?',
         },
+      },
+      manageZones: {
+        title: 'Quản Lý Vùng',
+        create: 'Tạo Vùng',
+        edit: 'Chỉnh Sửa Vùng',
+        searchPlaceholder: 'Tìm vùng...',
+        loading: 'Đang tải...',
+        saving: 'Đang lưu...',
+        cancel: 'Hủy',
+        update: 'Cập Nhật',
+        form: {
+          name: 'Tên',
+          serverId: 'Server ID'
+        },
+        confirmDelete: 'Bạn có chắc muốn xóa vùng này?',
+        members: 'Quản Lý Thành Viên',
+        assign: 'Gán',
+        remove: 'Gỡ',
+        assigned: 'Đã Gán',
+        unassigned: 'Chưa Gán',
+        modal: {
+          title: 'Quản Lý Thành Viên Vùng',
+          searchPlaceholder: 'Tìm thành viên...',
+          all: 'Tất cả'
+        }
       },
     },
   },

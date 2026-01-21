@@ -13,7 +13,8 @@ trait UserRelations
      */
     public function zones()
     {
-        $zoneUsersTableName = \Kennofizet\RewardPlay\Models\ZoneUser::getTable();
+        // getTable() is an instance method on BaseModel, instantiate to call it
+        $zoneUsersTableName = (new \Kennofizet\RewardPlay\Models\ZoneUser())->getTable();
         return $this->belongsToMany(
             \Kennofizet\RewardPlay\Models\Zone::class,
             $zoneUsersTableName,

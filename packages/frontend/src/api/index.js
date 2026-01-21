@@ -28,21 +28,33 @@ export function createGameApi(backendUrl, token) {
     // Auth
     checkUser: () => api.get('/api/rewardplay/auth/check'),
     getUserData: () => api.get('/api/rewardplay/auth/user-data'),
-    
+    // Zones the current user belongs to
+    getZones: () => api.get('/api/rewardplay/player/zones'),
+    getCustomImages: (params) => api.get('/api/rewardplay/player/custom-images', { params }),
     // Manifest
     getManifest: () => api.get('/api/rewardplay/manifest'),
-
     // Ranking
     getRanking: () => api.get('/api/rewardplay/ranking'),
-    
     // Demo
     getDemo: () => api.get('/api/rewardplay/demo'),
+
+    // Zones the current user can manage (for settings)
+    getManagedZones: () => api.get('/api/rewardplay/player/managed-zones'),
+    // Zone management (settings)
+    getAllZones: (params) => api.get('/api/rewardplay/zones', { params }),
+    getZone: (id) => api.get(`/api/rewardplay/zones/${id}`),
+    createZone: (data) => api.post('/api/rewardplay/zones', data),
+    updateZone: (id, data) => api.put(`/api/rewardplay/zones/${id}`, data),
+    deleteZone: (id) => api.delete(`/api/rewardplay/zones/${id}`),
+    // Zone users (server members + assigned)
+    getZoneUsers: (zoneId, params) => api.get(`/api/rewardplay/zones/${zoneId}/users`, { params }),
+    assignZoneUser: (zoneId, userId) => api.post(`/api/rewardplay/zones/${zoneId}/users`, { user_id: userId }),
+    removeZoneUser: (zoneId, userId) => api.delete(`/api/rewardplay/zones/${zoneId}/users/${userId}`),
 
     // Setting Items CRUD
     getSettingItems: (params) => api.get('/api/rewardplay/setting-items', { params }),
     getSettingItem: (id) => api.get(`/api/rewardplay/setting-items/${id}`),
     getItemTypes: () => api.get('/api/rewardplay/setting-items/types'),
-    getCustomImages: (params) => api.get('/api/rewardplay/setting-items/custom-images', { params }),
     createSettingItem: (data) => {
       // If data is FormData, use multipart/form-data, otherwise use JSON
       if (data instanceof FormData) {

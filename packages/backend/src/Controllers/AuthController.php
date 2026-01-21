@@ -45,10 +45,19 @@ class AuthController extends Controller
             return $this->apiErrorResponse('User not authenticated', 401);
         }
 
+        // Determine manager status from attributes set by ValidateRewardPlayToken
+        $managedServerId = $request->attributes->get('rewardplay_user_managed_server_id');
+        $managedZoneIds = $request->attributes->get('rewardplay_user_managed_zone_ids', []);
+
+        $isManager = false;
+        if (!empty($managedServerId)) {
+            $isManager = true;
+        } elseif (!empty($managedZoneIds) && is_array($managedZoneIds) && count($managedZoneIds) > 0) {
+            $isManager = true;
+        }
+
         return $this->apiResponseWithContext([
-            'user' => [
-                'id' => $userId,
-            ]
+            'is_manager' => $isManager,
         ]);
     }
 

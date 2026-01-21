@@ -1,6 +1,7 @@
 <template>
   <GameLayout 
     :rotate="rotate"
+    :is-manager="isManager"
     @page-change="handlePageChange"
     @icon-click="handleIconClick"
   >
@@ -24,6 +25,10 @@ const props = defineProps({
   rotate: {
     type: Boolean,
     default: true
+  },
+  isManager: {
+    type: Boolean,
+    default: false
   }
 })
 

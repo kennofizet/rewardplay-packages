@@ -64,10 +64,6 @@ class BaseModel extends Model
      * @param string $tableName - Table name without prefix (e.g., 'rewardplay_tokens', 'rewardplay_setting_item_set_items')
      * @return string
      */
-    protected static function getPivotTableName(string $tableName): string
-    {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . $tableName;
-    }
+
 
 }

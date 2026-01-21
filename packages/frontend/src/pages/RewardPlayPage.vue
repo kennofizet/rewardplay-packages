@@ -11,6 +11,8 @@
         @login-failed="handleLoginFailed"
       />
 
+      <ZoneSelectPage v-if="showZoneModal" :zones="zones" @select="handleZoneSelect" @close="showZoneModal = false" />
+
       <LoadingSource
         :is-loading="isLoading"
         :loading-progress="loadingProgress"
@@ -29,11 +31,11 @@
       />
       
       <div 
-        v-if="!isLoading && !showLogin"
+        v-if="!isLoading && !showLogin && !showZoneModal"
         class="game-content"
         :class="{ 'content-hidden': isLoading || showLogin }"
       >
-        <MainGame :rotate="rotate" />
+        <MainGame :rotate="rotate" :is-manager="isManager" />
       </div>
     </div>
   </div>
@@ -43,6 +45,7 @@
 import { ref, provide, computed, inject } from 'vue'
 import LoadingSource from '../components/LoadingSource.vue'
 import LoginScreen from '../components/LoginScreen.vue'
+import ZoneSelectPage from '../components/game/ZoneSelectPage.vue'
 import { ResourceLoader } from '../utils/resourceLoader'
 import MainGame from '../components/MainGame.vue'
 import { createTranslator } from '../i18n'
@@ -109,6 +112,7 @@ const customStyles = computed(() => {
 })
 
 const showLogin = ref(true)
+const isManager = ref(false)
 const isLoading = ref(false)
 const loadingProgress = ref(0)
 const unzipProgress = ref(0)
@@ -122,10 +126,60 @@ const loginError = ref(null)
 const gameApi = inject('gameApi', null)
 const injectedBackendUrl = inject('backendUrl', '')
 
-const handleLoginSuccess = async (userData) => {
+const zones = ref([])
+const showZoneModal = ref(true)
+const selectedZone = ref(null)
+
+async function fetchZones() {
+  try {
+    if (gameApi && gameApi.getZones) {
+      const resp = await gameApi.getZones()
+      // accept multiple response shapes
+      if (resp?.data?.datas?.zones) return resp.data.datas.zones
+      if (resp?.data?.zones) return resp.data.zones
+      if (Array.isArray(resp)) return resp
+      if (resp?.zones) return resp.zones
+    }
+  } catch (e) {
+    console.warn('Failed to fetch zones from gameApi', e)
+  }
+
+  return []
+}
+
+const handleLoginSuccess = async (payload = {}) => {
+  // payload may contain { is_manager: boolean }
+  isManager.value = !!payload.is_manager
   showLogin.value = false
   loginError.value = null
-  // Start loading resources after successful login
+   
+   // After successful login, fetch zones for the user and prompt selection if needed
+   const userZones = await fetchZones()
+   if (userZones && userZones.length > 1) {
+     zones.value = userZones
+     showZoneModal.value = true
+     // Defer loading resources until zone selected
+     return
+   }
+
+   // If single zone, auto-select it
+   if (userZones && userZones.length === 1) {
+     handleZoneSelect(userZones[0])
+   }
+
+   // Start loading resources after zone is set
+   isLoading.value = true
+   await loadUserData()
+   loadAllResources()
+}
+
+const handleZoneSelect = async (zone) => {
+  selectedZone.value = zone
+  showZoneModal.value = false
+  try { localStorage.setItem('selected_zone', JSON.stringify(zone)) } catch (e) {}
+  if (gameApi && gameApi.setZone) gameApi.setZone(zone)
+
+  // Proceed with loading now that zone is selected
   isLoading.value = true
   await loadUserData()
   loadAllResources()

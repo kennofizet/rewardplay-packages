@@ -25,6 +25,7 @@ export default {
         settingItems: 'Setting Items',
         settingOptions: 'Setting Options',
         settingItemSets: 'Item Sets',
+        manageZones: 'Manage Zones',
       },
       settingItems: {
         title: 'Setting Items',
@@ -198,6 +199,31 @@ export default {
           of: 'of',
         },
         bonusesHint: 'Add bonus options by selecting a key and entering a value for each bonus level',
+      },
+      manageZones: {
+        title: 'Manage Zones',
+        create: 'Create Zone',
+        edit: 'Edit Zone',
+        searchPlaceholder: 'Search zones',
+        loading: 'Loading...',
+        saving: 'Saving...',
+        cancel: 'Cancel',
+        update: 'Update',
+        form: {
+          name: 'Name',
+          serverId: 'Server ID'
+        },
+        confirmDelete: 'Are you sure you want to delete this zone?',
+        members: 'Manage Members',
+        assign: 'Assign',
+        remove: 'Remove',
+        assigned: 'Assigned',
+        unassigned: 'Unassigned',
+        modal: {
+          title: 'Manage Zone Members',
+          searchPlaceholder: 'Search members...',
+          all: 'All'
+        }
       },
     },
   },

@@ -28,7 +28,7 @@
         {{ t('component.menu.shop') }}
       </MenuItem>
 
-      <MenuItem @click="$emit('page-change', 'manage-setting')">
+      <MenuItem @click="$emit('page-change', 'manage-setting')" v-if="isManager">
         {{ t('component.menu.manageSetting') }}
       </MenuItem>
     </div>
@@ -67,6 +67,13 @@ import MenuItem from './MenuItem.vue'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
+
+const props = defineProps({
+  isManager: {
+    type: Boolean,
+    default: false
+  }
+})
 
 defineEmits(['page-change', 'icon-click'])
 </script>
