@@ -60,7 +60,7 @@
               </div>
             </td>
             <td>
-              <StatMapPreview :value="set.set_bonuses" :max-items-per-group="3" />
+              <StatMapPreview :value="set.set_bonuses" :max-items-per-group="3" :stats-map="statsMap" />
             </td>
             <td>{{ truncateDescription(set.description) }}</td>
             <td class="actions-cell">
@@ -205,6 +205,7 @@ const loadingKeys = ref(false)
 const error = ref(null)
 const settingItemSets = ref([])
 const conversionKeys = ref([])
+const statsMap = ref({})
 const zones = ref([])
 const availableItems = ref([])
 const pagination = ref(null)
@@ -422,6 +423,11 @@ const loadSettingItemSets = async () => {
         last_page: response.data.datas.setting_item_sets.last_page,
         total: response.data.datas.setting_item_sets.total
       }
+    }
+
+    // Capture stats mapping returned by the backend (stat_key => display_name)
+    if (response.data && response.data.datas && response.data.datas.stats) {
+      statsMap.value = response.data.datas.stats || {}
     }
 
     // Load zones from response

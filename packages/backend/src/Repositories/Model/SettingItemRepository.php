@@ -136,8 +136,9 @@ class SettingItemRepository
      */
     public function delete(SettingItem $settingItem): bool
     {
-        // Delete associated image file
-        $this->deleteImageFile($settingItem->image);
+        // Soft delete: do not remove image files from disk so items can be restored later.
+        // The model uses SoftDeletes trait, so calling delete() will set deleted_at.
+        // $this->deleteImageFile($settingItem->image);
 
         return (bool) $settingItem->delete();
     }

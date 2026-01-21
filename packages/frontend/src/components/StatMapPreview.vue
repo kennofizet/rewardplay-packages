@@ -10,7 +10,7 @@
           :key="`${item.key}-${idx}`"
           class="stat-chip"
         >
-          <span class="stat-chip__key">{{ item.key }}</span>
+          <span class="stat-chip__key">{{ props.statsMap[item.key] || item.key }}</span>
           <span class="stat-chip__sep">:</span>
           <span class="stat-chip__value">{{ formatValue(item.value) }}</span>
         </span>
@@ -36,7 +36,7 @@
               class="stat-chip"
               :title="typeof item.value === 'object' ? JSON.stringify(item.value, null, 2) : ''"
             >
-              <span class="stat-chip__key">{{ item.key }}</span>
+              <span class="stat-chip__key">{{ props.statsMap[item.key] || item.key }}</span>
               <span class="stat-chip__sep">:</span>
               <span class="stat-chip__value">{{ formatValue(item.value) }}</span>
             </span>
@@ -58,6 +58,7 @@ const props = defineProps({
   value: { type: [Object, Array, String, Number, null], default: null },
   maxItems: { type: Number, default: 3 },
   maxItemsPerGroup: { type: Number, default: 3 },
+  statsMap: { type: Object, default: () => ({}) }
 })
 
 const isPlainObject = (v) => v && typeof v === 'object' && !Array.isArray(v)

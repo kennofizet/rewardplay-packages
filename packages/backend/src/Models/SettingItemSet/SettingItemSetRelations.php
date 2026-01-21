@@ -32,6 +32,6 @@ trait SettingItemSetRelations
             (new SettingItemSetItem())->getTable(),
             'set_id',
             'item_id'
-        )->withTimestamps();
+        )->withTimestamps()->withTrashed();
     }
 }

@@ -6,6 +6,7 @@ use Kennofizet\RewardPlay\Models\SettingItem\SettingItemRelations;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemScopes;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemActions;
 use Kennofizet\RewardPlay\Core\Model\BaseModel;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 /**
@@ -13,7 +14,7 @@ use Illuminate\Support\Str;
  */
 class SettingItem extends BaseModel
 {
-    use SettingItemRelations, SettingItemActions, SettingItemScopes;
+    use SettingItemRelations, SettingItemActions, SettingItemScopes, SoftDeletes;
 
     /**
      * Get the table name with prefix
