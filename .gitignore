@@ -4,6 +4,7 @@
 
 # Cursor rules files
 .cursorrules*
+.cursorignore
 
 # Dependencies
 node_modules/

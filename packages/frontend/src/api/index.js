@@ -100,6 +100,24 @@ export function createGameApi(backendUrl, token) {
     createSettingItemSet: (data) => api.post('/api/rewardplay/setting-item-sets', data),
     updateSettingItemSet: (id, data) => api.put(`/api/rewardplay/setting-item-sets/${id}`, data),
     deleteSettingItemSet: (id) => api.delete(`/api/rewardplay/setting-item-sets/${id}`),
+
+    // Setting Stack Bonuses CRUD
+    getStackBonuses: (params) => api.get('/api/rewardplay/setting-stack-bonuses', { params }),
+    getStackBonus: (id) => api.get(`/api/rewardplay/setting-stack-bonuses/${id}`),
+    createStackBonus: (data) => api.post('/api/rewardplay/setting-stack-bonuses', data),
+    updateStackBonus: (id, data) => api.put(`/api/rewardplay/setting-stack-bonuses/${id}`, data),
+    deleteStackBonus: (id) => api.delete(`/api/rewardplay/setting-stack-bonuses/${id}`),
+    suggestStackBonuses: () => api.post('/api/rewardplay/setting-stack-bonuses/suggest'),
+
+    // Setting Daily Rewards (Manage)
+    getDailyRewardConfigs: (params) => api.get('/api/rewardplay/setting-daily-rewards', { params }), // Expects month/year
+    saveDailyRewardConfig: (data) => api.post('/api/rewardplay/setting-daily-rewards', data), // Update or Create based on date
+    suggestDailyRewards: (data) => api.post('/api/rewardplay/setting-daily-rewards/suggest', data),
+
+    // Player Daily Rewards & Bag
+    getPlayerDailyRewardState: (params) => api.get('/api/rewardplay/player/daily-rewards', { params }), // Includes stack info
+    collectDailyReward: () => api.post('/api/rewardplay/player/daily-rewards/collect'),
+    getPlayerBag: () => api.get('/api/rewardplay/player/bag'),
   }
 }
 

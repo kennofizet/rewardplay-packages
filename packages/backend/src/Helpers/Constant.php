@@ -47,4 +47,16 @@ class Constant
         self::DODGE_KEY => 'Dodge',
         self::RESISTANCE_KEY => 'Resistance',
     ];
+
+    // Reward Types
+    const TYPE_COIN = 'coin';
+    const TYPE_EXP = 'exp';
+    const TYPE_ITEM = 'item';
+    const TYPE_TICKET = 'ticket'; // potentially mentioned later or good practice
+
+    const REWARD_TYPES = [
+        self::TYPE_COIN => 'Coin',
+        self::TYPE_EXP => 'Exp',
+        self::TYPE_ITEM => 'Item',
+    ];
 }

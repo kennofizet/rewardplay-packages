@@ -9,12 +9,12 @@ class RewardPlayServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/Config/rewardplay.php',
+            __DIR__ . '/Config/rewardplay.php',
             'rewardplay'
         );
         // Merge demo config so default demo data is available via config('rewardplay-demo')
         $this->mergeConfigFrom(
-            __DIR__.'/Config/rewardplay-demo.php',
+            __DIR__ . '/Config/rewardplay-demo.php',
             'rewardplay-demo'
         );
     }
@@ -22,17 +22,17 @@ class RewardPlayServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/Migrations' => database_path('migrations'),
+            __DIR__ . '/Migrations' => database_path('migrations'),
         ], 'rewardplay-migrations');
 
         $this->publishes([
-            __DIR__.'/Config/rewardplay.php' => config_path('rewardplay.php'),
+            __DIR__ . '/Config/rewardplay.php' => config_path('rewardplay.php'),
         ], 'rewardplay-config');
 
         // Publish default images folder
         $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
         $this->publishes([
-            __DIR__.'/Assets/images' => public_path($imagesFolder),
+            __DIR__ . '/Assets/images' => public_path($imagesFolder),
         ], 'rewardplay-images');
 
         // Register custom commands
@@ -43,7 +43,6 @@ class RewardPlayServiceProvider extends ServiceProvider
             ]);
         }
 
-        $this->loadRoutesFrom(__DIR__.'/Routes/api.php');
+        $this->loadRoutesFrom(__DIR__ . '/Routes/api.php');
     }
 }
-

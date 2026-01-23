@@ -282,6 +282,7 @@ export default {
       bonusTitle: 'PHẦN THƯỞNG ĐĂNG NHẬP HÀNG NGÀY',
       bonusFooter: 'Bỏ lỡ một ngày sẽ làm giảm tiến trình của bạn về mức cơ bản',
       todaysRewards: 'PHẦN THƯỞNG HÔM NAY',
+      monthlyRewards: 'PHẦN THƯỞNG HÀNG THÁNG',
       day: 'Ngày',
       epicReward: 'PHẦN THƯỞNG ĐẶC BIỆT',
       collect: 'Nhận',

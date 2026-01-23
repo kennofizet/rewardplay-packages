@@ -155,6 +155,10 @@ const handleLoginSuccess = async (payload = {}) => {
    
    // After successful login, fetch zones for the user and prompt selection if needed
    const userZones = await fetchZones()
+   if (userZones && userZones.length == 0) {
+    showZoneModal.value = false
+   }
+
    if (userZones && userZones.length > 1) {
      zones.value = userZones
      showZoneModal.value = true

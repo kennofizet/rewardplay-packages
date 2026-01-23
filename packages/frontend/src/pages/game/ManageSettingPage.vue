@@ -24,6 +24,8 @@ import { ref, computed, inject } from 'vue'
 import SettingItemsListPage from './manage-setting/SettingItemsListPage.vue'
 import SettingOptionsListPage from './manage-setting/SettingOptionsListPage.vue'
 import SettingItemSetsListPage from './manage-setting/SettingItemSetsListPage.vue'
+import SettingStackBonusListPage from './manage-setting/SettingStackBonusListPage.vue'
+import SettingDailyRewardConfigPage from './manage-setting/SettingDailyRewardConfigPage.vue'
 import ManageZonesPage from './manage-setting/ManageZonesPage.vue'
 
 const translator = inject('translator', null)
@@ -32,8 +34,10 @@ const t = translator || ((key) => key)
 const menuItems = [
   { key: 'setting-items', label: t('page.manageSetting.menu.settingItems') },
   { key: 'setting-options', label: t('page.manageSetting.menu.settingOptions') },
-  { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets') }
-  ,{ key: 'manage-zones', label: t('page.manageSetting.menu.manageZones') }
+  { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets') },
+  { key: 'manage-zones', label: t('page.manageSetting.menu.manageZones') },
+  { key: 'setting-stack-bonuses', label: 'Stack Bonuses' },
+  { key: 'setting-daily-rewards', label: 'Daily Rewards Config' }
 ]
 
 const currentPage = ref('setting-items')
@@ -42,8 +46,10 @@ const currentPageComponent = computed(() => {
   const pageMap = {
     'setting-items': SettingItemsListPage,
     'setting-options': SettingOptionsListPage,
-    'setting-item-sets': SettingItemSetsListPage
-    ,  'manage-zones': ManageZonesPage
+    'setting-item-sets': SettingItemSetsListPage,
+    'manage-zones': ManageZonesPage,
+    'setting-stack-bonuses': SettingStackBonusListPage,
+    'setting-daily-rewards': SettingDailyRewardConfigPage
   }
   return pageMap[currentPage.value] || SettingItemsListPage
 })

@@ -18,8 +18,8 @@ $rateLimit = config('rewardplay.rate_limit', 60);
 Route::prefix($prefix)
     ->middleware([
         "throttle:{$rateLimit},1",
-        'api', 
-        ValidateRewardPlayToken::class, 
+        'api',
+        ValidateRewardPlayToken::class,
         ValidatorRequestMiddleware::class,
         EnsureUserIsManager::class,
     ])
@@ -29,25 +29,33 @@ Route::prefix($prefix)
         require_once __DIR__ . '/setting/setting-item-sets.php';
         require_once __DIR__ . '/setting/zones.php';
         require_once __DIR__ . '/setting/stats.php';
+
+        // New Settings Routes - IMPORTANT: Specific routes MUST come before apiResource
+        Route::post('setting-stack-bonuses/suggest', [\Kennofizet\RewardPlay\Controllers\Settings\SettingStackBonusController::class, 'suggest']);
+        Route::apiResource('setting-stack-bonuses', \Kennofizet\RewardPlay\Controllers\Settings\SettingStackBonusController::class);
+
+        Route::post('setting-daily-rewards/suggest', [\Kennofizet\RewardPlay\Controllers\Settings\SettingDailyRewardController::class, 'suggest']);
+        Route::get('setting-daily-rewards', [\Kennofizet\RewardPlay\Controllers\Settings\SettingDailyRewardController::class, 'index']);
+        Route::post('setting-daily-rewards', [\Kennofizet\RewardPlay\Controllers\Settings\SettingDailyRewardController::class, 'store']);
     });
 
 // Protected routes (require token validation)
 Route::prefix($prefix)
     ->middleware([
         "throttle:{$rateLimit},1",
-        'api', 
-        ValidateRewardPlayToken::class, 
+        'api',
+        ValidateRewardPlayToken::class,
         ValidatorRequestMiddleware::class
     ])
     ->group(function () {
         Route::get('/auth/check', [AuthController::class, 'checkUser']);
-        
+
         Route::get('/demo', [DemoController::class, 'index']);
         Route::get('/users', [UserController::class, 'index']);
 
         Route::get('/auth/user-data', [AuthController::class, 'getUserData']);
         Route::get('/ranking', [RankingController::class, 'getRanking']);
-            
+
         // Player endpoints (example) - player requests MUST send zone_id param
         Route::post('/player/action', [PlayerController::class, 'doAction']);
         // Get zones the current user belongs to
@@ -56,6 +64,12 @@ Route::prefix($prefix)
         Route::get('/player/custom-images', [PlayerController::class, 'getCustomImages']);
         // Get zones the current user can manage (for settings)
         Route::get('/player/managed-zones', [ZoneController::class, 'managed']);
+
+        // New Player Routes
+        Route::get('/player/daily-rewards', [\Kennofizet\RewardPlay\Controllers\Player\DailyRewardController::class, 'index']);
+        Route::post('/player/daily-rewards/collect', [\Kennofizet\RewardPlay\Controllers\Player\DailyRewardController::class, 'collect']);
+        Route::get('/player/bag', [\Kennofizet\RewardPlay\Controllers\Player\BagController::class, 'index']);
+
         Route::options('/manifest', function () {
             return response('', 200)
                 ->header('Access-Control-Allow-Origin', '*')

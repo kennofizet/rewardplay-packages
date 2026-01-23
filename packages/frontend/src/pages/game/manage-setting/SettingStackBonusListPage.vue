@@ -1,0 +1,223 @@
+<template>
+  <div class="setting-stack-bonuses-page">
+    <div class="page-header">
+      <h2>Stack Bonuses</h2>
+      <div class="actions">
+        <button class="btn-primary" @click="handleSuggest" style="margin-right: 10px;">
+          Suggest Default Data
+        </button>
+        <button class="btn-primary" @click="handleCreate">
+          Create New Bonus
+        </button>
+      </div>
+    </div>
+
+    <!-- TODO: Filters if needed -->
+
+    <div v-if="loading" class="loading">Loading...</div>
+    <div v-if="error" class="error">{{ error }}</div>
+
+    <div v-if="!loading && !error" class="table-container">
+      <table class="settings-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Consecutive Day</th>
+            <th>Rewards</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in bonuses" :key="item.id">
+            <td>{{ item.id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.day }}</td>
+            <td>
+              <div v-for="(reward, idx) in item.rewards" :key="idx" class="reward-inline">
+                {{ reward.type }} x{{ reward.quantity }}
+              </div>
+            </td>
+            <td class="actions-cell">
+              <button class="btn-edit" @click="handleEdit(item)">Edit</button>
+              <button class="btn-delete" @click="handleDelete(item)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal Implementation -->
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ editingItem ? 'Edit Bonus' : 'Create Bonus' }}</h3>
+          <button class="btn-close" @click="closeModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Name</label>
+            <input v-model="formData.name" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>Consecutive Day</label>
+            <input v-model.number="formData.day" type="number" required min="1" />
+          </div>
+
+          <div class="rewards-section">
+             <label>Rewards</label>
+             <div v-for="(reward, index) in formData.rewards" :key="index" class="reward-row">
+                <select v-model="reward.type" class="form-select small">
+                  <option value="coin">Coin</option>
+                  <option value="exp">EXP</option>
+                  <option value="item">Item</option>
+                  <option value="ticket">Ticket</option>
+                </select>
+                <input v-model.number="reward.quantity" type="number" placeholder="Qty" class="small-input" />
+                <button class="btn-danger small" @click="removeReward(index)">x</button>
+             </div>
+             <button class="btn-secondary small" @click="addReward">+ Add Reward</button>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="closeModal">Cancel</button>
+          <button class="btn-primary" @click="handleSave" :disabled="saving">
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, inject } from 'vue'
+
+const gameApi = inject('gameApi')
+const loading = ref(false)
+const error = ref(null)
+const bonuses = ref([])
+const showModal = ref(false)
+const editingItem = ref(null)
+const formData = ref({ name: '', day: 3, rewards: [{ type: 'coin', quantity: 100 }] })
+const saving = ref(false)
+
+const loadBonuses = async () => {
+    if (!gameApi) return
+    loading.value = true
+    try {
+        const res = await gameApi.getStackBonuses()
+        if(res.data && res.data.datas && res.data.datas.bonuses) {
+            bonuses.value = res.data.datas.bonuses.data || []
+        }
+    } catch (e) {
+        error.value = e.message || 'Failed to load'
+    } finally {
+        loading.value = false
+    }
+}
+
+const handleCreate = () => {
+    editingItem.value = null
+    formData.value = { name: '', day: 3, rewards: [{ type: 'coin', quantity: 100 }] }
+    showModal.value = true
+}
+
+const handleSuggest = async () => {
+    console.log('handleSuggest called')
+    if (loading.value) return // Prevent double-click
+    
+    loading.value = true
+    console.log('Calling API...')
+    try {
+        const response = await gameApi.suggestStackBonuses()
+        console.log('API response:', response)
+        await loadBonuses()
+        alert('Stack bonuses created successfully!')
+    } catch (e) {
+        console.error('Error suggesting data:', e)
+        alert('Failed to suggest data: ' + (e.response?.data?.message || e.message))
+    } finally {
+        loading.value = false
+    }
+}
+
+const handleEdit = (item) => {
+    editingItem.value = item
+    formData.value = JSON.parse(JSON.stringify(item))
+    if (!formData.value.rewards) formData.value.rewards = []
+    showModal.value = true
+}
+
+const addReward = () => {
+    formData.value.rewards.push({ type: 'coin', quantity: 100 })
+}
+
+const removeReward = (index) => {
+    formData.value.rewards.splice(index, 1)
+}
+
+const handleDelete = async (item) => {
+    try {
+        await gameApi.deleteStackBonus(item.id)
+        loadBonuses()
+    } catch (e) {
+        alert('Failed to delete')
+    }
+}
+
+const closeModal = () => showModal.value = false
+
+const handleSave = async () => {
+    saving.value = true
+    try {
+        if(editingItem.value) {
+            await gameApi.updateStackBonus(editingItem.value.id, formData.value)
+        } else {
+            await gameApi.createStackBonus(formData.value)
+        }
+        closeModal()
+        loadBonuses()
+    } catch (e) {
+        alert('Failed to save: ' + (e.response?.data?.message || e.message))
+    } finally {
+        saving.value = false
+    }
+}
+
+onMounted(() => {
+    loadBonuses()
+})
+</script>
+
+<style scoped>
+/* Reuse styles from SettingItemsListPage or shared styles */
+.setting-stack-bonuses-page { width: 100%; }
+.page-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.page-header h2 { color: #d0d4d6; margin: 0; }
+.loading, .error { padding: 20px; text-align: center; color: #d0d4d6; }
+.table-container { overflow-x: auto; }
+.settings-table { width: 100%; border-collapse: collapse; background: #253344; }
+.settings-table th, .settings-table td { padding: 12px; text-align: left; border-bottom: 1px solid #1a2332; color: #d0d4d6; }
+.settings-table th { background: #1a2332; color: #f6a901; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; color: #d0d4d6; }
+.form-group input, .form-select { width: 100%; padding: 8px; background: #2f3e52; border: 1px solid #1a2332; color: white; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background: #253344; padding: 20px; border-radius: 8px; width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto; color: #d0d4d6; }
+.modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.btn-primary { background: #f6a901; border: none; padding: 8px 16px; color: #1a2332; font-weight: 600; cursor: pointer; border-radius: 4px; }
+.btn-secondary { background: #1a2332; border: 1px solid #4a5b70; color: #d0d4d6; padding: 8px 16px; cursor: pointer; border-radius: 4px; }
+.btn-edit, .btn-delete { padding: 4px 8px; margin-right: 5px; cursor: pointer; border-radius: 2px; border: 1px solid #4a5b70; background: #2f3e52; color: white; }
+.btn-delete { background: #e74c3c; border-color: #e74c3c; }
+
+.rewards-section { margin-top: 15px; border-top: 1px solid #1a2332; padding-top: 10px; }
+.reward-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
+.form-select.small, .small-input { padding: 4px; font-size: 0.9em; }
+.small-input { width: 80px; }
+.reward-inline { display: inline-block; background: #1a2332; padding: 2px 6px; border-radius: 4px; margin-right: 5px; font-size: 0.85em; }
+.btn-danger.small { padding: 2px 6px; font-size: 0.8em; }
+.btn-secondary.small { padding: 4px 8px; font-size: 0.9em; }
+</style>

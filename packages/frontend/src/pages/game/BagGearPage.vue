@@ -152,6 +152,7 @@
 
 <script setup>
 import { ref, inject, computed, unref, onMounted, watch } from 'vue'
+const gameApi = inject('gameApi')
 import ItemBox from '../../components/game/ItemBox.vue'
 import { getFileImageUrl } from '../../utils/imageResolverRuntime'
 const translator = inject('translator', null)
@@ -267,9 +268,41 @@ const updateDisplayedItems = () => {
   bagItems.value = [...currentItems, ...emptySlots]
 }
 
+const loadBagData = async () => {
+  if (!gameApi) return
+  try {
+    const res = await gameApi.getPlayerBag()
+    if (res.data?.datas?.user_bag) {
+      const bagData = res.data.datas.user_bag
+      // Map API items to frontend expected format
+      // BagItem from API has item relation loaded
+      const mapItems = (items) => {
+        return items.map(bi => ({
+          id: bi.id,
+          item_id: bi.item_id,
+          quantity: bi.quantity,
+          property: bi.properties || {},
+          key_image: bi.item?.image || 'bag.other', // Fallback image
+          name: bi.item?.name || 'Item',
+        }))
+      }
+
+      allItems.value.bag = mapItems(bagData.bag || [])
+      allItems.value.sword = mapItems(bagData.sword || [])
+      allItems.value.other = mapItems(bagData.other || [])
+      allItems.value.shop = mapItems(bagData.shop || [])
+      
+      updateDisplayedItems()
+    }
+  } catch (e) {
+    console.error("Failed to load bag data", e)
+  }
+}
+
 // Initialize bag items when component mounts
 onMounted(() => {
   initializeBagItems()
+  loadBagData()
 })
 
 // Watch for userData changes (in case it loads after component mounts)

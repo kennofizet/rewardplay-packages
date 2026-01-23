@@ -22,8 +22,8 @@
       </div>
     </Sector>
     
-    <Sector :title="t('component.dailyReward.todaysRewards')">
-      <div class="reward-line">
+    <Sector :title="t('component.dailyReward.monthlyRewards')">
+      <div class="reward-grid">
         <RewardCard
           v-for="reward in rewards"
           :key="reward.id"
@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, inject, onMounted } from 'vue'
+import { ref, inject, onMounted, computed } from 'vue'
 import Sector from '../../components/game/Sector.vue'
 import WeekDay from '../../components/game/WeekDay.vue'
 import RewardItem from '../../components/game/RewardItem.vue'
@@ -57,136 +57,126 @@ const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
 const selectedZone = ref(null)
+const loading = ref(false)
+const state = ref(null)
+
+const weekDays = computed(() => {
+    if (!state.value || !state.value.stack_bonuses) return []
+    
+    // Fixed 1-7 cycle
+    const weeklyStreak = state.value.weekly_streak || 0
+    const bonuses = state.value.stack_bonuses || {}
+
+    return Array.from({length: 7}, (_, i) => {
+        const dayNum = i + 1
+        const bonus = bonuses[dayNum]
+        const rewards = bonus?.rewards || []
+        
+        return {
+            day: dayNum,
+            completed: dayNum < weeklyStreak || (dayNum === weeklyStreak && state.value.is_claimed_today),
+            past: dayNum < weeklyStreak,
+            current: dayNum === weeklyStreak && !state.value.is_claimed_today,
+            rewards: rewards.map(r => `${r.type} x${r.quantity}`)
+        }
+    })
+})
+
+const rewards = computed(() => {
+    if (!state.value || !state.value.seven_days_rewards) return []
+
+    // Get 7 days starting from today
+    const sevenDays = state.value.seven_days_rewards.slice(0, 7)
+    const nextRewardEpic = state.value.next_reward_epic || null
+    if(nextRewardEpic){
+      nextRewardEpic.isSpecific = true
+      sevenDays.push(nextRewardEpic)
+    }
+    
+    const weeklyStreak = state.value.weekly_streak || 1
+    const bonuses = state.value.stack_bonuses || {}
+
+    return sevenDays.map((r, index) => {
+        const dateDate = new Date(r.date)
+        let dayOfMonth = dateDate.getDate() // Actual day of month (1-31)
+        if(r.isSpecific){
+          dayOfMonth = dateDate.getDate() + ' / ' + dateDate.getMonth()+1
+        }
+        const dayNumInCycle = index + 1
+        
+        const isCurrent = dayNumInCycle === weeklyStreak && !r.claimed
+        const isCollected = r.claimed
+        
+        const firstItem = r.items?.[0]
+        const type = firstItem?.type || 'item'
+
+        // Mix in stack bonus for this day in cycle
+        const stackBonus = bonuses[dayNumInCycle]
+        let extraInfo = ''
+        if (stackBonus) {
+            extraInfo = `+ ${stackBonus.name}`
+        }
+        
+        return {
+            id: r.id || index,
+            original_date: r.date,
+            day: `${t('component.dailyReward.day')} ${dayOfMonth}`, // Show actual day of month
+            title: firstItem ? firstItem.type.toUpperCase() : 'REWARD',
+            description: firstItem ? `x${firstItem.quantity} ${extraInfo}` : 'Daily Reward',
+            rarity: r.is_epic ? 'epic' : (dayNumInCycle % 3 === 0 ? 'rare' : 'common'),
+            isCurrent: isCurrent,
+            isCollected: isCollected,
+            isEpic: r.isSpecific || false, // Use is_epic from database
+            isFeature: r.is_epic || false,
+            imageType: type === 'coin' ? 'coins' : (type === 'exp' ? 'chest' : 'backpack'),
+            imageKey: type === 'coin' ? 'global.coin' : null
+        }
+    })
+})
+
+const loadData = async () => {
+    if(!gameApi) return
+    loading.value = true
+    try {
+        const res = await gameApi.getPlayerDailyRewardState()
+        // Expected response: { current_streak: 3, stack_config: {}, month_rewards: [] }
+        state.value = res.data?.datas || {}
+    } catch(e) {
+        console.error(e)
+    } finally {
+        loading.value = false
+    }
+}
+
+const handleCollect = async (reward) => {
+  if (!gameApi) return
+  
+  try {
+    const params = { reward_id: reward.id, date: reward.original_date } // Depends on backend requirement
+    if (selectedZone.value) params.zone_id = selectedZone.value.id
+    
+    await gameApi.collectDailyReward()
+    
+    // Optimistic update or reload
+    reward.isCollected = true
+    reward.isCurrent = false
+    loadData() // Reload to sync everything (e.g. stack might update)
+  } catch (error) {
+    console.error('Error collecting reward:', error)
+  }
+}
 
 onMounted(async () => {
-  // Try to restore previously selected zone (selection happens after login elsewhere)
   try {
     const stored = localStorage.getItem('selected_zone')
     if (stored) {
       selectedZone.value = JSON.parse(stored)
       if (gameApi && gameApi.setZone) gameApi.setZone(selectedZone.value)
     }
-  } catch (e) {
-    // ignore malformed storage
-  }
-})
-
-const weekDays = ref([
-  { day: 1, completed: true, past: true, current: false, rewards: [] },
-  { day: 2, completed: true, past: false, current: true, rewards: ['+5% V-money'] },
-  { day: 3, completed: false, past: false, current: false, rewards: ['+5% V-money', '+5% daily limit'] },
-  { day: 4, completed: false, past: false, current: false, rewards: ['+5% V-money', '+10% daily limit', '+5% EXP'] },
-  { day: 5, completed: false, past: false, current: false, rewards: ['+15% V-money', '+10% daily limit', '+5% EXP'] },
-  { day: 6, completed: false, past: false, current: false, rewards: ['+15% V-money', '+10% daily limit', '+15% EXP'] },
-  { day: 7, completed: false, past: false, current: false, rewards: ['+15% V-money', '+30% daily limit', '+15% EXP'] }
-])
-
-const rewards = ref([
-  {
-    id: 1,
-    day: `${t('component.dailyReward.day')} 8`,
-    title: 'V-money',
-    description: '+100 V-money',
-    rarity: 'common',
-    isCollected: true,
-    imageType: 'coins',
-    imageKey: 'global.coin'
-  },
-  {
-    id: 2,
-    day: `${t('component.dailyReward.day')} 9`,
-    title: 'Wing-Chest',
-    description: 'acquire two common items and one rare weapon',
-    rarity: 'rare',
-    isCollected: true,
-    imageType: 'chest',
-    imageKey: 'global.box_coin'
-  },
-  {
-    id: 3,
-    day: 'day 10',
-    title: 'V-money',
-    description: '+250 V-money',
-    rarity: 'common',
-    isCollected: true,
-    imageType: 'coins',
-    imageKey: 'global.coin'
-  },
-  {
-    id: 4,
-    day: `${t('component.dailyReward.day')} 11`,
-    title: 'First-Aid',
-    description: 'nicely looking upgrade to first aid backpack capacity',
-    rarity: 'epic',
-    isCurrent: true,
-    isCollected: false,
-    imageType: 'backpack',
-    imageKey: 'bag.bag'
-  },
-  {
-    id: 5,
-    day: `${t('component.dailyReward.day')} 12`,
-    title: 'V-money',
-    description: '+500 V-money',
-    rarity: 'common',
-    isFeature: true,
-    imageType: 'coins',
-    imageKey: 'global.coin'
-  },
-  {
-    id: 6,
-    day: `${t('component.dailyReward.day')} 13`,
-    title: 'Wing-Chest',
-    description: 'acquire two common items and one rare weapon',
-    rarity: 'rare',
-    isFeature: true,
-    imageType: 'chest',
-    imageKey: 'global.box_coin'
-  },
-  {
-    id: 7,
-    day: 'day 14',
-    title: 'V-money',
-    description: '+1000 V-money',
-    rarity: 'common',
-    isFeature: true,
-    imageType: 'coins',
-    imageKey: 'global.coin'
-  },
-  {
-    id: 8,
-    day: `${t('component.dailyReward.day')} 28`,
-    title: 'BOOM BOX',
-    description: 'The BOOM BOX is an explosive weapon. Once thrown, it will begin to play music and emit powerful blasts that deal huge damage to all structures within its radius, but do not harm the player.',
-    rarity: 'epic',
-    isEpic: true,
-    isFeature: true,
-    epicTitle: t('component.dailyReward.epicReward'),
-    imageType: 'epic-chest',
-    imageKey: 'global.epic_chest'
-  }
-])
-
-const handleCollect = async (reward) => {
-  if (!gameApi) {
-    console.error('Game API not available')
-    return
-  }
+  } catch (e) {}
   
-  try {
-    // TODO: Call API to collect reward. Always include zone_id when available.
-    const params = { reward_id: reward.id }
-    if (selectedZone.value) params.zone_id = selectedZone.value.id
-    // const response = await gameApi.collectDailyReward(params)
-    reward.isCollected = true
-    reward.isCurrent = false
-  } catch (error) {
-    console.error('Error collecting reward:', error)
-  }
-}
-
-// Zone selection is handled after login on the main game entry (RewardPlayPage).
-// Here we just keep any previously-selected zone available for actions.
+  loadData()
+})
 </script>
 
 <style scoped>
@@ -195,15 +185,37 @@ const handleCollect = async (reward) => {
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
+  gap: 15px;
   margin-top: 30px;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
 }
 
-.reward-line {
+.reward-grid {
   display: flex;
-  align-items: center;
+  flex-wrap: nowrap;
+  gap: 20px;
   justify-content: space-between;
-  margin-bottom: 60px;
-  margin-top: 128px;
+  align-items: flex-end; /* Align to bottom so bigger card grows upwards */
+  margin-bottom: 80px;
+  margin-top: 40px;
+}
+
+@media (max-width: 1200px) {
+    .reward-grid {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+/* Custom scrollbar */
+.week-line::-webkit-scrollbar, .reward-grid::-webkit-scrollbar {
+  height: 6px;
+}
+.week-line::-webkit-scrollbar-track, .reward-grid::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+}
+.week-line::-webkit-scrollbar-thumb, .reward-grid::-webkit-scrollbar-thumb {
+  background: rgba(246,169, 1, 0.5);
+  border-radius: 3px;
 }
 </style>

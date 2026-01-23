@@ -38,15 +38,25 @@ trait SettingItemActions
     public static function getItemTypes(): array
     {
         $itemTypes = [];
-        
+
         foreach (SettingItemConstant::ITEM_TYPE_NAMES as $type => $name) {
             $itemTypes[] = [
                 'type' => $type,
                 'name' => $name
             ];
         }
-        
+
         return $itemTypes;
+    }
+
+    /**
+     * Get all active items
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function getActiveItems()
+    {
+        return self::all();
     }
 }
 
