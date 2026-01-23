@@ -1,31 +1,31 @@
 <template>
   <div class="setting-stack-bonuses-page">
     <div class="page-header">
-      <h2>Stack Bonuses</h2>
+      <h2>{{ t('page.manageSetting.settingStackBonuses.title') }}</h2>
       <div class="actions">
         <button class="btn-primary" @click="handleSuggest" style="margin-right: 10px;">
-          Suggest Default Data
+          {{ t('page.manageSetting.settingStackBonuses.suggest') }}
         </button>
         <button class="btn-primary" @click="handleCreate">
-          Create New Bonus
+          {{ t('page.manageSetting.settingStackBonuses.create') }}
         </button>
       </div>
     </div>
 
     <!-- TODO: Filters if needed -->
 
-    <div v-if="loading" class="loading">Loading...</div>
+    <div v-if="loading" class="loading">{{ t('page.manageSetting.settingStackBonuses.loading') }}</div>
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="!loading && !error" class="table-container">
       <table class="settings-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Consecutive Day</th>
-            <th>Rewards</th>
-            <th>Actions</th>
+            <th>{{ t('page.manageSetting.settingStackBonuses.table.id') }}</th>
+            <th>{{ t('page.manageSetting.settingStackBonuses.table.name') }}</th>
+            <th>{{ t('page.manageSetting.settingStackBonuses.table.consecutiveDay') }}</th>
+            <th>{{ t('page.manageSetting.settingStackBonuses.table.rewards') }}</th>
+            <th>{{ t('page.manageSetting.settingStackBonuses.table.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -39,8 +39,8 @@
               </div>
             </td>
             <td class="actions-cell">
-              <button class="btn-edit" @click="handleEdit(item)">Edit</button>
-              <button class="btn-delete" @click="handleDelete(item)">Delete</button>
+              <button class="btn-edit" @click="handleEdit(item)">{{ t('page.manageSetting.settingStackBonuses.edit') }}</button>
+              <button class="btn-delete" @click="handleDelete(item)">{{ t('page.manageSetting.settingStackBonuses.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -51,39 +51,39 @@
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>{{ editingItem ? 'Edit Bonus' : 'Create Bonus' }}</h3>
+          <h3>{{ editingItem ? t('page.manageSetting.settingStackBonuses.edit') : t('page.manageSetting.settingStackBonuses.create') }}</h3>
           <button class="btn-close" @click="closeModal">×</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Name</label>
+            <label>{{ t('page.manageSetting.settingStackBonuses.form.name') }}</label>
             <input v-model="formData.name" type="text" required />
           </div>
           <div class="form-group">
-            <label>Consecutive Day</label>
+            <label>{{ t('page.manageSetting.settingStackBonuses.form.consecutiveDay') }}</label>
             <input v-model.number="formData.day" type="number" required min="1" />
           </div>
 
           <div class="rewards-section">
-             <label>Rewards</label>
+             <label>{{ t('page.manageSetting.settingStackBonuses.form.rewards') }}</label>
              <div v-for="(reward, index) in formData.rewards" :key="index" class="reward-row">
                 <select v-model="reward.type" class="form-select small">
-                  <option value="coin">Coin</option>
-                  <option value="exp">EXP</option>
-                  <option value="item">Item</option>
-                  <option value="ticket">Ticket</option>
+                  <option value="coin">{{ t('page.manageSetting.settingStackBonuses.types.coin') }}</option>
+                  <option value="exp">{{ t('page.manageSetting.settingStackBonuses.types.exp') }}</option>
+                  <option value="item">{{ t('page.manageSetting.settingStackBonuses.types.item') }}</option>
+                  <option value="ticket">{{ t('page.manageSetting.settingStackBonuses.types.ticket') }}</option>
                 </select>
-                <input v-model.number="reward.quantity" type="number" placeholder="Qty" class="small-input" />
+                <input v-model.number="reward.quantity" type="number" :placeholder="t('page.manageSetting.settingStackBonuses.form.qty')" class="small-input" />
                 <button class="btn-danger small" @click="removeReward(index)">x</button>
              </div>
-             <button class="btn-secondary small" @click="addReward">+ Add Reward</button>
+             <button class="btn-secondary small" @click="addReward">{{ t('page.manageSetting.settingStackBonuses.form.addReward') }}</button>
           </div>
 
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeModal">Cancel</button>
+          <button class="btn-secondary" @click="closeModal">{{ t('page.manageSetting.settingStackBonuses.cancel') }}</button>
           <button class="btn-primary" @click="handleSave" :disabled="saving">
-            {{ saving ? 'Saving...' : 'Save' }}
+            {{ saving ? t('page.manageSetting.settingStackBonuses.saving') : t('page.manageSetting.settingStackBonuses.save') }}
           </button>
         </div>
       </div>
@@ -93,6 +93,9 @@
 
 <script setup>
 import { ref, onMounted, inject } from 'vue'
+
+const translator = inject('translator', null)
+const t = translator || ((key) => key)
 
 const gameApi = inject('gameApi')
 const loading = ref(false)
@@ -112,7 +115,7 @@ const loadBonuses = async () => {
             bonuses.value = res.data.datas.bonuses.data || []
         }
     } catch (e) {
-        error.value = e.message || 'Failed to load'
+        error.value = e.message || t('page.manageSetting.settingStackBonuses.messages.loadFailed')
     } finally {
         loading.value = false
     }
@@ -163,7 +166,7 @@ const handleDelete = async (item) => {
         await gameApi.deleteStackBonus(item.id)
         loadBonuses()
     } catch (e) {
-        alert('Failed to delete')
+        alert(t('page.manageSetting.settingStackBonuses.messages.deleteFailed'))
     }
 }
 
@@ -180,7 +183,7 @@ const handleSave = async () => {
         closeModal()
         loadBonuses()
     } catch (e) {
-        alert('Failed to save: ' + (e.response?.data?.message || e.message))
+        alert(t('page.manageSetting.settingStackBonuses.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
     } finally {
         saving.value = false
     }

@@ -156,8 +156,8 @@
                   class="property-custom-value"
                   :title="getPresetValuesTooltip(prop.key)"
                 >
-                  <span class="custom-value-label">Preset Values</span>
-                  <span class="custom-value-count">{{ getPresetValuesCount(prop.key) }} stats</span>
+                  <span class="custom-value-label">{{ t('page.manageSetting.settingItems.presetValues') }}</span>
+                  <span class="custom-value-count">{{ getPresetValuesCount(prop.key) }} {{ t('page.manageSetting.settingItems.stats') }}</span>
                 </div>
                 <button 
                   type="button"
@@ -284,7 +284,13 @@ const propertyKeyOptions = computed(() => {
 const isCustomStat = (key) => statHelpers ? statHelpers.isCustomStat(conversionKeys.value, key) : false
 const getCustomStatValue = (key) => statHelpers ? statHelpers.getCustomStatValue(conversionKeys.value, key) : null
 const getPresetValuesCount = (key) => statHelpers ? statHelpers.getPresetValuesCount(conversionKeys.value, key) : 0
-const getPresetValuesTooltip = (key) => statHelpers ? statHelpers.getPresetValuesTooltip(conversionKeys.value, key) : 'Preset Values (no value set)'
+const getPresetValuesTooltip = (key) => {
+  const result = statHelpers ? statHelpers.getPresetValuesTooltip(conversionKeys.value, key) : null
+  if (result && result !== 'Preset Values (no value set)') {
+    return result
+  }
+  return t('page.manageSetting.settingItems.presetValuesNoValue')
+}
 
 const syncDefaultPropertiesToList = () => {
   // Convert default_property map into editable list items

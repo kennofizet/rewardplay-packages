@@ -19,6 +19,15 @@ export default {
       unzipping: 'Đang Giải Nén Tệp',
       userData: 'Tải Dữ Liệu Người Dùng',
       customImages: 'Đang Tải Hình Ảnh Tùy Chỉnh',
+      unzippingFiles: 'Đang giải nén tệp...',
+      unzipComplete: 'Giải nén hoàn tất',
+      loadingAssets: 'Đang tải tài nguyên...',
+      assetsLoaded: 'Tài nguyên đã tải',
+      assetsLoadFailed: 'Tải tài nguyên thất bại',
+      loadingUserData: 'Đang tải dữ liệu người dùng...',
+      userDataLoaded: 'Dữ liệu người dùng đã tải',
+      userDataLoadFailed: 'Tải dữ liệu người dùng thất bại',
+      noApiAvailable: 'Không có API khả dụng',
     },
     manageSetting: {
       menu: {
@@ -55,6 +64,9 @@ export default {
         valuePlaceholder: 'Giá trị',
         addOption: 'Thêm Thuộc Tính',
         removeProperty: 'Xóa',
+        presetValues: 'Giá Trị Đặt Trước',
+        presetValuesNoValue: 'Giá Trị Đặt Trước (chưa đặt giá trị)',
+        stats: 'thuộc tính',
         table: {
           id: 'ID',
           name: 'Tên',
@@ -190,6 +202,8 @@ export default {
         noItems: 'Không có vật phẩm trong vùng này. Vui lòng chọn vùng trước.',
         noItemsForBonus: 'Hãy chọn vật phẩm trước để cấu hình thưởng bộ.',
         bonusesHint: 'Thêm thưởng bộ bằng cách chọn thuộc tính và nhập giá trị cho mỗi mốc.',
+        itemBonus: 'Thưởng Vật Phẩm:',
+        itemsBonus: 'Thưởng Vật Phẩm:',
         errors: {
           apiNotAvailable: 'Game API không khả dụng',
           nameRequired: 'Vui lòng nhập tên',
@@ -223,6 +237,72 @@ export default {
           title: 'Quản Lý Thành Viên Vùng',
           searchPlaceholder: 'Tìm thành viên...',
           all: 'Tất cả'
+        }
+      },
+      settingStackBonuses: {
+        title: 'Thưởng Tích Lũy',
+        create: 'Tạo Thưởng Mới',
+        suggest: 'Gợi Ý Dữ Liệu Mặc Định',
+        edit: 'Chỉnh Sửa Thưởng',
+        loading: 'Đang tải...',
+        saving: 'Đang lưu...',
+        save: 'Lưu',
+        cancel: 'Hủy',
+        delete: 'Xóa',
+        table: {
+          id: 'ID',
+          name: 'Tên',
+          consecutiveDay: 'Ngày Liên Tiếp',
+          rewards: 'Phần Thưởng',
+          actions: 'Hành động'
+        },
+        form: {
+          name: 'Tên',
+          consecutiveDay: 'Ngày Liên Tiếp',
+          rewards: 'Phần Thưởng',
+          addReward: '+ Thêm Phần Thưởng',
+          qty: 'Số lượng'
+        },
+        types: {
+          coin: 'Xu',
+          exp: 'Kinh Nghiệm',
+          item: 'Vật Phẩm',
+          ticket: 'Vé'
+        },
+        messages: {
+          suggestSuccess: 'Thưởng tích lũy đã được tạo thành công!',
+          suggestFailed: 'Không thể gợi ý dữ liệu',
+          deleteFailed: 'Không thể xóa',
+          saveFailed: 'Không thể lưu',
+          loadFailed: 'Không thể tải'
+        }
+      },
+      settingDailyRewards: {
+        title: 'Cấu Hình Phần Thưởng Hàng Ngày',
+        prev: 'Trước',
+        next: 'Sau',
+        suggest: 'Gợi Ý Dữ Liệu Mặc Định',
+        editDay: 'Chỉnh Sửa Ngày',
+        cancel: 'Hủy',
+        save: 'Lưu',
+        form: {
+          type: 'Loại',
+          item: 'Vật Phẩm',
+          qty: 'Số lượng',
+          addItem: '+ Thêm Vật Phẩm'
+        },
+        types: {
+          coin: 'Xu',
+          exp: 'Kinh Nghiệm',
+          item: 'Vật Phẩm',
+          ticket: 'Vé'
+        },
+        messages: {
+          suggestSuccess: 'Phần thưởng hàng ngày đã được gợi ý thành công!',
+          suggestFailed: 'Không thể tạo gợi ý',
+          toggleEpicFailed: 'Không thể thay đổi trạng thái đặc biệt',
+          saveFailed: 'Không thể lưu',
+          unknownItem: 'Vật Phẩm Không Xác Định'
         }
       },
     },
@@ -286,6 +366,8 @@ export default {
       day: 'Ngày',
       epicReward: 'PHẦN THƯỞNG ĐẶC BIỆT',
       collect: 'Nhận',
+      reward: 'PHẦN THƯỞNG',
+      dailyReward: 'Phần Thưởng Hàng Ngày',
     },
     luckyWheel: {
       spin: 'QUAY',

@@ -27,8 +27,8 @@
           class="bonus-custom-value"
           :title="JSON.stringify(bonus.value, null, 2)"
         >
-          <span class="custom-value-label">Preset Values</span>
-          <span class="custom-value-count">{{ Object.keys(bonus.value || {}).length }} stats</span>
+          <span class="custom-value-label">{{ t('page.manageSetting.settingItems.presetValues') }}</span>
+          <span class="custom-value-count">{{ Object.keys(bonus.value || {}).length }} {{ t('page.manageSetting.settingItems.stats') }}</span>
         </div>
         <button 
           type="button"
@@ -52,7 +52,11 @@
 </template>
 
 <script setup>
+import { inject } from 'vue'
 import CustomSelect from './CustomSelect.vue'
+
+const translator = inject('translator', null)
+const t = translator || ((key) => key)
 
 const props = defineProps({
   label: {

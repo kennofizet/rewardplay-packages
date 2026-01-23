@@ -36,8 +36,8 @@ const menuItems = [
   { key: 'setting-options', label: t('page.manageSetting.menu.settingOptions') },
   { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets') },
   { key: 'manage-zones', label: t('page.manageSetting.menu.manageZones') },
-  { key: 'setting-stack-bonuses', label: 'Stack Bonuses' },
-  { key: 'setting-daily-rewards', label: 'Daily Rewards Config' }
+  { key: 'setting-stack-bonuses', label: t('page.manageSetting.settingStackBonuses.title') },
+  { key: 'setting-daily-rewards', label: t('page.manageSetting.settingDailyRewards.title') }
 ]
 
 const currentPage = ref('setting-items')

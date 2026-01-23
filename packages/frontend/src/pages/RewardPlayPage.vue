@@ -235,12 +235,12 @@ const loadAllResources = async () => {
     unzipProgress.value = Math.min(progress, 100)
     if (progress < 100) {
       if (current !== undefined && total !== undefined) {
-        loadingSubTexts.value.unzipping = `Unzipping files... ${current}/${total}`
+        loadingSubTexts.value.unzipping = `${translator('page.loading.unzippingFiles')} ${current}/${total}`
       } else {
-        loadingSubTexts.value.unzipping = 'Unzipping files...'
+        loadingSubTexts.value.unzipping = translator('page.loading.unzippingFiles')
       }
     } else {
-      loadingSubTexts.value.unzipping = 'Unzip complete'
+      loadingSubTexts.value.unzipping = translator('page.loading.unzipComplete')
     }
   })
 
@@ -250,19 +250,19 @@ const loadAllResources = async () => {
     if (progress < 100) {
       if (currentFileName) {
         // Show custom image being loaded
-        loadingSubTexts.value.assets = `Loading ${current}/${total} files - ${currentFileName}`
+        loadingSubTexts.value.assets = `${translator('page.loading.loadingAssets')} ${current}/${total} - ${currentFileName}`
       } else if (total !== undefined && total > 0) {
         // Show general progress with current/total
         if (current !== undefined) {
-          loadingSubTexts.value.assets = `Loading assets... ${current}/${total}`
+          loadingSubTexts.value.assets = `${translator('page.loading.loadingAssets')} ${current}/${total}`
         } else {
-          loadingSubTexts.value.assets = `Loading assets... 0/${total}`
+          loadingSubTexts.value.assets = `${translator('page.loading.loadingAssets')} 0/${total}`
         }
       } else {
-        loadingSubTexts.value.assets = 'Loading assets...'
+        loadingSubTexts.value.assets = translator('page.loading.loadingAssets')
       }
     } else {
-      loadingSubTexts.value.assets = 'Assets loaded'
+      loadingSubTexts.value.assets = translator('page.loading.assetsLoaded')
     }
   })
 
@@ -273,13 +273,13 @@ const loadAllResources = async () => {
     // Ensure loading reaches 100%
     if (loadingProgress.value < 100) {
       loadingProgress.value = 100
-      loadingSubTexts.value.assets = 'Assets loaded'
+      loadingSubTexts.value.assets = translator('page.loading.assetsLoaded')
     }
     
     // Ensure unzip reaches 100%
     if (unzipProgress.value < 100) {
       unzipProgress.value = 100
-      loadingSubTexts.value.unzipping = 'Unzip complete'
+      loadingSubTexts.value.unzipping = translator('page.loading.unzipComplete')
     }
   } catch (error) {
     console.error('Error loading resources:', error)
@@ -295,7 +295,7 @@ const loadUserData = async () => {
   if (!gameApi) {
     console.warn('gameApi not available, skipping user data load')
     userDataProgress.value = 100
-    loadingSubTexts.value.userData = 'No API available'
+    loadingSubTexts.value.userData = translator('page.loading.noApiAvailable')
     return
   }
 
@@ -303,14 +303,14 @@ const loadUserData = async () => {
     userDataProgress.value = 0
     const totalSteps = 10 // Total steps for progress calculation
     let currentStep = 0
-    loadingSubTexts.value.userData = `Loading user data... ${currentStep}/${totalSteps}`
+    loadingSubTexts.value.userData = `${translator('page.loading.loadingUserData')} ${currentStep}/${totalSteps}`
     
     // Simulate progress for better UX
     const progressInterval = setInterval(() => {
       if (currentStep < totalSteps - 1) {
         currentStep++
         userDataProgress.value = (currentStep / totalSteps) * 100
-        loadingSubTexts.value.userData = `Loading user data... ${currentStep}/${totalSteps}`
+        loadingSubTexts.value.userData = `${translator('page.loading.loadingUserData')} ${currentStep}/${totalSteps}`
       }
     }, 100)
 
@@ -319,11 +319,11 @@ const loadUserData = async () => {
     clearInterval(progressInterval)
     currentStep = totalSteps
     userDataProgress.value = 100
-    loadingSubTexts.value.userData = `Loading user data... ${currentStep}/${totalSteps}`
+    loadingSubTexts.value.userData = `${translator('page.loading.loadingUserData')} ${currentStep}/${totalSteps}`
     
     // Small delay to show completion
     setTimeout(() => {
-      loadingSubTexts.value.userData = 'User data loaded'
+      loadingSubTexts.value.userData = translator('page.loading.userDataLoaded')
     }, 200)
     
     if (response.data && response.data.success) {
@@ -334,7 +334,7 @@ const loadUserData = async () => {
     console.error('Error loading user data:', error)
     // Still mark as complete even if failed
     userDataProgress.value = 100
-    loadingSubTexts.value.userData = 'User data load failed'
+    loadingSubTexts.value.userData = translator('page.loading.userDataLoadFailed')
   }
 }
 

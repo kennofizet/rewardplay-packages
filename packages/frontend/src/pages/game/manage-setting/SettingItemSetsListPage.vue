@@ -259,7 +259,7 @@ const availableBonusLevels = computed(() => {
   for (let i = 1; i <= itemCount; i++) {
     levels.push({
       key: i,
-      label: `${i} ${i === 1 ? 'Item' : 'Items'} Bonus:`
+      label: `${i} ${i === 1 ? t('page.manageSetting.settingItemSets.itemBonus') : t('page.manageSetting.settingItemSets.itemsBonus')}`
     })
   }
   

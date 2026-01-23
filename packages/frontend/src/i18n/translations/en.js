@@ -19,6 +19,15 @@ export default {
       unzipping: 'Unzipping Files',
       userData: 'Load Data User',
       customImages: 'Loading Custom Images',
+      unzippingFiles: 'Unzipping files...',
+      unzipComplete: 'Unzip complete',
+      loadingAssets: 'Loading assets...',
+      assetsLoaded: 'Assets loaded',
+      assetsLoadFailed: 'Assets load failed',
+      loadingUserData: 'Loading user data...',
+      userDataLoaded: 'User data loaded',
+      userDataLoadFailed: 'User data load failed',
+      noApiAvailable: 'No API available',
     },
     manageSetting: {
       menu: {
@@ -55,6 +64,9 @@ export default {
         valuePlaceholder: 'Value',
         addOption: 'Add Option',
         removeProperty: 'Remove',
+        presetValues: 'Preset Values',
+        presetValuesNoValue: 'Preset Values (no value set)',
+        stats: 'stats',
         table: {
           id: 'ID',
           name: 'Name',
@@ -225,6 +237,72 @@ export default {
           all: 'All'
         }
       },
+      settingStackBonuses: {
+        title: 'Stack Bonuses',
+        create: 'Create New Bonus',
+        suggest: 'Suggest Default Data',
+        edit: 'Edit Bonus',
+        loading: 'Loading...',
+        saving: 'Saving...',
+        save: 'Save',
+        cancel: 'Cancel',
+        delete: 'Delete',
+        table: {
+          id: 'ID',
+          name: 'Name',
+          consecutiveDay: 'Consecutive Day',
+          rewards: 'Rewards',
+          actions: 'Actions'
+        },
+        form: {
+          name: 'Name',
+          consecutiveDay: 'Consecutive Day',
+          rewards: 'Rewards',
+          addReward: '+ Add Reward',
+          qty: 'Qty'
+        },
+        types: {
+          coin: 'Coin',
+          exp: 'EXP',
+          item: 'Item',
+          ticket: 'Ticket'
+        },
+        messages: {
+          suggestSuccess: 'Stack bonuses created successfully!',
+          suggestFailed: 'Failed to suggest data',
+          deleteFailed: 'Failed to delete',
+          saveFailed: 'Failed to save',
+          loadFailed: 'Failed to load'
+        }
+      },
+      settingDailyRewards: {
+        title: 'Daily Reward Configuration',
+        prev: 'Prev',
+        next: 'Next',
+        suggest: 'Suggest Default Data',
+        editDay: 'Edit Day',
+        cancel: 'Cancel',
+        save: 'Save',
+        form: {
+          type: 'Type',
+          item: 'Item',
+          qty: 'Qty',
+          addItem: '+ Add Item'
+        },
+        types: {
+          coin: 'Coin',
+          exp: 'Exp',
+          item: 'Item',
+          ticket: 'Ticket'
+        },
+        messages: {
+          suggestSuccess: 'Daily rewards suggested successfully!',
+          suggestFailed: 'Failed to generate suggestions',
+          toggleEpicFailed: 'Failed to toggle epic status',
+          saveFailed: 'Failed to save',
+          unknownItem: 'Unknown Item'
+        }
+      },
     },
   },
   component: {
@@ -282,9 +360,12 @@ export default {
       bonusTitle: 'BONUS FOR EVERYDAY LOGIN',
       bonusFooter: 'Missing even a single day will drop your progress to basic level',
       todaysRewards: 'TODAYS REWARDS',
+      monthlyRewards: 'MONTHLY REWARDS',
       day: 'Day',
       epicReward: 'EPIC REWARD',
       collect: 'collect',
+      reward: 'REWARD',
+      dailyReward: 'Daily Reward',
     },
     luckyWheel: {
       spin: 'SPIN',

@@ -1,14 +1,14 @@
 <template>
   <div class="setting-daily-reward-page">
     <div class="page-header">
-      <h2>Daily Reward Configuration</h2>
+      <h2>{{ t('page.manageSetting.settingDailyRewards.title') }}</h2>
     </div>
 
     <div class="controls">
-       <button @click="prevMonth" class="btn-nav">&lt; Prev</button>
+       <button @click="prevMonth" class="btn-nav">&lt; {{ t('page.manageSetting.settingDailyRewards.prev') }}</button>
        <span class="month-label">{{ currentYear }} - {{ currentMonth }}</span>
-       <button @click="nextMonth" class="btn-nav">Next &gt;</button>
-       <button class="btn-primary" @click="suggestData">Suggest Default Data</button>
+       <button @click="nextMonth" class="btn-nav">{{ t('page.manageSetting.settingDailyRewards.next') }} &gt;</button>
+       <button class="btn-primary" @click="suggestData">{{ t('page.manageSetting.settingDailyRewards.suggest') }}</button>
     </div>
 
     <div class="calendar-grid">
@@ -33,42 +33,42 @@
     <!-- Edit Modal -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
-        <h3>Edit Day {{ selectedDay }} / {{ currentMonth }} / {{ currentYear }}</h3>
+        <h3>{{ t('page.manageSetting.settingDailyRewards.editDay') }} {{ selectedDay }} / {{ currentMonth }} / {{ currentYear }}</h3>
         
         <div class="modal-body">
             <div class="item-list">
                 <div v-for="(item, index) in editingItems" :key="index" class="item-row">
                     <div class="input-group">
-                        <label>Type</label>
+                        <label>{{ t('page.manageSetting.settingDailyRewards.form.type') }}</label>
                         <select v-model="item.type">
-                            <option value="coin">Coin</option>
-                            <option value="exp">Exp</option>
-                            <option value="item">Item</option>
-                            <option value="ticket">Ticket</option>
+                            <option value="coin">{{ t('page.manageSetting.settingDailyRewards.types.coin') }}</option>
+                            <option value="exp">{{ t('page.manageSetting.settingDailyRewards.types.exp') }}</option>
+                            <option value="item">{{ t('page.manageSetting.settingDailyRewards.types.item') }}</option>
+                            <option value="ticket">{{ t('page.manageSetting.settingDailyRewards.types.ticket') }}</option>
                         </select>
                     </div>
 
                     <div class="input-group" v-if="item.type === 'item'">
-                        <label>Item</label>
+                        <label>{{ t('page.manageSetting.settingDailyRewards.form.item') }}</label>
                         <select v-model="item.item_id">
                             <option v-for="i in availableItems" :key="i.id" :value="i.id">{{ i.name }}</option>
                         </select>
                     </div>
 
                     <div class="input-group">
-                        <label>Qty</label>
+                        <label>{{ t('page.manageSetting.settingDailyRewards.form.qty') }}</label>
                         <input type="number" v-model.number="item.quantity" min="1" />
                     </div>
                     
                     <button class="btn-danger small" @click="removeItem(index)">x</button>
                 </div>
             </div>
-            <button class="btn-secondary small" @click="addItem">+ Add Item</button>
+            <button class="btn-secondary small" @click="addItem">{{ t('page.manageSetting.settingDailyRewards.form.addItem') }}</button>
         </div>
         
         <div class="modal-footer">
-           <button class="btn-secondary" @click="closeModal">Cancel</button>
-           <button class="btn-primary" @click="saveDay">Save</button>
+           <button class="btn-secondary" @click="closeModal">{{ t('page.manageSetting.settingDailyRewards.cancel') }}</button>
+           <button class="btn-primary" @click="saveDay">{{ t('page.manageSetting.settingDailyRewards.save') }}</button>
         </div>
       </div>
     </div>
@@ -77,6 +77,9 @@
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
+
+const translator = inject('translator', null)
+const t = translator || ((key) => key)
 
 const gameApi = inject('gameApi')
 const currentYear = ref(2026)
@@ -94,7 +97,7 @@ const daysInMonth = computed(() => {
 
 const getItemName = (id) => {
     const item = availableItems.value.find(i => i.id === id)
-    return item ? item.name : 'Unknown Item'
+    return item ? item.name : t('page.manageSetting.settingDailyRewards.messages.unknownItem')
 }
 
 const loadItems = async () => {
@@ -205,7 +208,7 @@ const saveDay = async () => {
         closeModal()
         loadRewards()
     } catch (e) {
-        alert('Failed to save')
+        alert(t('page.manageSetting.settingDailyRewards.messages.saveFailed'))
         console.error(e)
     }
 }
@@ -216,9 +219,9 @@ const suggestData = async () => {
     try {
         await gameApi.suggestDailyRewards({ year: currentYear.value, month: currentMonth.value })
         await loadRewards()
-        alert('Daily rewards suggested successfully!')
+        alert(t('page.manageSetting.settingDailyRewards.messages.suggestSuccess'))
     } catch(e) {
-        alert('Failed to generate suggestions: ' + (e.response?.data?.message || e.message))
+        alert(t('page.manageSetting.settingDailyRewards.messages.suggestFailed') + ': ' + (e.response?.data?.message || e.message))
     } finally {
         loading.value = false
     }

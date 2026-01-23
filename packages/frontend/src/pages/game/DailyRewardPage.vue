@@ -121,8 +121,8 @@ const rewards = computed(() => {
         return {
             original_date: r.date,
             day: `${t('component.dailyReward.day')} ${dayOfMonth}`, // Show actual day of month
-            title: firstItem ? firstItem.type.toUpperCase() : 'REWARD',
-            description: firstItem ? `x${firstItem.quantity} ${extraInfo}` : 'Daily Reward',
+            title: firstItem ? firstItem.type.toUpperCase() : t('component.dailyReward.reward'),
+            description: firstItem ? `x${firstItem.quantity} ${extraInfo}` : t('component.dailyReward.dailyReward'),
             rarity: r.is_epic ? 'epic' : (dayNumInCycle % 3 === 0 ? 'rare' : 'common'),
             isCurrent: isCurrent,
             isCollected: isCollected,
