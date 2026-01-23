@@ -8,6 +8,8 @@ use Kennofizet\RewardPlay\Models\SettingDailyReward\SettingDailyRewardModelRespo
 use Kennofizet\RewardPlay\Models\SettingStackBonus\SettingStackBonusModelResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Kennofizet\RewardPlay\Models\SettingDailyReward\SettingDailyRewardConstant;
+use Kennofizet\RewardPlay\Models\SettingStackBonus\SettingStackBonusConstant;
 
 class DailyRewardController extends Controller
 {
@@ -27,7 +29,8 @@ class DailyRewardController extends Controller
     public function index(Request $request): JsonResponse
     {
         $userId = $request->attributes->get('rewardplay_user_id');
-        $reponseMode = $request->reponseMode;
+        $reponseMode = SettingDailyRewardConstant::PLAYER_API_RESPONSE_REWARD_PAGE;
+        $stackBonusReponseMode = SettingStackBonusConstant::PLAYER_API_RESPONSE_REWARD_PAGE;
         
         $state = $this->service->getDailyRewardState($userId);
 
@@ -52,7 +55,7 @@ class DailyRewardController extends Controller
                 foreach ($state['stack_bonuses'] as $day => $bonus) {
                     $formattedStackBonuses[$day] = SettingStackBonusModelResponse::formatSettingStackBonus(
                         $bonus,
-                        $reponseMode
+                        $stackBonusReponseMode
                     );
                 }
                 $state['stack_bonuses'] = $formattedStackBonuses;

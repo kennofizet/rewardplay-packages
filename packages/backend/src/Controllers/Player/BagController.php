@@ -26,7 +26,7 @@ class BagController extends Controller
     public function index(Request $request): JsonResponse
     {
         $userId = $request->attributes->get('rewardplay_user_id');
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
 
         $bagItems = $this->service->getUserBag($userId);
         $categorized = $this->service->getUserBagCategorized($userId);

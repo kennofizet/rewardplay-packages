@@ -40,7 +40,7 @@ class SettingOptionController extends Controller
             'q',
             'zone_id',
         ]);
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
 
         $settingOptions = $this->settingOptionService->getSettingOptions($filters, $reponseMode);
 
@@ -75,7 +75,7 @@ class SettingOptionController extends Controller
         }
 
         if ($request->expectsJson()) {
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
             $formattedSettingOption = SettingOptionModelResponse::formatSettingOption($settingOption, $reponseMode);
             
             return $this->apiResponseWithContext([
@@ -98,7 +98,7 @@ class SettingOptionController extends Controller
 
         try {
             $settingOption = $this->settingOptionService->createSettingOption($data);
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
             $formattedSettingOption = SettingOptionModelResponse::formatSettingOption($settingOption, $reponseMode);
 
             return $this->apiResponseWithContext([
@@ -127,7 +127,7 @@ class SettingOptionController extends Controller
                 return $this->apiErrorResponse('Setting option not found', 404);
             }
 
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
             $formattedSettingOption = SettingOptionModelResponse::formatSettingOption($settingOption, $reponseMode);
 
             return $this->apiResponseWithContext([

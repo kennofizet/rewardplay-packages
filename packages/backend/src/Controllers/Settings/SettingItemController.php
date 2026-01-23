@@ -42,7 +42,7 @@ class SettingItemController extends Controller
             'type',
             'zone_id'
         ]);
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
 
         $settingItems = $this->settingItemService->getSettingItems($filters, $reponseMode);
 
@@ -77,7 +77,7 @@ class SettingItemController extends Controller
         }
 
         if ($request->expectsJson()) {
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
             $formattedSettingItem = SettingItemModelResponse::formatSettingItem($settingItem, $reponseMode);
             
             return $this->apiResponseWithContext([
@@ -103,7 +103,7 @@ class SettingItemController extends Controller
 
         try {
             $settingItem = $this->settingItemService->createSettingItem($data, $imageFile);
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
             $formattedSettingItem = SettingItemModelResponse::formatSettingItem($settingItem, $reponseMode);
 
             return $this->apiResponseWithContext([
@@ -135,7 +135,7 @@ class SettingItemController extends Controller
                 return $this->apiErrorResponse('Setting item not found', 404);
             }
 
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
             $formattedSettingItem = SettingItemModelResponse::formatSettingItem($settingItem, $reponseMode);
 
             return $this->apiResponseWithContext([

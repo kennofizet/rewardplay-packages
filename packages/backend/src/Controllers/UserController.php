@@ -31,7 +31,7 @@ class UserController extends Controller
             'keySearch', 
             'q'
         ]);
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
 
         $users = $this->userService->getUsers($filters, $reponseMode);
 

@@ -19,6 +19,8 @@ class SettingStackBonusRelationshipSetting
     protected static $settings = [
         SettingStackBonusConstant::API_SETTING_STACK_BONUS_LIST_PAGE => [
         ],
+        SettingStackBonusConstant::PLAYER_API_RESPONSE_REWARD_PAGE => [
+        ],
         HelperConstant::REPONSE_MODE_SELECTER_API => [
         ]
     ];

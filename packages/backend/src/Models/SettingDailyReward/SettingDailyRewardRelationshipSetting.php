@@ -19,6 +19,8 @@ class SettingDailyRewardRelationshipSetting
     protected static $settings = [
         SettingDailyRewardConstant::API_SETTING_DAILY_REWARD_LIST_PAGE => [
         ],
+        SettingDailyRewardConstant::PLAYER_API_RESPONSE_REWARD_PAGE => [
+        ],
         HelperConstant::REPONSE_MODE_SELECTER_API => [
         ]
     ];

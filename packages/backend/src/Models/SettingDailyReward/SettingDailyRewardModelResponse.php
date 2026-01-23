@@ -48,6 +48,15 @@ class SettingDailyRewardModelResponse extends BaseModelResponse
                 'date' => $settingDailyReward->date,
                 'is_epic' => $settingDailyReward->is_epic ?? false,
             ];
+        }elseif(in_array($mode, [
+            SettingDailyRewardConstant::PLAYER_API_RESPONSE_REWARD_PAGE,
+        ])){
+            return [
+                'is_epic' => $settingDailyReward->is_epic,
+                'items' => $settingDailyReward->items,
+                'stack_bonuses' => $settingDailyReward->stack_bonuses,
+                'date' => $settingDailyReward->date
+            ];
         }
 
         return [

@@ -8,7 +8,7 @@
         <WeekDay
           v-for="day in weekDays"
           :key="day.day"
-          :title="`${t('component.dailyReward.day')} ${day.day}`"
+          :title="day.name"
           :is-completed="day.completed"
           :is-past="day.past"
           :is-current="day.current"
@@ -26,7 +26,7 @@
       <div class="reward-grid">
         <RewardCard
           v-for="reward in rewards"
-          :key="reward.id"
+          :key="reward.date"
           :day-label="reward.day"
           :title="reward.title"
           :description="reward.description"
@@ -73,6 +73,7 @@ const weekDays = computed(() => {
         const rewards = bonus?.rewards || []
         
         return {
+            name: bonus?.name || t('component.dailyReward.day') + ' ' + dayNum,
             day: dayNum,
             completed: dayNum < weeklyStreak || (dayNum === weeklyStreak && state.value.is_claimed_today),
             past: dayNum < weeklyStreak,
@@ -118,7 +119,6 @@ const rewards = computed(() => {
         }
         
         return {
-            id: r.id || index,
             original_date: r.date,
             day: `${t('component.dailyReward.day')} ${dayOfMonth}`, // Show actual day of month
             title: firstItem ? firstItem.type.toUpperCase() : 'REWARD',
@@ -152,9 +152,6 @@ const handleCollect = async (reward) => {
   if (!gameApi) return
   
   try {
-    const params = { reward_id: reward.id, date: reward.original_date } // Depends on backend requirement
-    if (selectedZone.value) params.zone_id = selectedZone.value.id
-    
     await gameApi.collectDailyReward()
     
     // Optimistic update or reload

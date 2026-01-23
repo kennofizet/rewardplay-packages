@@ -37,7 +37,7 @@ class SettingStackBonusController extends Controller
             'day_to',
             'is_active',
         ]);
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
 
         $settingStackBonuses = $this->settingStackBonusService->getSettingStackBonuses($filters, $reponseMode);
 
@@ -61,7 +61,7 @@ class SettingStackBonusController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
         $bonus = $this->settingStackBonusService->getSettingStackBonus($id, $reponseMode);
 
         if (!$bonus) {
@@ -91,7 +91,7 @@ class SettingStackBonusController extends Controller
             $data = $request->validated();
 
             $bonus = $this->settingStackBonusService->createSettingStackBonus($data);
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
 
             if ($request->expectsJson()) {
                 $formattedBonus = SettingStackBonusModelResponse::formatSettingStackBonus($bonus, $reponseMode);
@@ -120,7 +120,7 @@ class SettingStackBonusController extends Controller
             $data = $request->validated();
 
             $bonus = $this->settingStackBonusService->updateSettingStackBonus($id, $data);
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
 
             if ($request->expectsJson()) {
                 $formattedBonus = SettingStackBonusModelResponse::formatSettingStackBonus($bonus, $reponseMode);

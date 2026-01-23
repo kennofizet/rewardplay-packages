@@ -47,6 +47,14 @@ class SettingStackBonusModelResponse extends BaseModelResponse
                 'name' => $settingStackBonus->name,
                 'day' => $settingStackBonus->day,
             ];
+        }elseif(in_array($mode, [
+            SettingStackBonusConstant::PLAYER_API_RESPONSE_REWARD_PAGE,
+        ])){
+            return [
+                'rewards' => $settingStackBonus->rewards ?? [],
+                'day' => $settingStackBonus->day,
+                'name' => $settingStackBonus->name,
+            ];
         }
 
         return [

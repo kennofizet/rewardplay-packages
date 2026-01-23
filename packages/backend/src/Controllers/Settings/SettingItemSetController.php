@@ -40,7 +40,7 @@ class SettingItemSetController extends Controller
             'q',
             'zone_id'
         ]);
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
 
         $settingItemSets = $this->settingItemSetService->getSettingItemSets($filters, $reponseMode);
 
@@ -79,7 +79,7 @@ class SettingItemSetController extends Controller
         }
 
         if ($request->expectsJson()) {
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
             $formattedSettingItemSet = SettingItemSetModelResponse::formatSettingItemSet($settingItemSet, $reponseMode);
             
             return $this->apiResponseWithContext([
@@ -103,7 +103,7 @@ class SettingItemSetController extends Controller
 
         try {
             $settingItemSet = $this->settingItemSetService->createSettingItemSet($data, $itemIds);
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
             $formattedSettingItemSet = SettingItemSetModelResponse::formatSettingItemSet($settingItemSet, $reponseMode);
 
             return $this->apiResponseWithContext([
@@ -133,7 +133,7 @@ class SettingItemSetController extends Controller
                 return $this->apiErrorResponse('Setting item set not found', 404);
             }
 
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
             $formattedSettingItemSet = SettingItemSetModelResponse::formatSettingItemSet($settingItemSet, $reponseMode);
 
             return $this->apiResponseWithContext([

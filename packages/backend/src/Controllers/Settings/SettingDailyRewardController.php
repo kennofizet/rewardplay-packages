@@ -38,7 +38,7 @@ class SettingDailyRewardController extends Controller
             'is_active',
             'is_epic',
         ]);
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
 
         $settingDailyRewards = $this->settingDailyRewardService->getSettingDailyRewards($filters, $reponseMode);
 
@@ -66,7 +66,7 @@ class SettingDailyRewardController extends Controller
         $month = $filters['month'] ?? Carbon::now()->month;
 
         $rewards = $this->settingDailyRewardService->getSettingDailyRewardsByMonth($year, $month);
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
 
         if ($request->expectsJson()) {
             $formattedRewards = SettingDailyRewardModelResponse::formatSettingDailyRewards($rewards, $reponseMode);
@@ -88,7 +88,7 @@ class SettingDailyRewardController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $reponseMode = $request->reponseMode;
+        $reponseMode = "";
         $reward = $this->settingDailyRewardService->getSettingDailyReward($id, $reponseMode);
 
         if (!$reward) {
@@ -118,7 +118,7 @@ class SettingDailyRewardController extends Controller
             $data = $request->validated();
 
             $reward = $this->settingDailyRewardService->createOrUpdateSettingDailyReward($data);
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
 
             if ($request->expectsJson()) {
                 $formattedReward = SettingDailyRewardModelResponse::formatSettingDailyReward($reward, $reponseMode);
@@ -147,7 +147,7 @@ class SettingDailyRewardController extends Controller
             $data = $request->validated();
 
             $reward = $this->settingDailyRewardService->updateSettingDailyReward($id, $data);
-            $reponseMode = $request->reponseMode;
+            $reponseMode = "";
 
             if ($request->expectsJson()) {
                 $formattedReward = SettingDailyRewardModelResponse::formatSettingDailyReward($reward, $reponseMode);
