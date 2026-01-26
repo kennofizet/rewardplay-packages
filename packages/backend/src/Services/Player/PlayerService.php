@@ -9,22 +9,13 @@ use Kennofizet\RewardPlay\Models\SettingItem;
 class PlayerService
 {
     /**
-     * Return list of custom images accessible to current user (zones user is in or manages)
+     * Return list of custom images accessible to current user (zones user is in current)
      *
      * @return array [ ['url' => string, 'type' => string], ... ]
      */
     public function getCustomImages(): array
     {
-        // Get all zone IDs user is in OR manages
-        $userZoneIds = BaseModelActions::currentUserZoneIds();
-        $allZoneIds = array_values(array_unique($userZoneIds));
-
-        if (empty($allZoneIds)) {
-            return [];
-        }
-
-        $settingItems = SettingItem::whereIn('zone_id', $allZoneIds)
-            ->whereNotNull('image')
+        $settingItems = SettingItem::whereNotNull('image')
             ->where('image', '!=', '')
             ->get();
 

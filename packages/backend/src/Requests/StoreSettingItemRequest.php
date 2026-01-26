@@ -31,7 +31,6 @@ class StoreSettingItemRequest extends FormRequest
             'description' => 'nullable|string',
             'type' => 'required|string|in:' . $allowedTypesString,
             'default_property' => 'nullable|json',
-            'zone_id' => 'nullable|integer|exists:' . $zonesTableName . ',id',
             'image' => 'nullable|file|image|max:2048',
         ];
     }

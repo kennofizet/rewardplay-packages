@@ -24,6 +24,27 @@ export function createGameApi(backendUrl, token) {
     },
   })
 
+  // Add interceptor to automatically include zone_id from localStorage as header
+  api.interceptors.request.use((config) => {
+    try {
+      const selectedZone = localStorage.getItem('selected_zone')
+      if (selectedZone) {
+        const zone = JSON.parse(selectedZone)
+        if (zone && zone.id) {
+          // Add zone_id to headers (similar to X-RewardPlay-Token)
+          config.headers = config.headers || {}
+          if (!config.headers['X-RewardPlay-Zone-Id']) {
+            config.headers['X-RewardPlay-Zone-Id'] = zone.id.toString()
+          }
+        }
+      }
+    } catch (e) {
+      // Silently fail if localStorage is not available or zone is invalid
+      console.warn('Failed to get zone_id from localStorage:', e)
+    }
+    return config
+  })
+
   return {
     // Auth
     checkUser: () => api.get('/api/rewardplay/auth/check'),
@@ -35,14 +56,10 @@ export function createGameApi(backendUrl, token) {
     getManifest: () => api.get('/api/rewardplay/manifest'),
     // Ranking
     getRanking: () => api.get('/api/rewardplay/ranking'),
-    // Demo
-    getDemo: () => api.get('/api/rewardplay/demo'),
-
     // Zones the current user can manage (for settings)
     getManagedZones: () => api.get('/api/rewardplay/player/managed-zones'),
     // Zone management (settings)
     getAllZones: (params) => api.get('/api/rewardplay/zones', { params }),
-    getZone: (id) => api.get(`/api/rewardplay/zones/${id}`),
     createZone: (data) => api.post('/api/rewardplay/zones', data),
     updateZone: (id, data) => api.put(`/api/rewardplay/zones/${id}`, data),
     deleteZone: (id) => api.delete(`/api/rewardplay/zones/${id}`),
@@ -53,7 +70,6 @@ export function createGameApi(backendUrl, token) {
 
     // Setting Items CRUD
     getSettingItems: (params) => api.get('/api/rewardplay/setting-items', { params }),
-    getSettingItem: (id) => api.get(`/api/rewardplay/setting-items/${id}`),
     getItemTypes: () => api.get('/api/rewardplay/setting-items/types'),
     createSettingItem: (data) => {
       // If data is FormData, use multipart/form-data, otherwise use JSON
@@ -95,8 +111,7 @@ export function createGameApi(backendUrl, token) {
 
     // Setting Item Sets CRUD
     getSettingItemSets: (params) => api.get('/api/rewardplay/setting-item-sets', { params }),
-    getSettingItemSet: (id) => api.get(`/api/rewardplay/setting-item-sets/${id}`),
-    getItemsForZone: (params) => api.get('/api/rewardplay/setting-items/items-for-zone', { params }),
+    getItemsForZone: () => api.get('/api/rewardplay/setting-items/items-for-zone'),
     createSettingItemSet: (data) => api.post('/api/rewardplay/setting-item-sets', data),
     updateSettingItemSet: (id, data) => api.put(`/api/rewardplay/setting-item-sets/${id}`, data),
     deleteSettingItemSet: (id) => api.delete(`/api/rewardplay/setting-item-sets/${id}`),
@@ -115,7 +130,7 @@ export function createGameApi(backendUrl, token) {
     suggestDailyRewards: (data) => api.post('/api/rewardplay/setting-daily-rewards/suggest', data),
 
     // Player Daily Rewards & Bag
-    getPlayerDailyRewardState: (params) => api.get('/api/rewardplay/player/daily-rewards', { params }), // Includes stack info
+    getPlayerDailyRewardState: () => api.get('/api/rewardplay/player/daily-rewards'), // Includes stack info
     collectDailyReward: () => api.post('/api/rewardplay/player/daily-rewards/collect'),
     getPlayerBag: () => api.get('/api/rewardplay/player/bag'),
   }

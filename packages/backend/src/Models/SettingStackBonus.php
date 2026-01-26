@@ -16,6 +16,7 @@ class SettingStackBonus extends BaseModel
         'day',
         'rewards',
         'is_active',
+        'zone_id',
     ];
 
     protected $casts = [

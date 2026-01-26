@@ -16,13 +16,6 @@
         @input="handleSearch"
       />
       <CustomSelect
-        v-model="filters.zone_id"
-        :options="zoneOptionsWithEmpty"
-        :placeholder="t('page.manageSetting.settingItems.allZones')"
-        @change="loadSettingItems"
-        trigger-class="zone-select"
-      />
-      <CustomSelect
         v-model="filters.type"
         :options="typeOptionsWithEmpty"
         :placeholder="t('page.manageSetting.settingItems.allTypes')"
@@ -47,7 +40,6 @@
             <th>{{ t('page.manageSetting.settingItems.table.name') }}</th>
             <th>{{ t('page.manageSetting.settingItems.table.slug') }}</th>
             <th>{{ t('page.manageSetting.settingItems.table.type') }}</th>
-            <th>{{ t('page.manageSetting.settingItems.table.zone') }}</th>
             <th>{{ t('page.manageSetting.settingItems.table.image') }}</th>
             <th>{{ t('page.manageSetting.settingItems.table.defaultProperty') }}</th>
             <th>{{ t('page.manageSetting.settingItems.table.description') }}</th>
@@ -60,7 +52,6 @@
             <td>{{ item.name }}</td>
             <td>{{ item.slug }}</td>
             <td>{{ item.type }}</td>
-            <td>{{ item.zone ? item.zone.name : '-' }}</td>
             <td>
               <img v-if="item.image" :src="item.image" alt="" class="item-image" />
               <span v-else>-</span>
@@ -102,14 +93,6 @@
           <button class="btn-close" @click="closeModal">×</button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label>{{ t('page.manageSetting.settingItems.form.zone') }}</label>
-            <CustomSelect
-              v-model="formData.zone_id"
-              :options="zoneOptions"
-              :placeholder="t('page.manageSetting.settingItems.selectZone')"
-            />
-          </div>
           <div class="form-group">
             <label>{{ t('page.manageSetting.settingItems.form.name') }}</label>
             <input v-model="formData.name" type="text" required />
@@ -195,7 +178,7 @@
             class="btn-primary" 
             :class="{ 'btn-loading': saveLoading, 'btn-fail': saveFailed }"
             @click="handleSave"
-            :disabled="saveLoading || !formData.type || !formData.zone_id || !formData.name"
+            :disabled="saveLoading || !formData.type || !formData.name"
           >
             <span v-if="saveLoading">{{ t('page.manageSetting.settingItems.saving') }}</span>
             <span v-else-if="saveFailed">{{ t('page.manageSetting.settingItems.saveFailed') }}</span>
@@ -223,7 +206,6 @@ const error = ref(null)
 const settingItems = ref([])
 const conversionKeys = ref([])
 const itemTypes = ref([])
-const zones = ref([])
 const pagination = ref(null)
 const showModal = ref(false)
 const editingItem = ref(null)
@@ -231,21 +213,6 @@ const saveLoading = ref(false)
 const saveFailed = ref(false)
 const defaultPropertiesList = ref([])
 const selectedImageFile = ref(null)
-
-const zoneOptions = computed(() => {
-  const options = zones.value.map(zone => ({
-    value: zone.id,
-    label: zone.name
-  }))
-  return options
-})
-
-const zoneOptionsWithEmpty = computed(() => {
-  return [
-    { value: '', label: t('page.manageSetting.settingItems.allZones') },
-    ...zoneOptions.value
-  ]
-})
 
 const typeOptions = computed(() => {
   const options = itemTypes.value.map(itemType => ({
@@ -326,7 +293,6 @@ const removeProperty = (index) => {
 
 const filters = ref({
   search: '',
-  zone_id: '',
   type: '',
   currentPage: 1,
   perPage: 15
@@ -337,7 +303,6 @@ const formData = ref({
   description: '',
   type: '',
   default_property: {},
-  zone_id: '',
   image_preview: null
 })
 
@@ -356,9 +321,6 @@ const loadSettingItems = async () => {
       params.keySearch = filters.value.search
     }
 
-    if (filters.value.zone_id) {
-      params.zone_id = filters.value.zone_id
-    }
 
     if (filters.value.type) {
       params.type = filters.value.type
@@ -375,17 +337,6 @@ const loadSettingItems = async () => {
       }
     }
 
-    // Load zones from response
-    if (response.data && response.data.datas && response.data.datas.zones) {
-      zones.value = response.data.datas.zones
-      // Set default zone if not selected
-      if (!filters.value.zone_id && zones.value.length > 0) {
-        filters.value.zone_id = zones.value[0].id
-        // Reload with default zone
-        await loadSettingItems()
-        return
-      }
-    }
   } catch (err) {
     error.value = err.response?.data?.message || err.message || 'Failed to load setting items'
     console.error('Error loading setting items:', err)
@@ -414,7 +365,6 @@ const handleCreate = () => {
     description: '',
     type: '',
     default_property: {},
-    zone_id: zones.value.length > 0 ? zones.value[0].id : '',
     image_preview: null
   }
   defaultPropertiesList.value = []
@@ -431,7 +381,6 @@ const handleEdit = async (item) => {
     description: item.description || '',
     type: item.type || '',
     default_property: item.default_property ? { ...item.default_property } : {},
-    zone_id: item.zone_id || '',
     image_preview: null
   }
   // Ensure stats are loaded before syncing properties (needed for custom stats)
@@ -515,10 +464,6 @@ const handleSave = async () => {
     return
   }
 
-  if (!formData.value.zone_id) {
-    error.value = t('page.manageSetting.settingItems.errors.zoneRequired')
-    return
-  }
 
   saveLoading.value = true
   saveFailed.value = false
@@ -576,7 +521,6 @@ const handleSave = async () => {
     formDataToSend.append('name', formData.value.name)
     formDataToSend.append('description', formData.value.description || '')
     formDataToSend.append('type', formData.value.type)
-    formDataToSend.append('zone_id', formData.value.zone_id)
 
     if (Object.keys(defaultPropertyClean).length > 0) {
       formDataToSend.append('default_property', JSON.stringify(defaultPropertyClean))
@@ -645,7 +589,6 @@ const closeModal = () => {
     description: '',
     type: '',
     default_property: {},
-    zone_id: '',
     image_preview: null
   }
   defaultPropertiesList.value = []
@@ -695,7 +638,6 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.zone-select,
 .type-select {
   padding: 10px;
   background: #253344;

@@ -6,6 +6,7 @@ use Kennofizet\RewardPlay\Services\Model\SettingDailyRewardService;
 use Kennofizet\RewardPlay\Services\Model\SettingStackBonusService;
 use Kennofizet\RewardPlay\Models\UserDailyStatus;
 use Kennofizet\RewardPlay\Models\UserBagItem;
+use Kennofizet\RewardPlay\Models\UserEventTransaction;
 use Carbon\Carbon;
 use Exception;
 
@@ -39,9 +40,9 @@ class DailyRewardService
         $isClaimedToday = $userDailyStatus->last_claim_date 
             && Carbon::parse($userDailyStatus->last_claim_date)->isToday();
 
-        $weeklyRewardsWithClaimStatus = $weeklyRewards->map(function ($dailyReward) {
+        $weeklyRewardsWithClaimStatus = $weeklyRewards->map(function ($dailyReward) use ($userId) {
             $dailyReward->original_date = $dailyReward->date;
-            $dailyReward->claimed = false;
+            $dailyReward->claimed = $dailyReward->hasClaimed($userId);
             return $dailyReward;
         });
 
@@ -114,14 +115,34 @@ class DailyRewardService
         }
 
         $todayDailyReward = $this->settingDailyRewardService->getSettingDailyRewardByDate(Carbon::today());
+        $allCollectedItems = [];
+
         if ($todayDailyReward && !empty($todayDailyReward->items)) {
             $this->grantRewards($userId, $todayDailyReward->items);
+            $allCollectedItems = array_merge($allCollectedItems, $todayDailyReward->items);
+            
+            // Save transaction for daily reward
+            UserEventTransaction::create([
+                'user_id' => $userId,
+                'model_type' => \Kennofizet\RewardPlay\Models\SettingDailyReward::class,
+                'model_id' => $todayDailyReward->id,
+                'items' => $todayDailyReward->items,
+            ]);
         }
 
-        $currentWeeklyStreakDay = ($userDailyStatus->consecutive_login_days - 1) % 7 + 1;
+        $currentWeeklyStreakDay = $userDailyStatus->consecutive_login_days;
         $stackBonusForStreakDay = $this->settingStackBonusService->getSettingStackBonusByDay($currentWeeklyStreakDay);
         if ($stackBonusForStreakDay && !empty($stackBonusForStreakDay->rewards)) {
             $this->grantRewards($userId, $stackBonusForStreakDay->rewards);
+            $allCollectedItems = array_merge($allCollectedItems, $stackBonusForStreakDay->rewards);
+            
+            // Save transaction for stack bonus
+            UserEventTransaction::create([
+                'user_id' => $userId,
+                'model_type' => \Kennofizet\RewardPlay\Models\SettingStackBonus::class,
+                'model_id' => $stackBonusForStreakDay->id,
+                'items' => $stackBonusForStreakDay->rewards,
+            ]);
         }
 
         $userDailyStatus->last_claim_date = Carbon::now();

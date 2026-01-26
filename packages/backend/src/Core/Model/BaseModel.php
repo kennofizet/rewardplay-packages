@@ -55,6 +55,22 @@ class BaseModel extends Model
             } catch (\Exception $e) {
             }
         });
+
+        // Auto-add zone_id when creating models (if table has zone_id column and it's not already set)
+        static::creating(function ($model) {
+            $table = $model->getTable();
+            
+            // Check if table has zone_id column
+            if (self::tableHasColumn($table, HelperConstant::ZONE_ID_COLUMN)) {
+                // Only set zone_id if it's not already set and we have a current zone_id from request
+                if (empty($model->zone_id) && request()) {
+                    $currentZoneId = request()->attributes->get('rewardplay_user_zone_id_current');
+                    if (!empty($currentZoneId)) {
+                        $model->zone_id = $currentZoneId;
+                    }
+                }
+            }
+        });
     }
 
     /**

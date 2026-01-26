@@ -12,7 +12,7 @@ class SettingItemSetRelationshipSetting
      */
     public static function buildWithArray(?string $mode = null): array
     {
-        $with = ['zone', 'items'];
+        $with = ['items'];
 
         return $with;
     }

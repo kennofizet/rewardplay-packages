@@ -15,14 +15,14 @@ trait BaseModelScopes
 
     public function scopeIsInZone(Builder $query)
     {
-        $zoneIds = BaseModelActions::currentUserZoneIds();
-        if (empty($zoneIds)) {
+        $zoneId = BaseModelActions::currentUserZoneId();
+        if (empty($zoneId)) {
             return $query->returnNull();
         }
         
         $table = $query->getModel()->getTable();
-        return $query->where(function($q) use ($table, $zoneIds) {
-            $q->whereIn($table . '.' . HelperConstant::ZONE_ID_COLUMN, $zoneIds);
+        return $query->where(function($q) use ($table, $zoneId) {
+            $q->where($table . '.' . HelperConstant::ZONE_ID_COLUMN, $zoneId);
         });
     }
 

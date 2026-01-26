@@ -17,6 +17,7 @@ class UserBagItem extends BaseModel
         'quantity',
         'properties',
         'acquired_at',
+        'zone_id',
     ];
 
     protected $casts = [

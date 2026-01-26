@@ -6,23 +6,19 @@ use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\Services\Model\SettingItemSetService;
-use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
 use Kennofizet\RewardPlay\Models\SettingItemSet\SettingItemSetModelResponse;
-use Kennofizet\RewardPlay\Models\SettingItemSet;
 use Kennofizet\RewardPlay\Requests\StoreSettingItemSetRequest;
 use Kennofizet\RewardPlay\Requests\UpdateSettingItemSetRequest;
+use Kennofizet\RewardPlay\Models\SettingItemSet\SettingItemSetConstant;
 
 class SettingItemSetController extends Controller
 {
     protected SettingItemSetService $settingItemSetService;
-    protected ZoneService $zoneService;
 
     public function __construct(
         SettingItemSetService $settingItemSetService,
-        ZoneService $zoneService
     ) {
         $this->settingItemSetService = $settingItemSetService;
-        $this->zoneService = $zoneService;
     }
 
     /**
@@ -37,15 +33,12 @@ class SettingItemSetController extends Controller
             'perPage', 
             'currentPage', 
             'keySearch', 
-            'q',
-            'zone_id'
+            'q'
         ]);
-        $reponseMode = "";
+        
+        $reponseMode = SettingItemSetConstant::API_SETTING_ITEM_SET_LIST_PAGE;
 
         $settingItemSets = $this->settingItemSetService->getSettingItemSets($filters, $reponseMode);
-
-        // Get zones user can manage
-        $zones = $this->getZonesUserCanManage();
 
         if ($request->expectsJson()) {
             $formattedSettingItemSets = SettingItemSetModelResponse::formatSettingItemSets($settingItemSets, $reponseMode);
@@ -55,35 +48,7 @@ class SettingItemSetController extends Controller
 
             return $this->apiResponseWithContext([
                 'setting_item_sets' => $formattedSettingItemSets,
-                'zones' => $zones,
                 'stats' => $statsMap,
-            ]);
-        }
-
-        return $this->apiErrorResponse();
-    }
-
-    /**
-     * Get a single setting item set
-     * 
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
-     */
-    public function show(Request $request, int $id): JsonResponse
-    {
-        $settingItemSet = $this->settingItemSetService->getSettingItemSet($id);
-
-        if (!$settingItemSet) {
-            return $this->apiErrorResponse('Setting item set not found', 404);
-        }
-
-        if ($request->expectsJson()) {
-            $reponseMode = "";
-            $formattedSettingItemSet = SettingItemSetModelResponse::formatSettingItemSet($settingItemSet, $reponseMode);
-            
-            return $this->apiResponseWithContext([
-                'setting_item_set' => $formattedSettingItemSet,
             ]);
         }
 

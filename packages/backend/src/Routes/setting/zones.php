@@ -5,7 +5,6 @@ use Kennofizet\RewardPlay\Controllers\Settings\ZoneController as SettingsZoneCon
 
 // Zones (manage)
 Route::get('/zones', [SettingsZoneController::class, 'index']);
-Route::get('/zones/{id}', [SettingsZoneController::class, 'show']);
 // List users for a zone (server members + assigned ids)
 Route::get('/zones/{id}/users', [SettingsZoneController::class, 'users']);
 // Assign/Remove user to/from zone

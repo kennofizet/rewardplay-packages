@@ -5,9 +5,6 @@ namespace Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
-use Kennofizet\RewardPlay\Models\SettingOption;
-use Kennofizet\RewardPlay\Models\Zone;
-use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation\Traits\StatsCustomCheckTrait;
 
 class SettingItemValidationService
@@ -24,8 +21,6 @@ class SettingItemValidationService
      */
     public function validateSettingItem(array $data, ?\Illuminate\Http\UploadedFile $imageFile = null, ?int $id = null)
     {
-        $zonesTableName = (new Zone())->getTable();
-
         // Get allowed types (item types)
         $itemTypes = array_keys(SettingItemConstant::ITEM_TYPE_NAMES);
         $allowedTypesString = implode(',', $itemTypes);
@@ -34,7 +29,6 @@ class SettingItemValidationService
             'name' => $id ? 'sometimes|required|string|max:255' : 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => $id ? 'sometimes|required|string|in:' . $allowedTypesString : 'required|string|in:' . $allowedTypesString,
-            'zone_id' => 'nullable|integer|exists:' . $zonesTableName . ',id',
         ];
 
         // Add image validation if file is provided

@@ -1,10 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Kennofizet\RewardPlay\Controllers\DemoController;
 use Kennofizet\RewardPlay\Controllers\AuthController;
 use Kennofizet\RewardPlay\Controllers\RankingController;
-use Kennofizet\RewardPlay\Controllers\UserController;
 use Kennofizet\RewardPlay\Controllers\Player\PlayerController;
 use Kennofizet\RewardPlay\Controllers\Player\ZoneController;
 use Kennofizet\RewardPlay\Middleware\ValidateRewardPlayToken;
@@ -49,15 +47,9 @@ Route::prefix($prefix)
     ])
     ->group(function () {
         Route::get('/auth/check', [AuthController::class, 'checkUser']);
-
-        Route::get('/demo', [DemoController::class, 'index']);
-        Route::get('/users', [UserController::class, 'index']);
-
         Route::get('/auth/user-data', [AuthController::class, 'getUserData']);
         Route::get('/ranking', [RankingController::class, 'getRanking']);
 
-        // Player endpoints (example) - player requests MUST send zone_id param
-        Route::post('/player/action', [PlayerController::class, 'doAction']);
         // Get zones the current user belongs to
         Route::get('/player/zones', [ZoneController::class, 'index']);
         // Get custom images accessible to the current player

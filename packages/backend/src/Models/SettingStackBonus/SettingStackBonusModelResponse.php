@@ -34,8 +34,7 @@ class SettingStackBonusModelResponse extends BaseModelResponse
                 'id' => $settingStackBonus->id,
                 'name' => $settingStackBonus->name,
                 'day' => $settingStackBonus->day,
-                'rewards' => $settingStackBonus->rewards ?? [],
-                'is_active' => $settingStackBonus->is_active ?? false
+                'rewards' => $settingStackBonus->rewards ?? []
             ];
 
             return $default_reponse;
@@ -61,8 +60,7 @@ class SettingStackBonusModelResponse extends BaseModelResponse
             'id' => $settingStackBonus->id,
             'name' => $settingStackBonus->name,
             'day' => $settingStackBonus->day,
-            'rewards' => $settingStackBonus->rewards ?? [],
-            'is_active' => $settingStackBonus->is_active ?? false,
+            'rewards' => $settingStackBonus->rewards ?? []
         ];
     }
 

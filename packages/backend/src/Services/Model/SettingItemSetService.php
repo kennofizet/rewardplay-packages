@@ -43,22 +43,6 @@ class SettingItemSetService
             $query->with($withRelationships);
         }
 
-        // Always eager load zone relationship to prevent N+1
-        $query->with('zone');
-
-        // Apply zone filter - default to first zone user can manage
-        $zoneId = $filters['zone_id'] ?? null;
-        if (empty($zoneId)) {
-            // Get zones user can manage and use first one
-            $zones = $this->zoneService->getZonesUserCanManage();
-            if (!empty($zones)) {
-                $zoneId = $zones[0]['id'];
-            }
-        }
-        if ($zoneId) {
-            $query->byZone($zoneId);
-        }
-
         // Apply search filter
         if (!empty($filters['keySearch']) || !empty($filters['q'])) {
             $search = $filters['keySearch'] ?? $filters['q'];
@@ -67,25 +51,6 @@ class SettingItemSetService
 
         // Paginate results
         return $query->orderBy('id', 'desc')->paginate($perPage, ['*'], 'page', $page);
-    }
-
-    /**
-     * Get a single setting item set by ID
-     */
-    public function getSettingItemSet(int $id, ?string $modeView = null): ?SettingItemSet
-    {
-        $query = SettingItemSet::query();
-
-        // Load relationships based on mode
-        $withRelationships = SettingItemSetRelationshipSetting::buildWithArray($modeView);
-        if (!empty($withRelationships)) {
-            $query->with($withRelationships);
-        }
-
-        // Always eager load zone
-        $query->with('zone');
-
-        return $query->find($id);
     }
 
     /**

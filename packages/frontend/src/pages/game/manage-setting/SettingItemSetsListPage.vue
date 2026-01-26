@@ -15,13 +15,6 @@
         class="search-input"
         @input="handleSearch"
       />
-      <CustomSelect
-        v-model="filters.zone_id"
-        :options="zoneOptionsWithEmpty"
-        :placeholder="t('page.manageSetting.settingItemSets.allZones')"
-        @change="loadSettingItemSets"
-        trigger-class="zone-select"
-      />
     </div>
 
     <div v-if="loading" class="loading">
@@ -38,7 +31,6 @@
           <tr>
             <th>{{ t('page.manageSetting.settingItemSets.table.id') }}</th>
             <th>{{ t('page.manageSetting.settingItemSets.table.name') }}</th>
-            <th>{{ t('page.manageSetting.settingItemSets.table.zone') }}</th>
             <th>{{ t('page.manageSetting.settingItemSets.table.items') }}</th>
             <th>{{ t('page.manageSetting.settingItemSets.table.setBonuses') }}</th>
             <th>{{ t('page.manageSetting.settingItemSets.table.description') }}</th>
@@ -49,7 +41,6 @@
           <tr v-for="set in settingItemSets" :key="set.id">
             <td>{{ set.id }}</td>
             <td>{{ set.name }}</td>
-            <td>{{ set.zone ? set.zone.name : '-' }}</td>
             <td>
               <span class="items-count">{{ set.items_count || 0 }} {{ t('page.manageSetting.settingItemSets.labels.items') }}</span>
               <div v-if="set.items && set.items.length > 0" class="items-preview">
@@ -96,15 +87,6 @@
           <button class="btn-close" @click="closeModal">×</button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label>{{ t('page.manageSetting.settingItemSets.form.zone') }}</label>
-            <CustomSelect
-              v-model="formData.zone_id"
-              :options="zoneOptions"
-              :placeholder="t('page.manageSetting.settingItemSets.selectZone')"
-              @change="handleZoneChange"
-            />
-          </div>
           <div class="form-group">
             <label>{{ t('page.manageSetting.settingItemSets.form.name') }}</label>
             <input v-model="formData.name" type="text" required />
@@ -176,7 +158,7 @@
             class="btn-primary" 
             :class="{ 'btn-loading': saveLoading, 'btn-fail': saveFailed }"
             @click="handleSave"
-            :disabled="saveLoading || !formData.name || !formData.zone_id || formData.item_ids.length === 0"
+            :disabled="saveLoading || !formData.name || formData.item_ids.length === 0"
           >
             <span v-if="saveLoading">{{ t('page.manageSetting.settingItemSets.saving') }}</span>
             <span v-else-if="saveFailed">{{ t('page.manageSetting.settingItemSets.saveFailed') }}</span>
@@ -206,7 +188,6 @@ const error = ref(null)
 const settingItemSets = ref([])
 const conversionKeys = ref([])
 const statsMap = ref({})
-const zones = ref([])
 const availableItems = ref([])
 const pagination = ref(null)
 const showModal = ref(false)
@@ -214,24 +195,8 @@ const editingSet = ref(null)
 const saveLoading = ref(false)
 const saveFailed = ref(false)
 
-const zoneOptions = computed(() => {
-  const options = zones.value.map(zone => ({
-    value: zone.id,
-    label: zone.name
-  }))
-  return options
-})
-
-const zoneOptionsWithEmpty = computed(() => {
-  return [
-    { value: '', label: t('page.manageSetting.settingItemSets.allZones') },
-    ...zoneOptions.value
-  ]
-})
-
 const filters = ref({
   search: '',
-  zone_id: '',
   currentPage: 1,
   perPage: 15
 })
@@ -239,7 +204,6 @@ const filters = ref({
 const formData = ref({
   name: '',
   description: '',
-  zone_id: '',
   item_ids: [],
   set_bonuses: {}
 })
@@ -410,9 +374,6 @@ const loadSettingItemSets = async () => {
       params.keySearch = filters.value.search
     }
 
-    if (filters.value.zone_id) {
-      params.zone_id = filters.value.zone_id
-    }
 
     const response = await gameApi.getSettingItemSets(params)
     
@@ -430,17 +391,6 @@ const loadSettingItemSets = async () => {
       statsMap.value = response.data.datas.stats || {}
     }
 
-    // Load zones from response
-    if (response.data && response.data.datas && response.data.datas.zones) {
-      zones.value = response.data.datas.zones
-      // Set default zone if not selected
-      if (!filters.value.zone_id && zones.value.length > 0) {
-        filters.value.zone_id = zones.value[0].id
-        // Reload with default zone
-        await loadSettingItemSets()
-        return
-      }
-    }
   } catch (err) {
     error.value = err.response?.data?.message || err.message || 'Failed to load item sets'
     console.error('Error loading item sets:', err)
@@ -449,23 +399,14 @@ const loadSettingItemSets = async () => {
   }
 }
 
-const handleZoneChange = async () => {
-  if (!formData.value.zone_id) {
-    availableItems.value = []
-    return
-  }
-
-  await loadItemsForZone(formData.value.zone_id)
-}
-
-const loadItemsForZone = async (zoneId) => {
-  if (!gameApi || !zoneId) {
+const loadItemsForZone = async () => {
+  if (!gameApi) {
     return
   }
 
   loadingItems.value = true
   try {
-    const response = await gameApi.getItemsForZone({ zone_id: zoneId })
+    const response = await gameApi.getItemsForZone()
     if (response.data && response.data.datas && response.data.datas.items) {
       availableItems.value = response.data.datas.items
     }
@@ -487,21 +428,18 @@ const changePage = (page) => {
   loadSettingItemSets()
 }
 
-const handleCreate = () => {
+const handleCreate = async () => {
   editingSet.value = null
   saveLoading.value = false
   saveFailed.value = false
   formData.value = {
     name: '',
     description: '',
-    zone_id: zones.value.length > 0 ? zones.value[0].id : '',
     item_ids: [],
     set_bonuses: {}
   }
   bonusesList.value = {}
-  if (formData.value.zone_id) {
-    loadItemsForZone(formData.value.zone_id)
-  }
+  await loadItemsForZone()
   showModal.value = true
 }
 
@@ -512,7 +450,6 @@ const handleEdit = async (set) => {
   formData.value = {
     name: set.name || '',
     description: set.description || '',
-    zone_id: set.zone_id || '',
     item_ids: set.items ? set.items.map(item => item.id) : [],
     set_bonuses: set.set_bonuses || {}
   }
@@ -523,9 +460,7 @@ const handleEdit = async (set) => {
   }
   
   syncBonusesToList()
-  if (formData.value.zone_id) {
-    await loadItemsForZone(formData.value.zone_id)
-  }
+  await loadItemsForZone()
   showModal.value = true
 }
 
@@ -540,10 +475,6 @@ const handleSave = async () => {
     return
   }
 
-  if (!formData.value.zone_id) {
-    error.value = t('page.manageSetting.settingItemSets.errors.zoneRequired')
-    return
-  }
 
   if (formData.value.item_ids.length === 0) {
     error.value = t('page.manageSetting.settingItemSets.errors.itemsRequired')
@@ -561,7 +492,6 @@ const handleSave = async () => {
     const data = {
       name: formData.value.name,
       description: formData.value.description || null,
-      zone_id: formData.value.zone_id,
       set_bonuses: formData.value.set_bonuses && Object.keys(formData.value.set_bonuses).length > 0 ? formData.value.set_bonuses : null,
       item_ids: formData.value.item_ids
     }
@@ -621,7 +551,6 @@ const closeModal = () => {
   formData.value = {
     name: '',
     description: '',
-    zone_id: '',
     item_ids: [],
     set_bonuses: {}
   }
@@ -692,13 +621,6 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.zone-select {
-  padding: 10px;
-  background: #253344;
-  border: 1px solid #1a2332;
-  color: #d0d4d6;
-  font-size: 14px;
-}
 
 .loading, .error {
   padding: 20px;

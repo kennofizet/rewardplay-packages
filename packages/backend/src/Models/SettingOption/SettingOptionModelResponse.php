@@ -33,14 +33,7 @@ class SettingOptionModelResponse extends BaseModelResponse
             $default_reponse = [
                 'id' => $settingOption->id,
                 'name' => $settingOption->name,
-                'rates' => $settingOption->rates,
-                'zone_id' => $settingOption->zone_id,
-                'zone' => $settingOption->zone ? [
-                    'id' => $settingOption->zone->id,
-                    'name' => $settingOption->zone->name,
-                ] : null,
-                'created_at' => $settingOption->created_at,
-                'updated_at' => $settingOption->updated_at,
+                'rates' => $settingOption->rates
             ];
 
             return $default_reponse;
@@ -56,12 +49,7 @@ class SettingOptionModelResponse extends BaseModelResponse
         return [
             'id' => $settingOption->id,
             'name' => $settingOption->name,
-            'rates' => $settingOption->rates,
-            'zone_id' => $settingOption->zone_id,
-            'zone' => $settingOption->zone ? [
-                'id' => $settingOption->zone->id,
-                'name' => $settingOption->zone->name,
-            ] : null,
+            'rates' => $settingOption->rates
         ];
     }
 

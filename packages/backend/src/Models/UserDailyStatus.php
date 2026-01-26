@@ -17,6 +17,7 @@ class UserDailyStatus extends BaseModel
         'last_login_date',
         'consecutive_login_days',
         'last_claim_date',
+        'zone_id',
     ];
 
     public function getTable()

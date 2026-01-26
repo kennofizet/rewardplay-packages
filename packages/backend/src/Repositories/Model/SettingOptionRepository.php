@@ -16,8 +16,7 @@ class SettingOptionRepository
     {
         return SettingOption::create([
             'name' => $data['name'],
-            'rates' => $data['rates'] ?? null,
-            'zone_id' => $data['zone_id'] ?? null,
+            'rates' => $data['rates'] ?? null
         ]);
     }
 
@@ -37,9 +36,6 @@ class SettingOptionRepository
         }
         if (isset($data['rates'])) {
             $updateData['rates'] = $data['rates'];
-        }
-        if (isset($data['zone_id'])) {
-            $updateData['zone_id'] = $data['zone_id'];
         }
 
         $settingOption->update($updateData);

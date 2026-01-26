@@ -15,13 +15,6 @@
         class="search-input"
         @input="handleSearch"
       />
-      <CustomSelect
-        v-model="filters.zone_id"
-        :options="zoneOptionsWithEmpty"
-        :placeholder="t('page.manageSetting.settingOptions.allZones')"
-        @change="loadSettingOptions"
-        trigger-class="zone-select"
-      />
     </div>
 
     <div v-if="loading" class="loading">
@@ -38,7 +31,6 @@
           <tr>
             <th>{{ t('page.manageSetting.settingOptions.table.id') }}</th>
             <th>{{ t('page.manageSetting.settingOptions.table.name') }}</th>
-            <th>{{ t('page.manageSetting.settingOptions.table.zone') }}</th>
             <th>{{ t('page.manageSetting.settingOptions.table.rates') }}</th>
             <th>{{ t('page.manageSetting.settingOptions.table.actions') }}</th>
           </tr>
@@ -47,7 +39,6 @@
           <tr v-for="option in settingOptions" :key="option.id">
             <td>{{ option.id }}</td>
             <td>{{ option.name }}</td>
-            <td>{{ option.zone ? option.zone.name : '-' }}</td>
             <td>
               <StatMapPreview :value="option.rates" :max-items="4" />
             </td>
@@ -84,14 +75,6 @@
           <button class="btn-close" @click="closeModal">×</button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label>{{ t('page.manageSetting.settingOptions.form.zone') }}</label>
-            <CustomSelect
-              v-model="formData.zone_id"
-              :options="zoneOptions"
-              :placeholder="t('page.manageSetting.settingOptions.selectZone')"
-            />
-          </div>
           <div class="form-group">
             <label>{{ t('page.manageSetting.settingOptions.form.name') }}</label>
             <input v-model="formData.name" type="text" required />
@@ -144,7 +127,7 @@
             class="btn-primary" 
             :class="{ 'btn-loading': saveLoading, 'btn-fail': saveFailed }"
             @click="handleSave"
-            :disabled="saveLoading || !formData.name || !formData.zone_id"
+            :disabled="saveLoading || !formData.name"
           >
             <span v-if="saveLoading">{{ t('page.manageSetting.settingOptions.saving') }}</span>
             <span v-else-if="saveFailed">{{ t('page.manageSetting.settingOptions.saveFailed') }}</span>
@@ -171,27 +154,11 @@ const loadingKeys = ref(false)
 const error = ref(null)
 const settingOptions = ref([])
 const conversionKeys = ref([])
-const zones = ref([])
 const pagination = ref(null)
 const showModal = ref(false)
 const editingOption = ref(null)
 const saveLoading = ref(false)
 const saveFailed = ref(false)
-
-const zoneOptions = computed(() => {
-  const options = zones.value.map(zone => ({
-    value: zone.id,
-    label: zone.name
-  }))
-  return options
-})
-
-const zoneOptionsWithEmpty = computed(() => {
-  return [
-    { value: '', label: t('page.manageSetting.settingOptions.allZones') },
-    ...zoneOptions.value
-  ]
-})
 
 const rateKeyOptions = computed(() => {
   const options = conversionKeys.value.map(key => ({
@@ -203,14 +170,12 @@ const rateKeyOptions = computed(() => {
 
 const filters = ref({
   search: '',
-  zone_id: '',
   currentPage: 1,
   perPage: 15
 })
 
 const formData = ref({
   name: '',
-  zone_id: '',
   rates: {},
   rates_json: ''
 })
@@ -278,9 +243,6 @@ const loadSettingOptions = async () => {
       params.keySearch = filters.value.search
     }
 
-    if (filters.value.zone_id) {
-      params.zone_id = filters.value.zone_id
-    }
 
     const response = await gameApi.getSettingOptions(params)
     
@@ -293,17 +255,6 @@ const loadSettingOptions = async () => {
       }
     }
 
-    // Load zones from response
-    if (response.data && response.data.datas && response.data.datas.zones) {
-      zones.value = response.data.datas.zones
-      // Set default zone if not selected
-      if (!filters.value.zone_id && zones.value.length > 0) {
-        filters.value.zone_id = zones.value[0].id
-        // Reload with default zone
-        await loadSettingOptions()
-        return
-      }
-    }
   } catch (err) {
     error.value = err.response?.data?.message || err.message || 'Failed to load setting options'
     console.error('Error loading setting options:', err)
@@ -328,7 +279,6 @@ const handleCreate = () => {
   saveFailed.value = false
   formData.value = {
     name: '',
-    zone_id: zones.value.length > 0 ? zones.value[0].id : '',
     rates: {},
     rates_json: '{}'
   }
@@ -342,7 +292,6 @@ const handleEdit = (option) => {
   saveFailed.value = false
   formData.value = {
     name: option.name || '',
-    zone_id: option.zone_id || '',
     rates: option.rates ? { ...option.rates } : {},
     rates_json: formatRates(option.rates)
   }
@@ -397,7 +346,6 @@ const handleSave = async () => {
 
     const data = {
       name: formData.value.name,
-      zone_id: formData.value.zone_id || null,
       rates: Object.keys(rates).length > 0 ? rates : null
     }
 
@@ -455,7 +403,6 @@ const closeModal = () => {
   saveFailed.value = false
   formData.value = {
     name: '',
-    zone_id: '',
     rates: {},
     rates_json: ''
   }
@@ -496,9 +443,6 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
-.zone-select {
-  min-width: 200px;
-}
 
 .search-input {
   flex: 1;

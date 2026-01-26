@@ -35,7 +35,6 @@ class SettingDailyRewardModelResponse extends BaseModelResponse
                 'date' => $settingDailyReward->date,
                 'items' => $settingDailyReward->items ?? [],
                 'stack_bonuses' => $settingDailyReward->stack_bonuses ?? [],
-                'is_active' => $settingDailyReward->is_active ?? false,
                 'is_epic' => $settingDailyReward->is_epic ?? false
             ];
 
@@ -55,7 +54,8 @@ class SettingDailyRewardModelResponse extends BaseModelResponse
                 'is_epic' => $settingDailyReward->is_epic,
                 'items' => $settingDailyReward->items,
                 'stack_bonuses' => $settingDailyReward->stack_bonuses,
-                'date' => $settingDailyReward->date
+                'date' => $settingDailyReward->date,
+                'claimed' => $settingDailyReward->claimed
             ];
         }
 
@@ -64,7 +64,6 @@ class SettingDailyRewardModelResponse extends BaseModelResponse
             'date' => $settingDailyReward->date,
             'items' => $settingDailyReward->items ?? [],
             'stack_bonuses' => $settingDailyReward->stack_bonuses ?? [],
-            'is_active' => $settingDailyReward->is_active ?? false,
             'is_epic' => $settingDailyReward->is_epic ?? false,
         ];
     }

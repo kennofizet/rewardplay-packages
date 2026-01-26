@@ -97,7 +97,7 @@ Manage game items with zones, images, and properties:
 
 - **Create/Update Items:** With image uploads, zone assignment, and JSON properties
 - **Zone Filtering:** Items are organized by zones
-- **Image Storage:** Images saved to `public/{images_folder}/items/{zone_id}/{user_id}/`
+- **Image Storage:** Images saved to `public/{images_folder}/items/{zone_id}/`
 
 ## API Endpoints
 

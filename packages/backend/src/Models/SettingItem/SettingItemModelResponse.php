@@ -37,14 +37,7 @@ class SettingItemModelResponse extends BaseModelResponse
                 'description' => $settingItem->description,
                 'type' => $settingItem->type,
                 'default_property' => $settingItem->default_property,
-                'image' => self::getImageFullUrl($settingItem->image),
-                'zone_id' => $settingItem->zone_id,
-                'zone' => $settingItem->zone ? [
-                    'id' => $settingItem->zone->id,
-                    'name' => $settingItem->zone->name,
-                ] : null,
-                'created_at' => $settingItem->created_at,
-                'updated_at' => $settingItem->updated_at,
+                'image' => self::getImageFullUrl($settingItem->image)
             ];
 
             return $default_reponse;
@@ -65,8 +58,7 @@ class SettingItemModelResponse extends BaseModelResponse
             'description' => $settingItem->description,
             'type' => $settingItem->type,
             'default_property' => $settingItem->default_property,
-            'image' => self::getImageFullUrl($settingItem->image),
-            'zone_id' => $settingItem->zone_id,
+            'image' => self::getImageFullUrl($settingItem->image)
         ];
     }
 

@@ -278,7 +278,7 @@ export default {
         }
       },
       settingDailyRewards: {
-        title: 'Cấu Hình Phần Thưởng Hàng Ngày',
+        title: 'Thưởng Hàng Ngày',
         prev: 'Trước',
         next: 'Sau',
         suggest: 'Gợi Ý Dữ Liệu Mặc Định',

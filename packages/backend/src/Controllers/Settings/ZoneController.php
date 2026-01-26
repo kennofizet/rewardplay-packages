@@ -6,7 +6,6 @@ use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
-use Kennofizet\RewardPlay\Models\Zone\ZoneModelResponse;
 
 class ZoneController extends Controller
 {
@@ -29,33 +28,6 @@ class ZoneController extends Controller
         if ($request->expectsJson()) {
             return $this->apiResponseWithContext([
                 'zones' => $zones,
-            ]);
-        }
-
-        return $this->apiErrorResponse();
-    }
-
-    /**
-     * Show single zone
-     */
-    public function show(Request $request, int $id): JsonResponse
-    {
-        $zone = $this->zoneService->getZones(['id' => $id]);
-        // getZones may return collection; try to find single
-        $single = null;
-        if (is_array($zone) || $zone instanceof \Illuminate\Support\Collection) {
-            $single = count($zone) ? $zone[0] : null;
-        } else {
-            $single = $zone;
-        }
-
-        if (!$single) {
-            return $this->apiErrorResponse('Zone not found', 404);
-        }
-
-        if ($request->expectsJson()) {
-            return $this->apiResponseWithContext([
-                'zone' => $single,
             ]);
         }
 

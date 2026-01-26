@@ -7,7 +7,6 @@ use Kennofizet\RewardPlay\Controllers\Settings\SettingItemController;
 Route::get('/setting-items', [SettingItemController::class, 'index']);
 Route::get('/setting-items/types', [SettingItemController::class, 'getItemTypes']);
 Route::get('/setting-items/items-for-zone', [SettingItemController::class, 'getItemsForZone']);
-Route::get('/setting-items/{id}', [SettingItemController::class, 'show']);
 Route::post('/setting-items', [SettingItemController::class, 'store']);
 Route::patch('/setting-items/{id}', [SettingItemController::class, 'update']); // Support FormData
 Route::put('/setting-items/{id}', [SettingItemController::class, 'update']);

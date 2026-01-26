@@ -17,6 +17,7 @@ class SettingDailyReward extends BaseModel
         'stack_bonuses',
         'is_active',
         'is_epic',
+        'zone_id',
     ];
 
     protected $casts = [

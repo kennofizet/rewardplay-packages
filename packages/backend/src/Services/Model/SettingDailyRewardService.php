@@ -58,21 +58,6 @@ class SettingDailyRewardService
     }
 
     /**
-     * Get setting daily rewards by month
-     */
-    public function getSettingDailyRewardsByMonth(int $year, int $month)
-    {
-        $query = SettingDailyReward::query();
-
-        // Load relationships
-        $this->loadRelationships($query, SettingDailyRewardRelationshipSetting::class);
-
-        return $query->byYearAndMonth($year, $month)
-            ->orderBy('date')
-            ->get();
-    }
-
-    /**
      * Get setting daily rewards by date range
      */
     public function getSettingDailyRewardsByDateRange(Carbon $startDate, Carbon $endDate)
@@ -85,19 +70,6 @@ class SettingDailyRewardService
         return $query->byDateRange($startDate, $endDate)
             ->orderBy('date')
             ->get();
-    }
-
-    /**
-     * Get a single setting daily reward by ID
-     */
-    public function getSettingDailyReward(int $id, ?string $modeView = null): ?SettingDailyReward
-    {
-        $query = SettingDailyReward::query();
-
-        // Load relationships based on mode
-        $this->loadRelationships($query, SettingDailyRewardRelationshipSetting::class, $modeView);
-
-        return $query->find($id);
     }
 
     /**
@@ -143,34 +115,6 @@ class SettingDailyRewardService
                 'is_active' => $data['is_active'] ?? true,
             ]
         );
-    }
-
-    /**
-     * Update a setting daily reward
-     */
-    public function updateSettingDailyReward(int $id, array $data): SettingDailyReward
-    {
-        $settingDailyReward = $this->findOrFail(SettingDailyReward::find($id), 'Setting daily reward');
-
-        $settingDailyReward->update([
-            'items' => $data['items'] ?? $settingDailyReward->items,
-            'stack_bonuses' => $data['stack_bonuses'] ?? $settingDailyReward->stack_bonuses,
-            'is_epic' => $data['is_epic'] ?? $settingDailyReward->is_epic,
-            'is_active' => $data['is_active'] ?? $settingDailyReward->is_active,
-        ]);
-
-        return $settingDailyReward->fresh();
-    }
-
-    public function deleteSettingDailyReward(int $id): bool
-    {
-        $settingDailyReward = SettingDailyReward::find($id);
-        
-        if (!$settingDailyReward) {
-            return false;
-        }
-
-        return $settingDailyReward->delete();
     }
 
     public function generateSuggestedRewards(int $year, int $month): array

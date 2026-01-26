@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, watch } from 'vue'
 import SettingItemsListPage from './manage-setting/SettingItemsListPage.vue'
 import SettingOptionsListPage from './manage-setting/SettingOptionsListPage.vue'
 import SettingItemSetsListPage from './manage-setting/SettingItemSetsListPage.vue'
@@ -31,16 +31,33 @@ import ManageZonesPage from './manage-setting/ManageZonesPage.vue'
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
-const menuItems = [
-  { key: 'setting-items', label: t('page.manageSetting.menu.settingItems') },
-  { key: 'setting-options', label: t('page.manageSetting.menu.settingOptions') },
-  { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets') },
-  { key: 'manage-zones', label: t('page.manageSetting.menu.manageZones') },
-  { key: 'setting-stack-bonuses', label: t('page.manageSetting.settingStackBonuses.title') },
-  { key: 'setting-daily-rewards', label: t('page.manageSetting.settingDailyRewards.title') }
+const hasSelectedZone = computed(() => {
+  try {
+    const selectedZone = localStorage.getItem('selected_zone')
+    return selectedZone && JSON.parse(selectedZone)?.id
+  } catch (e) {
+    return false
+  }
+})
+
+const allMenuItems = [
+  { key: 'setting-items', label: t('page.manageSetting.menu.settingItems'), requiresZone: true },
+  { key: 'setting-options', label: t('page.manageSetting.menu.settingOptions'), requiresZone: true },
+  { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets'), requiresZone: true },
+  { key: 'manage-zones', label: t('page.manageSetting.menu.manageZones'), requiresZone: false },
+  { key: 'setting-stack-bonuses', label: t('page.manageSetting.settingStackBonuses.title'), requiresZone: true },
+  { key: 'setting-daily-rewards', label: t('page.manageSetting.settingDailyRewards.title'), requiresZone: true }
 ]
 
-const currentPage = ref('setting-items')
+const menuItems = computed(() => {
+  if (hasSelectedZone.value) {
+    return allMenuItems
+  }
+  // Only show zones management when no zone is selected
+  return allMenuItems.filter(item => !item.requiresZone)
+})
+
+const currentPage = ref('manage-zones')
 
 const currentPageComponent = computed(() => {
   const pageMap = {
@@ -57,6 +74,13 @@ const currentPageComponent = computed(() => {
 const handleMenuClick = (pageKey) => {
   currentPage.value = pageKey
 }
+
+// Watch for zone selection changes and reset to manage-zones if zone is deselected
+watch(hasSelectedZone, (hasZone) => {
+  if (!hasZone && currentPage.value !== 'manage-zones') {
+    currentPage.value = 'manage-zones'
+  }
+})
 </script>
 
 <style scoped>

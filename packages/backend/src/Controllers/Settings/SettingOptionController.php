@@ -6,23 +6,18 @@ use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\Services\Model\SettingOptionService;
-use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
 use Kennofizet\RewardPlay\Models\SettingOption\SettingOptionModelResponse;
-use Kennofizet\RewardPlay\Models\SettingOption;
 use Kennofizet\RewardPlay\Requests\StoreSettingOptionRequest;
 use Kennofizet\RewardPlay\Requests\UpdateSettingOptionRequest;
 
 class SettingOptionController extends Controller
 {
     protected SettingOptionService $settingOptionService;
-    protected ZoneService $zoneService;
 
     public function __construct(
-        SettingOptionService $settingOptionService,
-        ZoneService $zoneService
+        SettingOptionService $settingOptionService
     ) {
         $this->settingOptionService = $settingOptionService;
-        $this->zoneService = $zoneService;
     }
 
     /**
@@ -37,22 +32,18 @@ class SettingOptionController extends Controller
             'perPage', 
             'currentPage', 
             'keySearch', 
-            'q',
-            'zone_id',
+            'q'
         ]);
+        
         $reponseMode = "";
 
         $settingOptions = $this->settingOptionService->getSettingOptions($filters, $reponseMode);
-
-        // Get zones user can manage
-        $zones = $this->getZonesUserCanManage();
 
         if ($request->expectsJson()) {
             $formattedSettingOptions = SettingOptionModelResponse::formatSettingOptions($settingOptions, $reponseMode);
             
             return $this->apiResponseWithContext([
-                'setting_options' => $formattedSettingOptions,
-                'zones' => $zones,
+                'setting_options' => $formattedSettingOptions
             ]);
         }
 

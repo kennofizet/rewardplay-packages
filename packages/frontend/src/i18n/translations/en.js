@@ -276,7 +276,7 @@ export default {
         }
       },
       settingDailyRewards: {
-        title: 'Daily Reward Configuration',
+        title: 'Daily Reward',
         prev: 'Prev',
         next: 'Next',
         suggest: 'Suggest Default Data',

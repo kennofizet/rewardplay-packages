@@ -23,20 +23,4 @@ abstract class Controller
         // TODO: Add logging here if needed: \Log::error($e->getMessage(), ['exception' => $e]);
         return $this->apiErrorResponse($e->getMessage(), $status);
     }
-
-    /**
-     * Safe way to get zones the current user can manage.
-     * Many controllers used ZoneService directly; this helper allows controllers
-     * that have a $zoneService property to reuse it without duplicating checks.
-     *
-     * @return array
-     */
-    protected function getZonesUserCanManage(): array
-    {
-        if (property_exists($this, 'zoneService') && $this->zoneService) {
-            return $this->zoneService->getZonesUserCanManage();
-        }
-
-        return [];
-    }
 }

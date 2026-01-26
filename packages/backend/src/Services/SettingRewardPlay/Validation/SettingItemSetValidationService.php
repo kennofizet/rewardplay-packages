@@ -4,10 +4,7 @@ namespace Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
-use Kennofizet\RewardPlay\Models\Zone;
 use Kennofizet\RewardPlay\Models\SettingItem;
-use Kennofizet\RewardPlay\Models\SettingOption;
 use Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation\Traits\StatsCustomCheckTrait;
 
 class SettingItemSetValidationService
@@ -25,15 +22,12 @@ class SettingItemSetValidationService
      */
     public function validateSettingItemSet(array $data, ?array $itemIds = null, ?int $id = null)
     {
-        $zonesTableName = (new Zone())->getTable();
         $itemsTableName = (new SettingItem())->getTable();
-        $allowedKeys = array_keys(HelperConstant::CONVERSION_KEYS);
 
         $rules = [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'set_bonuses' => 'nullable|array',
-            'zone_id' => 'nullable|integer|exists:' . $zonesTableName . ',id',
             'item_ids' => 'nullable|array',
             'item_ids.*' => 'integer|exists:' . $itemsTableName . ',id',
         ];

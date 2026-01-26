@@ -30,6 +30,15 @@ trait BaseModelActions
         });
     }
 
+    public static function currentUserZoneId()
+    {
+        $zoneId = request()->attributes->get('rewardplay_user_zone_id_current');
+        if (empty($zoneId)) {
+            return null;
+        }
+        return $zoneId;
+    }
+
     /**
      * Get array of zone IDs that the current user manages
      * 

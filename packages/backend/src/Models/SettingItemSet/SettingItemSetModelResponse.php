@@ -35,23 +35,15 @@ class SettingItemSetModelResponse extends BaseModelResponse
                 'name' => $settingItemSet->name,
                 'description' => $settingItemSet->description,
                 'set_bonuses' => $settingItemSet->set_bonuses,
-                'zone_id' => $settingItemSet->zone_id,
-                'zone' => $settingItemSet->zone ? [
-                    'id' => $settingItemSet->zone->id,
-                    'name' => $settingItemSet->zone->name,
-                ] : null,
                 'items' => $settingItemSet->items ? $settingItemSet->items->map(function($item) {
                     return [
                         'id' => $item->id,
                         'name' => $item->name,
-                        'slug' => $item->slug,
                         'type' => $item->type,
                         'image' => self::getImageFullUrl($item->image),
                     ];
                 })->toArray() : [],
-                'items_count' => $settingItemSet->items ? $settingItemSet->items->count() : 0,
-                'created_at' => $settingItemSet->created_at,
-                'updated_at' => $settingItemSet->updated_at,
+                'items_count' => $settingItemSet->items ? $settingItemSet->items->count() : 0
             ];
 
             return $default_reponse;
@@ -68,8 +60,7 @@ class SettingItemSetModelResponse extends BaseModelResponse
             'id' => $settingItemSet->id,
             'name' => $settingItemSet->name,
             'description' => $settingItemSet->description,
-            'set_bonuses' => $settingItemSet->set_bonuses,
-            'zone_id' => $settingItemSet->zone_id,
+            'set_bonuses' => $settingItemSet->set_bonuses
         ];
     }
 

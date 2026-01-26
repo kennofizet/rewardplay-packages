@@ -19,8 +19,7 @@ class SettingItemSetRepository
         $set = SettingItemSet::create([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'set_bonuses' => $data['set_bonuses'] ?? null,
-            'zone_id' => $data['zone_id'] ?? null,
+            'set_bonuses' => $data['set_bonuses'] ?? null
         ]);
 
         // Attach items if provided
@@ -51,9 +50,6 @@ class SettingItemSetRepository
         }
         if (isset($data['set_bonuses'])) {
             $updateData['set_bonuses'] = $data['set_bonuses'];
-        }
-        if (isset($data['zone_id'])) {
-            $updateData['zone_id'] = $data['zone_id'];
         }
 
         if (!empty($updateData)) {

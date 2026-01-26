@@ -6,7 +6,7 @@ use Kennofizet\RewardPlay\Controllers\Controller;
 use Kennofizet\RewardPlay\Services\Model\SettingDailyRewardService;
 use Kennofizet\RewardPlay\Models\SettingDailyReward\SettingDailyRewardModelResponse;
 use Kennofizet\RewardPlay\Requests\StoreSettingDailyRewardRequest;
-use Kennofizet\RewardPlay\Requests\UpdateSettingDailyRewardRequest;
+use Kennofizet\RewardPlay\Models\SettingDailyReward\SettingDailyRewardConstant;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
@@ -38,7 +38,7 @@ class SettingDailyRewardController extends Controller
             'is_active',
             'is_epic',
         ]);
-        $reponseMode = "";
+        $reponseMode = SettingDailyRewardConstant::API_SETTING_DAILY_REWARD_LIST_PAGE;
 
         $settingDailyRewards = $this->settingDailyRewardService->getSettingDailyRewards($filters, $reponseMode);
 
@@ -47,59 +47,6 @@ class SettingDailyRewardController extends Controller
             
             return $this->apiResponseWithContext([
                 'rewards' => $formattedSettingDailyRewards,
-            ]);
-        }
-
-        return $this->apiErrorResponse();
-    }
-
-    /**
-     * Get setting daily rewards by month
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function getByMonth(Request $request): JsonResponse
-    {
-        $filters = $request->only(['year', 'month']);
-        $year = $filters['year'] ?? Carbon::now()->year;
-        $month = $filters['month'] ?? Carbon::now()->month;
-
-        $rewards = $this->settingDailyRewardService->getSettingDailyRewardsByMonth($year, $month);
-        $reponseMode = "";
-
-        if ($request->expectsJson()) {
-            $formattedRewards = SettingDailyRewardModelResponse::formatSettingDailyRewards($rewards, $reponseMode);
-            
-            return $this->apiResponseWithContext([
-                'rewards' => $formattedRewards,
-            ]);
-        }
-
-        return $this->apiErrorResponse();
-    }
-
-    /**
-     * Get a single setting daily reward
-     * 
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
-     */
-    public function show(Request $request, int $id): JsonResponse
-    {
-        $reponseMode = "";
-        $reward = $this->settingDailyRewardService->getSettingDailyReward($id, $reponseMode);
-
-        if (!$reward) {
-            return $this->apiErrorResponse('Setting daily reward not found', 404);
-        }
-
-        if ($request->expectsJson()) {
-            $formattedReward = SettingDailyRewardModelResponse::formatSettingDailyReward($reward, $reponseMode);
-            
-            return $this->apiResponseWithContext([
-                'reward' => $formattedReward,
             ]);
         }
 
@@ -129,56 +76,6 @@ class SettingDailyRewardController extends Controller
             }
 
             return $this->apiErrorResponse();
-        } catch (\Exception $e) {
-            return $this->handleException($e, 400);
-        }
-    }
-
-    /**
-     * Update a setting daily reward
-     * 
-     * @param UpdateSettingDailyRewardRequest $request
-     * @param int $id
-     * @return JsonResponse
-     */
-    public function update(UpdateSettingDailyRewardRequest $request, int $id): JsonResponse
-    {
-        try {
-            $data = $request->validated();
-
-            $reward = $this->settingDailyRewardService->updateSettingDailyReward($id, $data);
-            $reponseMode = "";
-
-            if ($request->expectsJson()) {
-                $formattedReward = SettingDailyRewardModelResponse::formatSettingDailyReward($reward, $reponseMode);
-                
-                return $this->apiResponseWithContext([
-                    'reward' => $formattedReward,
-                ]);
-            }
-
-            return $this->apiErrorResponse();
-        } catch (\Exception $e) {
-            return $this->handleException($e, 400);
-        }
-    }
-
-    /**
-     * Delete a setting daily reward
-     * 
-     * @param int $id
-     * @return JsonResponse
-     */
-    public function destroy(int $id): JsonResponse
-    {
-        try {
-            $deleted = $this->settingDailyRewardService->deleteSettingDailyReward($id);
-            
-            if (!$deleted) {
-                return $this->apiErrorResponse('Setting daily reward not found', 404);
-            }
-
-            return $this->apiResponseWithContext(['message' => 'Deleted']);
         } catch (\Exception $e) {
             return $this->handleException($e, 400);
         }

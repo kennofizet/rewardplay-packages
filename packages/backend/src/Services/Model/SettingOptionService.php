@@ -44,11 +44,6 @@ class SettingOptionService
             $query->search($search);
         }
 
-        // Apply zone filter
-        if (isset($filters['zone_id']) && $filters['zone_id'] !== null && $filters['zone_id'] !== '') {
-            $query->byZone($filters['zone_id']);
-        }
-
         // Paginate results
         return $query->orderBy('id', 'desc')->paginate($perPage, ['*'], 'page', $page);
     }

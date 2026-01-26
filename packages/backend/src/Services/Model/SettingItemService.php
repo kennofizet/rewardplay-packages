@@ -43,23 +43,6 @@ class SettingItemService
             $query->with($withRelationships);
         }
 
-        // Always eager load zone relationship to prevent N+1
-        $query->with('zone');
-
-        // Apply zone filter - default to first zone user can manage
-        $zoneId = $filters['zone_id'] ?? null;
-        if (empty($zoneId)) {
-            // Get zones user can manage and use first one
-            $zones = $this->zoneService->getZonesUserCanManage();
-            if (!empty($zones)) {
-                $zoneId = $zones[0]['id'];
-            }
-        }
-
-        if (!empty($zoneId)) {
-            $query->byZone($zoneId);
-        }
-
         // Apply search scope
         $key_search = '';
         if (!empty($filters['keySearch'])) {
@@ -82,14 +65,6 @@ class SettingItemService
         $query->orderBy('id', 'DESC');
 
         return $query->paginate($perPage, ['*'], 'page', $page);
-    }
-
-    /**
-     * Get a single setting item by ID
-     */
-    public function getSettingItem(int $id): ?SettingItem
-    {
-        return SettingItem::findById($id);
     }
 
     /**
@@ -135,9 +110,6 @@ class SettingItemService
             return null;
         }
         
-        // If updating zone_id, middleware already validated it
-        // If not updating zone_id, check existing item's zone (middleware validates on route param if needed)
-        
         return $this->settingItemRepository->update($settingItem, $data, $imageFile);
     }
 
@@ -167,20 +139,14 @@ class SettingItemService
     }
 
     /**
-     * Get items for a zone (for selecting items in set)
+     * Get items for a current user zone (for selecting items in set)
      * 
-     * @param int $zoneId
      * @return array
      * @throws \Exception
      */
-    public function getItemsForZone(int $zoneId): array
+    public function getItemsForZone(): array
     {
-        if (!$zoneId) {
-            throw new \Exception('Zone ID is required');
-        }
-
-        // Get items from the zone
-        $items = SettingItem::byZone($zoneId)->get();
+        $items = SettingItem::get();
 
         // Format items for response
         $formattedItems = $items->map(function($item) {

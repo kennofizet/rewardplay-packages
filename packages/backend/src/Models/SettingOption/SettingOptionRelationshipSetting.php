@@ -14,9 +14,6 @@ class SettingOptionRelationshipSetting
     {
         $with = [];
 
-        // Always load zone relationship
-        $with[] = 'zone';
-
         return $with;
     }
 }
