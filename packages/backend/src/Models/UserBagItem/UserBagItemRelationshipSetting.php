@@ -8,7 +8,7 @@ use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemConstant;
 class UserBagItemRelationshipSetting
 {
     protected static $settings = [
-        UserBagItemConstant::API_USER_BAG_ITEM_LIST_PAGE => [
+        UserBagItemConstant::PLAYER_API_RESPONSE_BAG_PAGE => [
             'item'
         ],
         HelperConstant::REPONSE_MODE_SELECTER_API => [

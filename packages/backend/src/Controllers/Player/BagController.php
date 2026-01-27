@@ -7,6 +7,7 @@ use Kennofizet\RewardPlay\Services\Player\BagService;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemConstant;
 
 class BagController extends Controller
 {
@@ -26,14 +27,11 @@ class BagController extends Controller
     public function index(Request $request): JsonResponse
     {
         $userId = $request->attributes->get('rewardplay_user_id');
-        $reponseMode = "";
+        $reponseMode = UserBagItemConstant::PLAYER_API_RESPONSE_BAG_PAGE;
 
-        $bagItems = $this->service->getUserBag($userId);
         $categorized = $this->service->getUserBagCategorized($userId);
 
-        if ($request->expectsJson()) {
-            $formattedBagItems = UserBagItemModelResponse::formatUserBagItems($bagItems, $reponseMode);
-            
+        if ($request->expectsJson()) {            
             // Format categorized items
             $formattedCategorized = [];
             foreach ($categorized as $category => $items) {
@@ -42,7 +40,6 @@ class BagController extends Controller
 
             return $this->apiResponseWithContext([
                 'user_bag' => $formattedCategorized,
-                'all_items' => $formattedBagItems,
             ]);
         }
 

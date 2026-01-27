@@ -15,7 +15,7 @@ class UserBagItemModelResponse extends BaseModelResponse
      */
     public static function getAvailableModeDefault(): string
     {
-        return UserBagItemConstant::API_USER_BAG_ITEM_LIST_PAGE;
+        return UserBagItemConstant::PLAYER_API_RESPONSE_BAG_PAGE;
     }
 
     /**
@@ -62,8 +62,7 @@ class UserBagItemModelResponse extends BaseModelResponse
             'user_id' => $userBagItem->user_id,
             'item_id' => $userBagItem->item_id,
             'quantity' => $userBagItem->quantity,
-            'properties' => $userBagItem->properties ?? [],
-            'acquired_at' => $userBagItem->acquired_at,
+            'properties' => $userBagItem->properties ?? []
         ];
     }
 
@@ -89,6 +88,12 @@ class UserBagItemModelResponse extends BaseModelResponse
             return $userBagItems->map(function ($userBagItem) use ($mode) {
                 return self::formatUserBagItem($userBagItem, $mode);
             })->toArray();
+        }
+
+        if(is_array($userBagItems)){
+            return array_map(function ($userBagItem) use ($mode) {
+                return self::formatUserBagItem($userBagItem, $mode);
+            }, $userBagItems);
         }
 
         return [];
