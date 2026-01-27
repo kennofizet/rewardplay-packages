@@ -2,6 +2,10 @@
   <div class="manage-setting-page">
     <div class="manage-setting-container">
       <div class="left-menu">
+        <div v-if="currentZoneName" class="current-zone-info">
+          <div class="zone-label">{{ t('page.manageSetting.currentZone') }}</div>
+          <div class="zone-name">{{ currentZoneName }}</div>
+        </div>
         <div 
           v-for="menuItem in menuItems" 
           :key="menuItem.key"
@@ -37,6 +41,19 @@ const hasSelectedZone = computed(() => {
     return selectedZone && JSON.parse(selectedZone)?.id
   } catch (e) {
     return false
+  }
+})
+
+const currentZoneName = computed(() => {
+  try {
+    const selectedZone = localStorage.getItem('selected_zone')
+    if (selectedZone) {
+      const zone = JSON.parse(selectedZone)
+      return zone?.name || null
+    }
+    return null
+  } catch (e) {
+    return null
   }
 })
 
@@ -102,8 +119,34 @@ watch(hasSelectedZone, (hasZone) => {
   width: 250px;
   background: #2d3a4b;
   border: 1px solid #253344;
-  padding: 20px 0;
+  padding: 0;
   min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.current-zone-info {
+  padding: 20px;
+  background: linear-gradient(135deg, #253344 0%, #1a2332 100%);
+  border-bottom: 2px solid #f6a901;
+  margin-bottom: 10px;
+}
+
+.zone-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #8a9196;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.zone-name {
+  font-size: 16px;
+  color: #f6a901;
+  font-weight: 600;
+  word-break: break-word;
+  line-height: 1.3;
 }
 
 .menu-item {

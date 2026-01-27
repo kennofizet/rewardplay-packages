@@ -101,7 +101,7 @@ const rewards = computed(() => {
         const dateDate = new Date(r.date)
         let dayOfMonth = dateDate.getDate() // Actual day of month (1-31)
         if(r.isSpecific){
-          dayOfMonth = dateDate.getDate() + ' / ' + dateDate.getMonth()+1
+          dayOfMonth = dateDate.getDate() + ' / ' + (dateDate.getMonth()+1)
         }
         const dayNumInCycle = index + 1
         

@@ -7,6 +7,13 @@ use Kennofizet\RewardPlay\Traits\GlobalDataTrait;
 use Kennofizet\RewardPlay\Traits\SettingRewardPlay;
 use Kennofizet\RewardPlay\Traits\ManagesZonesRewardPlay;
 use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\RewardPlay\Models\SettingItem;
+use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
+use Kennofizet\RewardPlay\Models\SettingOption;
+use Kennofizet\RewardPlay\Models\SettingItemSet;
+use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
+use Illuminate\Support\Facades\File;
+use Illuminate\Http\Request;
 
 class ManageRewardPlayCommand extends Command
 {
@@ -56,13 +63,21 @@ class ManageRewardPlayCommand extends Command
         // Main menu loop
         while (true) {
             $this->displayMainMenu();
-            $choice = $this->choice('Select an option', [
+            $menuOptions = [
                 'Select Server',
                 'Manage Zones',
                 'Manage Server Managers',
                 'Show Current Selection',
-                'Exit'
-            ], 4);
+            ];
+            
+            // Add fake data option if server and zone are selected
+            if ($this->currentServerId && $this->currentZoneId) {
+                $menuOptions[] = 'Generate Fake Data';
+            }
+            
+            $menuOptions[] = 'Exit';
+            
+            $choice = $this->choice('Select an option', $menuOptions, count($menuOptions) - 1);
 
             switch ($choice) {
                 case 'Select Server':
@@ -76,6 +91,9 @@ class ManageRewardPlayCommand extends Command
                     break;
                 case 'Show Current Selection':
                     $this->showCurrentSelection();
+                    break;
+                case 'Generate Fake Data':
+                    $this->generateFakeData();
                     break;
                 case 'Exit':
                     $this->info('Goodbye!');
@@ -547,5 +565,333 @@ class ManageRewardPlayCommand extends Command
         } else {
             $this->line('Zone: Not selected');
         }
+    }
+
+    /**
+     * Generate fake data for the selected zone
+     */
+    protected function generateFakeData()
+    {
+        if (!$this->currentServerId || !$this->currentZoneId) {
+            $this->error('Please select both server and zone first!');
+            return;
+        }
+
+        $this->info('--- Generate Fake Data ---');
+        $this->warn('This will create demo data for the selected zone.');
+        
+        if (!$this->confirm('Are you sure you want to generate fake data?', false)) {
+            $this->info('Cancelled.');
+            return;
+        }
+
+        // Set zone_id in request attributes so BaseModel can auto-populate
+        $request = Request::create('/', 'GET');
+        $request->attributes->set('rewardplay_user_zone_id_current', $this->currentZoneId);
+        app()->instance('request', $request);
+
+        try {
+            $this->info('Generating fake data...');
+            $this->newLine();
+
+            // Load image manifest
+            $imageManifest = $this->loadImageManifest();
+            
+            // Generate setting options (needed before items for custom options)
+            $this->info('Creating setting options...');
+            $customOptions = $this->generateSettingOptions();
+            $this->info('✓ Created ' . count($customOptions) . ' setting options');
+            $this->newLine();
+
+            // Generate items
+            $this->info('Creating items...');
+            $itemsByType = $this->generateItems($imageManifest, $customOptions);
+            $this->info('✓ Created ' . array_sum(array_map('count', $itemsByType)) . ' items');
+            $this->newLine();
+
+            // Generate item sets
+            $this->info('Creating item sets...');
+            $setsCount = $this->generateItemSets($itemsByType, $customOptions);
+            $this->info('✓ Created ' . $setsCount . ' item sets');
+            $this->newLine();
+
+            $this->info('✓ Fake data generation completed successfully!');
+        } catch (\Exception $e) {
+            $this->error('✗ Error generating fake data: ' . $e->getMessage());
+            $this->error($e->getTraceAsString());
+        }
+    }
+
+    /**
+     * Load image manifest
+     */
+    protected function loadImageManifest(): array
+    {
+        $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
+        $manifestPath = public_path($imagesFolder . '/image-manifest.json');
+        
+        if (!File::exists($manifestPath)) {
+            $this->warn('Image manifest not found, using default images');
+            return [];
+        }
+
+        $manifest = json_decode(File::get($manifestPath), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->warn('Failed to parse image manifest, using default images');
+            return [];
+        }
+
+        // Convert to full URLs
+        $manifestWithUrls = [];
+        foreach ($manifest as $key => $value) {
+            $fullPath = $imagesFolder . '/' . ltrim($value, '/');
+            $manifestWithUrls[$key] = $fullPath;
+        }
+
+        return $manifestWithUrls;
+    }
+
+    /**
+     * Generate items for each type
+     */
+    protected function generateItems(array $imageManifest, array $customOptions = []): array
+    {
+        $itemsByType = [];
+        $itemTiers = ['newbie', 'beginner', 'intermediate', 'advanced', 'expert', 'master', 'elite', 'legendary', 'mythic', 'challenged'];
+        
+        // Map item types to image keys from manifest
+        $typeImageMap = [
+            SettingItemConstant::ITEM_TYPE_SWORD => 'bag.sword',
+            SettingItemConstant::ITEM_TYPE_HAT => 'bag.hat',
+            SettingItemConstant::ITEM_TYPE_SHIRT => 'bag.shirt',
+            SettingItemConstant::ITEM_TYPE_TROUSER => 'bag.trouser',
+            SettingItemConstant::ITEM_TYPE_SHOE => 'bag.shoe',
+            SettingItemConstant::ITEM_TYPE_NECKLACE => 'bag.necklace',
+            SettingItemConstant::ITEM_TYPE_BRACELET => 'bag.bracelet',
+            SettingItemConstant::ITEM_TYPE_RING => 'bag.ring',
+            SettingItemConstant::ITEM_TYPE_CLOTHES => 'bag.clothes',
+            SettingItemConstant::ITEM_TYPE_WING => 'bag.wing',
+        ];
+
+        $conversionKeys = array_keys(HelperConstant::CONVERSION_KEYS);
+
+        foreach (SettingItemConstant::ITEM_TYPE_NAMES as $type => $typeName) {
+            $itemsByType[$type] = [];
+            $imageKey = $typeImageMap[$type] ?? 'bag.sword';
+            $imageUrl = $imageManifest[$imageKey] ?? null;
+            
+            // Fallback: try to find any bag image if specific one not found
+            if (!$imageUrl && !empty($imageManifest)) {
+                foreach ($imageManifest as $key => $url) {
+                    if (strpos($key, 'bag.') === 0) {
+                        $imageUrl = $url;
+                        break;
+                    }
+                }
+            }
+
+            for ($i = 0; $i < 10; $i++) {
+                $tier = $itemTiers[$i];
+                $itemName = ucfirst($tier) . ' ' . $typeName;
+                
+                // Generate default_property with random stats
+                $defaultProperty = [];
+                $numStats = rand(3, 6); // 3-6 random stats per item
+                $numStats = min($numStats, count($conversionKeys));
+                
+                // Get random keys from conversion keys
+                if ($numStats == 1) {
+                    $selectedKeys = [array_rand($conversionKeys, 1)];
+                } else {
+                    $selectedKeys = (array)array_rand($conversionKeys, $numStats);
+                }
+                
+                foreach ($selectedKeys as $keyIndex) {
+                    $statKey = $conversionKeys[$keyIndex];
+                    // Higher tier = higher values
+                    $baseValue = ($i + 1) * 100;
+                    $randomFactor = rand(80, 120) / 100; // ±20% variation
+                    $defaultProperty[$statKey] = (int)($baseValue * $randomFactor);
+                }
+
+                // Add custom options to wing and clothes items
+                if (($type === SettingItemConstant::ITEM_TYPE_WING || $type === SettingItemConstant::ITEM_TYPE_CLOTHES) && !empty($customOptions)) {
+                    // Add 1-2 custom options to these item types
+                    $numCustom = min(rand(1, 2), count($customOptions));
+                    if ($numCustom == 1) {
+                        $selectedCustomIndices = [array_rand($customOptions, 1)];
+                    } else {
+                        $selectedCustomIndices = (array)array_rand($customOptions, $numCustom);
+                    }
+                    
+                    foreach ($selectedCustomIndices as $idx) {
+                        $customOption = $customOptions[$idx];
+                        // Use the rates data from the custom option
+                        $defaultProperty['custom_key_' . $customOption->id] = $customOption->rates;
+                    }
+                }
+
+                // Create item
+                $item = SettingItem::create([
+                    'name' => $itemName,
+                    'description' => "A {$tier} tier {$typeName} item",
+                    'type' => $type,
+                    'default_property' => $defaultProperty,
+                    'image' => $imageUrl,
+                    'zone_id' => $this->currentZoneId,
+                ]);
+
+                $itemsByType[$type][] = $item;
+            }
+        }
+
+        return $itemsByType;
+    }
+
+    /**
+     * Generate setting options with custom names
+     */
+    protected function generateSettingOptions(): array
+    {
+        $customOptionNames = ['beautiful', 'student', 'director', 'cool', 'awesome', 'epic', 'legendary', 'mystic'];
+        $conversionKeys = array_keys(HelperConstant::CONVERSION_KEYS);
+        $options = [];
+
+        foreach ($customOptionNames as $optionName) {
+            // Generate rates with 2-4 random conversion keys
+            $rates = [];
+            $numRates = rand(2, 4);
+            $numRates = min($numRates, count($conversionKeys));
+            
+            // Get random keys from conversion keys
+            if ($numRates == 1) {
+                $selectedKeyIndices = [array_rand($conversionKeys, 1)];
+            } else {
+                $selectedKeyIndices = (array)array_rand($conversionKeys, $numRates);
+            }
+
+            foreach ($selectedKeyIndices as $keyIndex) {
+                $key = $conversionKeys[$keyIndex];
+                $rates[$key] = rand(10, 100); // Random value between 10-100
+            }
+
+            $option = SettingOption::create([
+                'name' => $optionName,
+                'rates' => $rates,
+                'zone_id' => $this->currentZoneId,
+            ]);
+
+            $options[] = $option;
+        }
+
+        return $options;
+    }
+
+    /**
+     * Generate item sets with bonuses
+     */
+    protected function generateItemSets(array $itemsByType, array $customOptions): int
+    {
+        $setsCount = 0;
+        $conversionKeys = array_keys(HelperConstant::CONVERSION_KEYS);
+
+        foreach ($itemsByType as $type => $items) {
+            if (count($items) < 10) {
+                continue; // Skip if not enough items
+            }
+
+            $itemIds = array_map(fn($item) => $item->id, $items);
+            $setName = ucfirst($type) . ' Set';
+            
+            // Generate set bonuses for 2, 5, 8, and full
+            $setBonuses = [];
+            
+            // Bonus at 2 items
+            $bonus2 = [];
+            $numStats2 = min(rand(2, 3), count($conversionKeys));
+            if ($numStats2 == 1) {
+                $selectedIndices2 = [array_rand($conversionKeys, 1)];
+            } else {
+                $selectedIndices2 = (array)array_rand($conversionKeys, $numStats2);
+            }
+            foreach ($selectedIndices2 as $idx) {
+                $stat = $conversionKeys[$idx];
+                $bonus2[$stat] = rand(50, 150);
+            }
+            $setBonuses['2'] = $bonus2;
+
+            // Bonus at 5 items
+            $bonus5 = [];
+            $numStats5 = min(rand(3, 4), count($conversionKeys));
+            if ($numStats5 == 1) {
+                $selectedIndices5 = [array_rand($conversionKeys, 1)];
+            } else {
+                $selectedIndices5 = (array)array_rand($conversionKeys, $numStats5);
+            }
+            foreach ($selectedIndices5 as $idx) {
+                $stat = $conversionKeys[$idx];
+                $bonus5[$stat] = rand(150, 300);
+            }
+            $setBonuses['5'] = $bonus5;
+
+            // Bonus at 8 items
+            $bonus8 = [];
+            $numStats8 = min(rand(4, 5), count($conversionKeys));
+            if ($numStats8 == 1) {
+                $selectedIndices8 = [array_rand($conversionKeys, 1)];
+            } else {
+                $selectedIndices8 = (array)array_rand($conversionKeys, $numStats8);
+            }
+            foreach ($selectedIndices8 as $idx) {
+                $stat = $conversionKeys[$idx];
+                $bonus8[$stat] = rand(300, 500);
+            }
+            $setBonuses['8'] = $bonus8;
+
+            // Full set bonus (use some custom options)
+            $bonusFull = [];
+            $numStatsFull = min(rand(5, 7), count($conversionKeys));
+            if ($numStatsFull == 1) {
+                $selectedIndicesFull = [array_rand($conversionKeys, 1)];
+            } else {
+                $selectedIndicesFull = (array)array_rand($conversionKeys, $numStatsFull);
+            }
+            foreach ($selectedIndicesFull as $idx) {
+                $stat = $conversionKeys[$idx];
+                $bonusFull[$stat] = rand(500, 1000);
+            }
+            
+            // Add 1-2 custom options to full bonus
+            if (!empty($customOptions)) {
+                $numCustom = min(2, count($customOptions));
+                if ($numCustom == 1) {
+                    $selectedCustomIndices = [array_rand($customOptions, 1)];
+                } else {
+                    $selectedCustomIndices = (array)array_rand($customOptions, $numCustom);
+                }
+                foreach ($selectedCustomIndices as $idx) {
+                    $customOption = $customOptions[$idx];
+                    // Use the rates data from the custom option
+                    $bonusFull['custom_key_' . $customOption->id] = $customOption->rates;
+                }
+            }
+            
+            $setBonuses['full'] = $bonusFull;
+
+            // Create item set
+            $set = SettingItemSet::create([
+                'name' => $setName,
+                'description' => "Complete set of {$type} items with progressive bonuses",
+                'set_bonuses' => $setBonuses,
+                'zone_id' => $this->currentZoneId,
+            ]);
+
+            // Attach all items to the set
+            $set->items()->sync($itemIds);
+            
+            $setsCount++;
+        }
+
+        return $setsCount;
     }
 }

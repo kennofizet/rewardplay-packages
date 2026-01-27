@@ -108,6 +108,7 @@ export function createGameApi(backendUrl, token) {
     // Stats
     getConversionKeys: () => api.get('/api/rewardplay/stats/conversion-keys'),
     getAllStats: () => api.get('/api/rewardplay/stats/all'),
+    getRewardTypes: (mode) => api.get('/api/rewardplay/stats/reward-types', { params: { mode } }),
 
     // Setting Item Sets CRUD
     getSettingItemSets: (params) => api.get('/api/rewardplay/setting-item-sets', { params }),

@@ -30,6 +30,7 @@ export default {
       noApiAvailable: 'No API available',
     },
     manageSetting: {
+      currentZone: 'Current Zone',
       menu: {
         settingItems: 'Setting Items',
         settingOptions: 'Setting Options',

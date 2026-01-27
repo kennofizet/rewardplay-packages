@@ -338,6 +338,8 @@ const loadUserData = async () => {
   }
 }
 
+localStorage.removeItem('selected_zone')
+
 // Create translator for the specified language
 const translator = createTranslator(props.language)
 

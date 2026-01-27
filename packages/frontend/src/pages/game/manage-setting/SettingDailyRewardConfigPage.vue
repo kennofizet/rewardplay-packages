@@ -41,10 +41,7 @@
                     <div class="input-group">
                         <label>{{ t('page.manageSetting.settingDailyRewards.form.type') }}</label>
                         <select v-model="item.type">
-                            <option value="coin">{{ t('page.manageSetting.settingDailyRewards.types.coin') }}</option>
-                            <option value="exp">{{ t('page.manageSetting.settingDailyRewards.types.exp') }}</option>
-                            <option value="item">{{ t('page.manageSetting.settingDailyRewards.types.item') }}</option>
-                            <option value="ticket">{{ t('page.manageSetting.settingDailyRewards.types.ticket') }}</option>
+                            <option v-for="(label, type) in rewardTypes" :key="type" :value="type">{{ label }}</option>
                         </select>
                     </div>
 
@@ -90,6 +87,7 @@ const rewards = ref({})
 const loading = ref(false)
 const availableItems = ref([])
 const editingItems = ref([])
+const rewardTypes = ref([])
 
 const daysInMonth = computed(() => {
     return new Date(currentYear.value, currentMonth.value, 0).getDate();
@@ -104,13 +102,24 @@ const loadItems = async () => {
     try {
         const res = await gameApi.getSettingItems({ limit: 1000 })
         // Adapt based on actual response structure
-        if (res.data?.datas?.items?.data) {
-            availableItems.value = res.data.datas.items.data
-        } else if (res.data?.datas?.items) {
-             availableItems.value = res.data.datas.items
+        if (res.data?.datas?.setting_items?.data) {
+            availableItems.value = res.data.datas.setting_items.data
+        } else if (res.data?.datas?.setting_items) {
+            availableItems.value = res.data.datas.setting_items
         }
     } catch (e) {
         console.error("Failed to load items", e)
+    }
+}
+
+const loadRewardTypes = async () => {
+    try {
+        const res = await gameApi.getRewardTypes('daily_reward')
+        if (res.data?.datas?.reward_types) {
+            rewardTypes.value = res.data.datas.reward_types
+        }
+    } catch (e) {
+        console.error("Failed to load reward types", e)
     }
 }
 
@@ -231,6 +240,7 @@ onMounted(() => {
     const now = new Date()
     currentYear.value = now.getFullYear()
     currentMonth.value = now.getMonth() + 1
+    loadRewardTypes()
     loadItems()
     loadRewards()
 })

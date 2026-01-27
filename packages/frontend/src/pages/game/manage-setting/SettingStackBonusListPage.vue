@@ -68,10 +68,7 @@
              <label>{{ t('page.manageSetting.settingStackBonuses.form.rewards') }}</label>
              <div v-for="(reward, index) in formData.rewards" :key="index" class="reward-row">
                 <select v-model="reward.type" class="form-select small">
-                  <option value="coin">{{ t('page.manageSetting.settingStackBonuses.types.coin') }}</option>
-                  <option value="exp">{{ t('page.manageSetting.settingStackBonuses.types.exp') }}</option>
-                  <option value="item">{{ t('page.manageSetting.settingStackBonuses.types.item') }}</option>
-                  <option value="ticket">{{ t('page.manageSetting.settingStackBonuses.types.ticket') }}</option>
+                  <option v-for="(label, type) in rewardTypes" :key="type" :value="type">{{ label }}</option>
                 </select>
                 <input v-model.number="reward.quantity" type="number" :placeholder="t('page.manageSetting.settingStackBonuses.form.qty')" class="small-input" />
                 <button class="btn-danger small" @click="removeReward(index)">x</button>
@@ -105,6 +102,18 @@ const showModal = ref(false)
 const editingItem = ref(null)
 const formData = ref({ name: '', day: 3, rewards: [{ type: 'coin', quantity: 100 }] })
 const saving = ref(false)
+const rewardTypes = ref([])
+
+const loadRewardTypes = async () => {
+    try {
+        const res = await gameApi.getRewardTypes('stack_bonus')
+        if (res.data?.datas?.reward_types) {
+            rewardTypes.value = res.data.datas.reward_types
+        }
+    } catch (e) {
+        console.error("Failed to load reward types", e)
+    }
+}
 
 const loadBonuses = async () => {
     if (!gameApi) return
@@ -190,6 +199,7 @@ const handleSave = async () => {
 }
 
 onMounted(() => {
+    loadRewardTypes()
     loadBonuses()
 })
 </script>
