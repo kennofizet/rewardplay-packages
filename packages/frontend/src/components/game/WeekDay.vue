@@ -7,7 +7,7 @@
     <div 
       :class="[
         'week-day-indicator',
-        { 'week-day-indicator-past': isPast },
+        { 'week-day-indicator-past': isPast || isCompleted },
         { 'week-day-indicator-current': isCurrent }
       ]"
     ></div>

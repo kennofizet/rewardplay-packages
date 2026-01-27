@@ -130,12 +130,23 @@ const injectedBackendUrl = inject('backendUrl', '')
 const zones = ref([])
 const showZoneModal = ref(true)
 const selectedZone = ref(null)
+const zoneTimezone = ref(null)
 
 async function fetchZones() {
   try {
     if (gameApi && gameApi.getZones) {
       const resp = await gameApi.getZones()
-      // accept multiple response shapes
+      
+      // Extract timezone from response
+      if (resp?.data?.datas?.timezone) {
+        zoneTimezone.value = resp.data.datas.timezone
+      } else if (resp?.data?.timezone) {
+        zoneTimezone.value = resp.data.timezone
+      } else if (resp?.timezone) {
+        zoneTimezone.value = resp.timezone
+      }
+      
+      // Extract zones
       if (resp?.data?.datas?.zones) return resp.data.datas.zones
       if (resp?.data?.zones) return resp.data.zones
       if (Array.isArray(resp)) return resp
@@ -365,6 +376,9 @@ provide('translator', translator)
 // Provide userData (will be set after getUserData loads)
 const userData = ref(null)
 provide('userData', userData)
+
+// Provide timezone (scoped to RewardPlay package only - won't affect parent project)
+provide('zoneTimezone', zoneTimezone)
 
 // Login screen will auto check user on mount
 // After successful login, loading will start

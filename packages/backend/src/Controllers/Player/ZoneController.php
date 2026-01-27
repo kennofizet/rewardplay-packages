@@ -25,9 +25,13 @@ class ZoneController extends Controller
         // Get zone IDs user belongs to
         $zoneIds = BaseModelActions::currentUserZoneIds();
 
+        // Get timezone from config
+        $timezone = config('app.timezone', 'UTC');
+
         if (empty($zoneIds)) {
             return $this->apiResponseWithContext([
                 'zones' => [],
+                'timezone' => $timezone,
             ]);
         }
 
@@ -42,6 +46,7 @@ class ZoneController extends Controller
 
         return $this->apiResponseWithContext([
             'zones' => $result,
+            'timezone' => $timezone,
         ]);
     }
 

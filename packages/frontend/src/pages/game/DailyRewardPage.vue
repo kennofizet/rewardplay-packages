@@ -50,10 +50,12 @@ import Sector from '../../components/game/Sector.vue'
 import WeekDay from '../../components/game/WeekDay.vue'
 import RewardItem from '../../components/game/RewardItem.vue'
 import RewardCard from '../../components/game/RewardCard.vue'
+import { useTimezone } from '../../composables/useTimezone'
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
+const { isToday, formatDate } = useTimezone()
 
 const selectedZone = ref(null)
 const loading = ref(false)
@@ -104,7 +106,6 @@ const rewards = computed(() => {
     if (!state.value || !state.value.seven_days_rewards) return []
 
     const weeklyStreak = state.value.weekly_streak || 0
-    const sevenDayClaimed = state.value.seven_days_rewards.filter(r => r.claimed).length
 
     // Get 7 days starting from today
     const sevenDays = state.value.seven_days_rewards.slice(0, 7)
@@ -116,16 +117,21 @@ const rewards = computed(() => {
     
     const bonuses = state.value.stack_bonuses || {}
 
+    // Create sevenDaysStack: map stack bonuses to seven days based on weekly streak
     return sevenDays.map((r, index) => {
-        const dateDate = new Date(r.date)
-        let dayOfMonth = dateDate.getDate() // Actual day of month (1-31)
+        let currentIndexBonus = weeklyStreak + index - 1
+        
+        // Get day and month using timezone-aware formatting
+        const dayOfMonthNum = parseInt(formatDate(r.date, { day: 'numeric' }))
+        const monthNum = parseInt(formatDate(r.date, { month: 'numeric' }))
+        let dayOfMonth = dayOfMonthNum // Actual day of month (1-31)
         let extraInfo = ''
 
         if(r.isSpecific){
-          dayOfMonth = dateDate.getDate() + ' / ' + (dateDate.getMonth()+1)
+          dayOfMonth = dayOfMonthNum + ' / ' + monthNum
         }else{
-          // Mix in stack bonus for this day in cycle
-          const stackBonus = bonuses[weeklyStreak - sevenDayClaimed + index]
+          const stackBonusDay = currentIndexBonus > 7 ? 7 : currentIndexBonus
+          const stackBonus = bonuses[stackBonusDay]
           if (stackBonus) {
               extraInfo = `+ ${stackBonus.name}`
           }
@@ -133,7 +139,8 @@ const rewards = computed(() => {
         
         const dayNumInCycle = index + 1
         
-        const isCurrent = (dateDate.toLocaleDateString() === new Date().toLocaleDateString()) && !r.claimed
+        // Use timezone-aware isToday check
+        const isCurrent = isToday(r.date) && !r.claimed
         const isCollected = r.claimed
         
         const items = r.items || []

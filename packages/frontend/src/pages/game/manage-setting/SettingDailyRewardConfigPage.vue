@@ -74,11 +74,13 @@
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
+import { useTimezone } from '../../../composables/useTimezone'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
 const gameApi = inject('gameApi')
+const { formatDate } = useTimezone()
 const currentYear = ref(2026)
 const currentMonth = ref(1)
 const showModal = ref(false)
@@ -237,9 +239,10 @@ const suggestData = async () => {
 }
 
 onMounted(() => {
+    // Use timezone-aware current date
     const now = new Date()
-    currentYear.value = now.getFullYear()
-    currentMonth.value = now.getMonth() + 1
+    currentYear.value = parseInt(formatDate(now, { year: 'numeric' }))
+    currentMonth.value = parseInt(formatDate(now, { month: 'numeric' }))
     loadRewardTypes()
     loadItems()
     loadRewards()

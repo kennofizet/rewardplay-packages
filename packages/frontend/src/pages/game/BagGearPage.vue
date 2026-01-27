@@ -374,7 +374,7 @@ const powerBackgroundStyle = computed(() => ({
 
 const handleItemClick = (item) => {
   // Only show detail panel if item has data (has item_id or id, and has property)
-  if (item && (item.item_id || item.id) && item.property) {
+  if (item && item.property) {
     selectedItem.value = item
   } else {
     selectedItem.value = null
