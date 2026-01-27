@@ -60,4 +60,7 @@ class Constant
         self::TYPE_GEAR => 'Gear',
         self::TYPE_TICKET => 'Ticket',
     ];
+
+    // Level Exp Defaults
+    const DEFAULT_EXP_NEEDED = 100; // Default exp needed to level up if no setting found
 }

@@ -83,7 +83,10 @@ class AuthController extends Controller
             'coin' => $user->getCoin(),
             'box_coin' => $user->getBoxCoin(),
             'ruby' => $user->getRuby(),
-            'power' => $user->getPower()
+            'power' => $user->getPower(),
+            'lv' => $user->getLevel(),
+            'exp' => $user->getExp(),
+            'exp_needed' => $user->getExpNeed()
         ]);
     }
 }

@@ -144,9 +144,14 @@ class DailyRewardService
     {
         foreach ($rewards as $rewardItem) {
             $rewardType = $rewardItem['type'] ?? HelperConstant::TYPE_GEAR;
+            $quantity = $rewardItem['quantity'] ?? 1;
 
             if ($rewardType == HelperConstant::TYPE_COIN) {
-                // TODO: Integration with wallet/coins table
+                // Give coin to user profile
+                $user->giveCoin($quantity);
+            } elseif ($rewardType == HelperConstant::TYPE_EXP) {
+                // Give exp to user profile
+                $user->giveExp($quantity);
             } elseif ($rewardType == HelperConstant::TYPE_GEAR || isset($rewardItem['item_id'])) {
                 // Use new structure: properties.stats and custom_options
                 $bagProperties = [];

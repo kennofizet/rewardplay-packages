@@ -6,6 +6,7 @@ use Kennofizet\RewardPlay\Models\User;
 use Kennofizet\RewardPlay\Models\UserBagItem;
 use Kennofizet\RewardPlay\Models\UserEventTransaction;
 use Kennofizet\RewardPlay\Models\UserProfile;
+use Kennofizet\RewardPlay\Models\SettingLevelExp;
 use Carbon\Carbon;
 
 trait UserActions
@@ -105,5 +106,63 @@ trait UserActions
     public function getPower(): int
     {
         return 0;
+    }
+
+    /**
+     * Get exp needed for user's current level
+     * 
+     * @return int
+     */
+    public function getExpNeed(): int
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        $currentLv = $profile->lv ?? 1;
+        return SettingLevelExp::getExpForLevel($currentLv);
+    }
+
+    /**
+     * Give exp to the user
+     * 
+     * @param int $expAmount - Amount of exp to give
+     * @return UserProfile
+     */
+    public function giveExp(int $expAmount): UserProfile
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->giveExp($expAmount);
+    }
+
+    /**
+     * Give coin to the user
+     * 
+     * @param int $coinAmount - Amount of coin to give
+     * @return UserProfile
+     */
+    public function giveCoin(int $coinAmount): UserProfile
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->giveCoin($coinAmount);
+    }
+
+    /**
+     * Get user's level from profile
+     * 
+     * @return int
+     */
+    public function getLevel(): int
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->lv ?? 1;
+    }
+
+    /**
+     * Get user's current exp from profile
+     * 
+     * @return int
+     */
+    public function getExp(): int
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->current_exp ?? 0;
     }
 }

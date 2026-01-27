@@ -56,6 +56,8 @@ const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 const { isToday, formatDate } = useTimezone()
+const userData = inject('userData', null)
+const updateUserData = inject('updateUserData', null)
 
 const selectedZone = ref(null)
 const loading = ref(false)
@@ -196,11 +198,75 @@ const loadData = async () => {
     }
 }
 
+/**
+ * Calculate total exp and coin from current day's rewards
+ * Includes both daily reward and stack bonus for current streak day
+ */
+const calculateTodayRewards = () => {
+  if (!state.value) return { exp: 0, coin: 0 }
+  
+  let totalExp = 0
+  let totalCoin = 0
+  
+  // Get today's daily reward
+  const todayDailyReward = state.value.seven_days_rewards?.find(r => isToday(r.date))
+  if (todayDailyReward && todayDailyReward.items) {
+    todayDailyReward.items.forEach(item => {
+      const type = item.type || ''
+      const quantity = item.quantity || 0
+      
+      if (type === 'exp') {
+        totalExp += quantity
+      } else if (type === 'coin') {
+        totalCoin += quantity
+      }
+    })
+  }
+  
+  // Get stack bonus for current streak day
+  const weeklyStreak = state.value.weekly_streak || 0
+  const stackBonusDay = weeklyStreak > 7 ? 7 : weeklyStreak
+  const stackBonus = state.value.stack_bonuses?.[stackBonusDay]
+  
+  if (stackBonus && stackBonus.rewards) {
+    stackBonus.rewards.forEach(item => {
+      const type = item.type || ''
+      const quantity = item.quantity || 0
+      
+      if (type === 'exp') {
+        totalExp += quantity
+      } else if (type === 'coin') {
+        totalCoin += quantity
+      }
+    })
+  }
+  
+  return { exp: totalExp, coin: totalCoin }
+}
+
 const handleCollect = async (reward) => {
   if (!gameApi) return
   
   try {
+    // Calculate rewards before collecting
+    const todayRewards = calculateTodayRewards()
+    
     await gameApi.collectDailyReward()
+    
+    // Update userData with the collected rewards
+    // updateUserData will handle level-up logic automatically
+    if (updateUserData && (todayRewards.exp > 0 || todayRewards.coin > 0)) {
+      const updates = {}
+      if (todayRewards.exp > 0) {
+        updates.exp = todayRewards.exp
+      }
+      if (todayRewards.coin > 0) {
+        updates.coin = todayRewards.coin
+      }
+      
+      // updateUserData will check if exp >= exp_needed and handle level up + reload
+      await updateUserData(updates)
+    }
     
     // Optimistic update or reload
     reward.isCollected = true

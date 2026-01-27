@@ -377,6 +377,66 @@ provide('translator', translator)
 const userData = ref(null)
 provide('userData', userData)
 
+// Global function to update userData
+const updateUserData = async (updates = {}) => {
+  if (!userData.value) {
+    // If userData is not loaded, reload it
+    await loadUserData()
+    return
+  }
+  
+  // Update userData with provided updates
+  if (typeof updates === 'object' && updates !== null) {
+    let shouldReload = false
+    
+    Object.keys(updates).forEach(key => {
+      if (userData.value[key] !== undefined) {
+        if (typeof userData.value[key] === 'number' && typeof updates[key] === 'number') {
+          // For numbers, add the update value (for coin, exp, etc.)
+          const oldValue = userData.value[key] || 0
+          userData.value[key] = oldValue + updates[key]
+          
+          // Check if exp update causes level up (handle multiple level-ups)
+          if (key === 'exp' && userData.value.exp_needed !== undefined) {
+            let currentExp = userData.value[key]
+            let currentLv = userData.value.lv || 1
+            let expNeeded = userData.value.exp_needed || 0
+            
+            // Handle multiple level-ups if exp is high enough
+            while (currentExp >= expNeeded && expNeeded > 0) {
+              currentExp -= expNeeded
+              currentLv += 1
+              // Mark that we need to reload to get new exp_needed for the new level
+              shouldReload = true
+              // For now, use the same exp_needed (will be updated after reload)
+              // In a real scenario, we'd need to calculate exp_needed for each level
+              // but since we don't have that data, we'll reload from backend
+            }
+            
+            // Update the values
+            userData.value[key] = currentExp
+            userData.value.lv = currentLv
+          }
+        } else {
+          // For other types, replace the value
+          userData.value[key] = updates[key]
+        }
+      } else {
+        // If key doesn't exist, add it
+        userData.value[key] = updates[key]
+      }
+    })
+    
+    // If level up occurred, reload userData to get new exp_needed
+    if (shouldReload) {
+      await loadUserData()
+    }
+  }
+}
+
+// Provide updateUserData function globally
+provide('updateUserData', updateUserData)
+
 // Provide timezone (scoped to RewardPlay package only - won't affect parent project)
 provide('zoneTimezone', zoneTimezone)
 

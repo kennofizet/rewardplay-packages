@@ -276,8 +276,8 @@ const initializeBagItems = () => {
   if (userDataValue.power !== undefined) {
     userPower.value = userDataValue.power
   }
-  if (userDataValue.level !== undefined) {
-    userLevel.value = userDataValue.level
+  if (userDataValue.lv !== undefined) {
+    userLevel.value = userDataValue.lv
   }
   if (userDataValue.exp !== undefined) {
     currentExp.value = userDataValue.exp

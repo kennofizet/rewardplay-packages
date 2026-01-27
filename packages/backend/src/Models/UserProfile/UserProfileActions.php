@@ -3,6 +3,7 @@
 namespace Kennofizet\RewardPlay\Models\UserProfile;
 
 use Kennofizet\RewardPlay\Models\UserProfile;
+use Kennofizet\RewardPlay\Models\SettingLevelExp;
 
 trait UserProfileActions
 {
@@ -40,5 +41,47 @@ trait UserProfileActions
                 'ruby' => 0,
             ]
         );
+    }
+
+    /**
+     * Give exp to the profile
+     * Adds to total_exp and current_exp
+     * 
+     * @param int $expAmount - Amount of exp to give
+     * @return UserProfile
+     */
+    public function giveExp(int $expAmount): UserProfile
+    {
+        $this->total_exp = ($this->total_exp ?? 0) + $expAmount;
+        $this->current_exp = ($this->current_exp ?? 0) + $expAmount;
+        $this->save();
+        
+        return $this->fresh();
+    }
+
+    /**
+     * Get exp needed for current level
+     * 
+     * @return int
+     */
+    public function getExpNeed(): int
+    {
+        $currentLv = $this->lv ?? 1;
+        return SettingLevelExp::getExpForLevel($currentLv);
+    }
+
+    /**
+     * Give coin to the profile
+     * Adds to coin amount
+     * 
+     * @param int $coinAmount - Amount of coin to give
+     * @return UserProfile
+     */
+    public function giveCoin(int $coinAmount): UserProfile
+    {
+        $this->coin = ($this->coin ?? 0) + $coinAmount;
+        $this->save();
+        
+        return $this->fresh();
     }
 }
