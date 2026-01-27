@@ -14,6 +14,7 @@ class UserBagItem extends BaseModel
     protected $fillable = [
         'user_id',
         'item_id',
+        'item_type',
         'quantity',
         'properties',
         'acquired_at',

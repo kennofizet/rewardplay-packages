@@ -35,7 +35,7 @@
                 <img :src="getImageUrl('character.hero')" alt="Hero">
               </div>
               <!-- Item Detail Panel (absolute positioned, appears next to character) -->
-              <div v-if="selectedItem && selectedItem.properties" class="item-detail-panel">
+              <div v-if="selectedItem && canShowItemDetail(selectedItem)" class="item-detail-panel">
                 <button class="item-detail-close" @click="closeItemDetail">×</button>
                 <div class="item-detail-header">
                   <img 
@@ -53,9 +53,9 @@
                   <h4 class="item-detail-properties-title">{{ t('component.bag.itemDetail.properties') }}</h4>
                   <div class="item-detail-properties">
                     <!-- Display stats from properties.stats -->
-                    <template v-if="selectedItem.properties && selectedItem.properties.stats">
+                    <template v-if="selectedItemProperties && selectedItemProperties.stats">
                       <div 
-                        v-for="(value, key) in selectedItem.properties.stats" 
+                        v-for="(value, key) in selectedItemProperties.stats" 
                         :key="'stat-' + key"
                         class="item-detail-property"
                       >
@@ -64,9 +64,9 @@
                       </div>
                     </template>
                     <!-- Display custom options from properties.custom_options -->
-                    <template v-if="selectedItem.properties && selectedItem.properties.custom_options">
+                    <template v-if="selectedItemProperties && selectedItemProperties.custom_options">
                       <div 
-                        v-for="(customOption, index) in (Array.isArray(selectedItem.properties.custom_options) ? selectedItem.properties.custom_options : [selectedItem.properties.custom_options])" 
+                        v-for="(customOption, index) in (Array.isArray(selectedItemProperties.custom_options) ? selectedItemProperties.custom_options : [selectedItemProperties.custom_options])" 
                         :key="'custom-' + index"
                         class="item-detail-property custom-option"
                       >
@@ -84,9 +84,9 @@
                       </div>
                     </template>
                     <!-- Fallback: display flat properties (for old format) -->
-                    <template v-if="selectedItem.properties && !selectedItem.properties.stats && !selectedItem.properties.custom_options">
+                    <template v-if="selectedItemProperties && !selectedItemProperties.stats && !selectedItemProperties.custom_options">
                       <div 
-                        v-for="(value, key) in selectedItem.properties" 
+                        v-for="(value, key) in selectedItemProperties" 
                         :key="key"
                         class="item-detail-property"
                       >
@@ -205,6 +205,13 @@ const userPower = ref(0)
 // Selected item for detail panel
 const selectedItem = ref(null)
 
+// Computed property to normalize property/properties for template compatibility
+const selectedItemProperties = computed(() => {
+  if (!selectedItem.value) return null
+  // Support both property (singular) and properties (plural) for compatibility
+  return selectedItem.value.property || selectedItem.value.properties || null
+})
+
 // Current filter type (default to 'bag' which shows bag items)
 const currentFilter = ref('bag')
 
@@ -319,7 +326,7 @@ const loadBagData = async () => {
           quantity: bi.quantity,
           property: bi.properties || {},
           key_image: bi.item?.image || 'bag.other', // Fallback image
-          name: bi.item?.name || 'Item',
+          name: bi.item?.name || 'Gear',
         }))
       }
 
@@ -372,9 +379,34 @@ const powerBackgroundStyle = computed(() => ({
   backgroundImage: `url('${getImageUrl(powerBackgroundKey.value)}')`
 }))
 
+/**
+ * Check if an item can show details
+ * Item can show details if it has property with custom_options or stats
+ * @param {Object} item - Item object to check
+ * @returns {boolean} True if item can show details
+ */
+const canShowItemDetail = (item) => {
+  if (!item) return false
+  
+  // Check if item has property (singular) or properties (plural) for compatibility
+  const property = item.property || item.properties
+  
+  if (!property) return false
+  
+  // Check if property has custom_options (array with at least one element) or stats (object with keys)
+  const hasCustomOptions = property.custom_options && 
+    (Array.isArray(property.custom_options) ? property.custom_options.length > 0 : true)
+  
+  const hasStats = property.stats && 
+    typeof property.stats === 'object' && 
+    Object.keys(property.stats).length > 0
+  
+  return hasCustomOptions || hasStats
+}
+
 const handleItemClick = (item) => {
-  // Only show detail panel if item has data (has item_id or id, and has property)
-  if (item && item.property) {
+  // Only show detail panel if item can show details
+  if (canShowItemDetail(item)) {
     selectedItem.value = item
   } else {
     selectedItem.value = null

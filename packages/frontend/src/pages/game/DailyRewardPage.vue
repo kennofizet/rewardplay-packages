@@ -146,7 +146,7 @@ const rewards = computed(() => {
         const items = r.items || []
         const limitedItems = items.slice(0, 2) // Limit to 2 items
         const firstItem = limitedItems[0]
-        const type = firstItem?.type || 'item'
+        const type = firstItem?.type || 'coin'
         
         // Create description array with count
         let description

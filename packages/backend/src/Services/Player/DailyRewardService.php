@@ -7,6 +7,7 @@ use Kennofizet\RewardPlay\Services\Model\SettingStackBonusService;
 use Kennofizet\RewardPlay\Models\UserDailyStatus;
 use Kennofizet\RewardPlay\Models\UserBagItem;
 use Kennofizet\RewardPlay\Models\UserEventTransaction;
+use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Carbon\Carbon;
 use Exception;
 
@@ -108,10 +109,10 @@ class DailyRewardService
         $todayDailyReward = $this->settingDailyRewardService->getSettingDailyRewardByDate(Carbon::today());
 
         if ($todayDailyReward && !empty($todayDailyReward->items)) {
-            $this->grantRewards($userId, $todayDailyReward->items);
+            $this->grantRewards($userId, $todayDailyReward->items, 'daily_reward');
             
-            // Save transaction for daily reward
-            UserEventTransaction::create([
+            // Save transaction for daily reward using UserEventTransactionActions
+            UserEventTransaction::createTransaction([
                 'user_id' => $userId,
                 'model_type' => \Kennofizet\RewardPlay\Models\SettingDailyReward::class,
                 'model_id' => $todayDailyReward->id,
@@ -122,10 +123,10 @@ class DailyRewardService
         $currentWeeklyStreakDay = $userDailyStatus->consecutive_login_days;
         $stackBonusForStreakDay = $this->settingStackBonusService->getSettingStackBonusByDay($currentWeeklyStreakDay);
         if ($stackBonusForStreakDay && !empty($stackBonusForStreakDay->rewards)) {
-            $this->grantRewards($userId, $stackBonusForStreakDay->rewards);
+            $this->grantRewards($userId, $stackBonusForStreakDay->rewards, 'stack_bonus');
             
-            // Save transaction for stack bonus
-            UserEventTransaction::create([
+            // Save transaction for stack bonus using UserEventTransactionActions
+            UserEventTransaction::createTransaction([
                 'user_id' => $userId,
                 'model_type' => \Kennofizet\RewardPlay\Models\SettingStackBonus::class,
                 'model_id' => $stackBonusForStreakDay->id,
@@ -137,14 +138,14 @@ class DailyRewardService
         $userDailyStatus->save();
     }
 
-    protected function grantRewards($userId, array $rewards)
+    protected function grantRewards($userId, array $rewards, string $rewardSource = 'daily_reward')
     {
         foreach ($rewards as $rewardItem) {
-            $rewardType = $rewardItem['type'] ?? 'item';
+            $rewardType = $rewardItem['type'] ?? HelperConstant::TYPE_GEAR;
 
-            if ($rewardType == 'coin') {
+            if ($rewardType == HelperConstant::TYPE_COIN) {
                 // TODO: Integration with wallet/coins table
-            } elseif ($rewardType == 'item' || isset($rewardItem['item_id'])) {
+            } elseif ($rewardType == HelperConstant::TYPE_GEAR || isset($rewardItem['item_id'])) {
                 // Use new structure: properties.stats and custom_options
                 $bagProperties = [];
                 
@@ -172,9 +173,11 @@ class DailyRewardService
                     $bagProperties['custom_options'] = $rewardItem['custom_stats'];
                 }
                 
-                UserBagItem::create([
+                // Use UserBagItemActions::createBagItem which handles duplicate checking
+                UserBagItem::createBagItem([
                     'user_id' => $userId,
                     'item_id' => $rewardItem['item_id'],
+                    'item_type' => $rewardType, // Set item_type from rewardType
                     'properties' => !empty($bagProperties) ? $bagProperties : null,
                     'quantity' => $rewardItem['quantity'] ?? 1,
                     'acquired_at' => Carbon::now()

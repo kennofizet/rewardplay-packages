@@ -109,11 +109,11 @@ class SettingDailyRewardService
         // Date is already validated by Request class, no need to check again
         $items = $data['items'] ?? [];
         
-        // Process items: add property attribute for items with type == TYPE_ITEM and item_id
+        // Process items: add property attribute for items with type == TYPE_GEAR and item_id
         $processedItems = [];
         foreach ($items as $item) {
             if (isset($item['type']) && 
-                $item['type'] === HelperConstant::TYPE_ITEM && 
+                $item['type'] === HelperConstant::TYPE_GEAR && 
                 !empty($item['item_id'])) {
                 
                 // Fetch the SettingItem to get its default_property and custom_stats

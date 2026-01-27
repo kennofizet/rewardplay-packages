@@ -31,17 +31,11 @@ class UserBagItemModelResponse extends BaseModelResponse
             self::getAvailableModeDefault()
         ])){
             $default_reponse = [
-                'id' => $userBagItem->id,
-                'user_id' => $userBagItem->user_id,
-                'item_id' => $userBagItem->item_id,
                 'quantity' => $userBagItem->quantity,
                 'properties' => $userBagItem->properties ?? [],
                 'acquired_at' => $userBagItem->acquired_at,
                 'item' => $userBagItem->item ? [
-                    'id' => $userBagItem->item->id,
                     'name' => $userBagItem->item->name,
-                    'slug' => $userBagItem->item->slug,
-                    'type' => $userBagItem->item->type,
                     'image' => self::getImageFullUrl($userBagItem->item->image),
                 ] : null
             ];
@@ -52,15 +46,13 @@ class UserBagItemModelResponse extends BaseModelResponse
         ])){
             return [
                 'id' => $userBagItem->id,
-                'item_id' => $userBagItem->item_id,
                 'quantity' => $userBagItem->quantity,
+                'properties' => $userBagItem->properties ?? []
             ];
         }
 
         return [
             'id' => $userBagItem->id,
-            'user_id' => $userBagItem->user_id,
-            'item_id' => $userBagItem->item_id,
             'quantity' => $userBagItem->quantity,
             'properties' => $userBagItem->properties ?? []
         ];

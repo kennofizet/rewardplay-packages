@@ -35,4 +35,15 @@ trait UserEventTransactionActions
         
         return $query->get();
     }
+
+    /**
+     * Create a new user event transaction
+     * 
+     * @param array $data - Transaction data (user_id, zone_id, model_type, model_id, items)
+     * @return UserEventTransaction
+     */
+    public static function createTransaction(array $data): UserEventTransaction
+    {
+        return UserEventTransaction::create($data);
+    }
 }

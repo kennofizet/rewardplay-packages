@@ -12,5 +12,5 @@ class SettingStackBonusConstant
 
     const TYPE_COIN = Constant::TYPE_COIN;
     const TYPE_EXP = Constant::TYPE_EXP;
-    const TYPE_ITEM = Constant::TYPE_ITEM;
+    const TYPE_GEAR = Constant::TYPE_GEAR;
 }

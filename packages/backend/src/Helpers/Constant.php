@@ -51,13 +51,13 @@ class Constant
     // Reward Types
     const TYPE_COIN = 'coin';
     const TYPE_EXP = 'exp';
-    const TYPE_ITEM = 'item'; // item is a setting item
+    const TYPE_GEAR = 'gear'; // gear is a setting item
     const TYPE_TICKET = 'ticket'; // potentially mentioned later or good practice
 
     const REWARD_TYPES = [
         self::TYPE_COIN => 'Coin',
         self::TYPE_EXP => 'Exp',
-        self::TYPE_ITEM => 'Item',
+        self::TYPE_GEAR => 'Gear',
         self::TYPE_TICKET => 'Ticket',
     ];
 }

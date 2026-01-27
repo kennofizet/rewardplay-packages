@@ -3,18 +3,12 @@
 namespace Kennofizet\RewardPlay\Services\Player;
 
 use Kennofizet\RewardPlay\Models\UserBagItem;
-use Kennofizet\RewardPlay\Models\SettingItem;
 
 class BagService
 {
     public function getUserBag(?int $userId = null)
     {
         $userBagItems = UserBagItem::getByUser($userId);
-
-        if ($userBagItems->isEmpty()) {
-            $this->syncDemoData($userId);
-            $userBagItems = UserBagItem::getByUser($userId);
-        }
 
         return $userBagItems;
     }
@@ -31,7 +25,7 @@ class BagService
         ];
 
         foreach ($userBagItems as $bagItem) {
-            $itemType = $bagItem->item->type ?? 'bag';
+            $itemType = $bagItem->item_type;
             $itemCategory = $this->mapTypeToCategory($itemType);
 
             if (isset($categorizedBagItems[$itemCategory])) {
@@ -46,31 +40,12 @@ class BagService
 
     protected function mapTypeToCategory($type)
     {
-        if (in_array($type, ['sword', 'weapon']))
+        if (in_array($type, []))
             return 'sword';
-        if (in_array($type, ['shop', 'premium']))
+        if (in_array($type, ['shop']))
             return 'shop';
         if (in_array($type, ['other', 'material']))
             return 'other';
         return 'bag';
-    }
-
-    public function syncDemoData(?int $userId = null)
-    {
-        $activeSettingItems = SettingItem::getActiveItems();
-
-        if ($activeSettingItems->isEmpty()) {
-            return;
-        }
-
-        foreach ($activeSettingItems->take(5) as $settingItem) {
-            UserBagItem::create([
-                'user_id' => $userId,
-                'item_id' => $settingItem->id,
-                'quantity' => rand(1, 5),
-                'properties' => ['durability' => 100],
-                'acquired_at' => now(),
-            ]);
-        }
     }
 }
