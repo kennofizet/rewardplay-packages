@@ -4,6 +4,7 @@ namespace Kennofizet\RewardPlay\Services\Model;
 
 use Kennofizet\RewardPlay\Models\SettingDailyReward;
 use Kennofizet\RewardPlay\Models\SettingDailyReward\SettingDailyRewardRelationshipSetting;
+use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Services\Model\Traits\BaseModelServiceTrait;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Carbon\Carbon;
@@ -106,10 +107,29 @@ class SettingDailyRewardService
     public function createOrUpdateSettingDailyReward(array $data): SettingDailyReward
     {
         // Date is already validated by Request class, no need to check again
+        $items = $data['items'] ?? [];
+        
+        // Process items: add property attribute for items with type == TYPE_ITEM and item_id
+        $processedItems = [];
+        foreach ($items as $item) {
+            if (isset($item['type']) && 
+                $item['type'] === HelperConstant::TYPE_ITEM && 
+                !empty($item['item_id'])) {
+                
+                // Fetch the SettingItem to get its default_property
+                $settingItem = SettingItem::findById($item['item_id']);
+                if ($settingItem && $settingItem->default_property) {
+                    // Add properties attribute from the item's default_property
+                    $item['properties'] = $settingItem->default_property;
+                }
+            }
+            $processedItems[] = $item;
+        }
+        
         return SettingDailyReward::updateOrCreate(
             ['date' => $data['date']],
             [
-                'items' => $data['items'] ?? [],
+                'items' => $processedItems,
                 'stack_bonuses' => $data['stack_bonuses'] ?? [],
                 'is_epic' => $data['is_epic'] ?? false,
                 'is_active' => $data['is_active'] ?? true,

@@ -137,14 +137,11 @@ const handleCreate = () => {
 }
 
 const handleSuggest = async () => {
-    console.log('handleSuggest called')
     if (loading.value) return // Prevent double-click
     
     loading.value = true
-    console.log('Calling API...')
     try {
         const response = await gameApi.suggestStackBonuses()
-        console.log('API response:', response)
         await loadBonuses()
         alert('Stack bonuses created successfully!')
     } catch (e) {

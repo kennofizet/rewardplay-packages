@@ -86,6 +86,9 @@ const weekDays = computed(() => {
 const rewards = computed(() => {
     if (!state.value || !state.value.seven_days_rewards) return []
 
+    const weeklyStreak = state.value.weekly_streak || 0
+    const sevenDayClaimed = state.value.seven_days_rewards.filter(r => r.claimed).length
+
     // Get 7 days starting from today
     const sevenDays = state.value.seven_days_rewards.slice(0, 7)
     const nextRewardEpic = state.value.next_reward_epic || null
@@ -94,29 +97,30 @@ const rewards = computed(() => {
       sevenDays.push(nextRewardEpic)
     }
     
-    const weeklyStreak = state.value.weekly_streak || 1
     const bonuses = state.value.stack_bonuses || {}
 
     return sevenDays.map((r, index) => {
         const dateDate = new Date(r.date)
         let dayOfMonth = dateDate.getDate() // Actual day of month (1-31)
+        let extraInfo = ''
+
         if(r.isSpecific){
           dayOfMonth = dateDate.getDate() + ' / ' + (dateDate.getMonth()+1)
+        }else{
+          // Mix in stack bonus for this day in cycle
+          const stackBonus = bonuses[weeklyStreak - sevenDayClaimed + index]
+          if (stackBonus) {
+              extraInfo = `+ ${stackBonus.name}`
+          }
         }
+        
         const dayNumInCycle = index + 1
         
-        const isCurrent = dayNumInCycle === weeklyStreak && !r.claimed
+        const isCurrent = (dateDate.toISOString() === new Date().toISOString()) && !r.claimed
         const isCollected = r.claimed
         
         const firstItem = r.items?.[0]
         const type = firstItem?.type || 'item'
-
-        // Mix in stack bonus for this day in cycle
-        const stackBonus = bonuses[dayNumInCycle]
-        let extraInfo = ''
-        if (stackBonus) {
-            extraInfo = `+ ${stackBonus.name}`
-        }
         
         return {
             original_date: r.date,

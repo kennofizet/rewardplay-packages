@@ -65,7 +65,6 @@ const handlePageChange = (page) => {
 
 const handleIconClick = (icon) => {
   // Handle icon clicks (notifications, settings, etc.)
-  console.log('Icon clicked:', icon)
 }
 </script>
 

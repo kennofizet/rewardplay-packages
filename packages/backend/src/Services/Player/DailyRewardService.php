@@ -53,13 +53,9 @@ class DailyRewardService
         $stackBonuses = $this->settingStackBonusService->getSettingStackBonusesByDayRange(1, 7);
         $stackBonusesByDay = $stackBonuses->keyBy('day');
 
-        $todayDateString = Carbon::today()->format('Y-m-d');
-        $currentWeekDayIndex = array_search($todayDateString, $weekDates);
-        $weeklyStreakDay = $currentWeekDayIndex !== false ? $currentWeekDayIndex + 1 : 0;
-
         return [
             'current_streak' => $userDailyStatus->consecutive_login_days,
-            'weekly_streak' => $weeklyStreakDay,
+            'weekly_streak' => $userDailyStatus->consecutive_login_days > sizeof($stackBonusesByDay) ? sizeof($stackBonusesByDay) : $userDailyStatus->consecutive_login_days,
             'is_claimed_today' => $isClaimedToday,
             'stack_bonuses' => $stackBonusesByDay,
             'seven_days_rewards' => $weeklyRewardsWithClaimStatus,
@@ -160,6 +156,7 @@ class DailyRewardService
                 UserBagItem::create([
                     'user_id' => $userId,
                     'item_id' => $rewardItem['item_id'],
+                    'properties' => $rewardItem['properties'] ?? null,
                     'quantity' => $rewardItem['quantity'] ?? 1,
                     'acquired_at' => Carbon::now()
                 ]);

@@ -58,7 +58,6 @@ const remainingPlayers = computed(() => {
 })
 
 const handlePeriodChange = (period) => {
-  console.log('Period changed:', period)
   // Force refresh when period changes
   loadRankingData(true)
 }
