@@ -31,6 +31,9 @@ class StoreSettingItemRequest extends FormRequest
             'description' => 'nullable|string',
             'type' => 'required|string|in:' . $allowedTypesString,
             'default_property' => 'nullable|json',
+            'custom_stats' => 'nullable|json',
+            'custom_stats.*.name' => 'required|string',
+            'custom_stats.*.properties' => 'required|array',
             'image' => 'nullable|file|image|max:2048',
         ];
     }

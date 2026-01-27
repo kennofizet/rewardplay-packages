@@ -80,6 +80,7 @@ class SettingItemService
     {
         // Normalize potential JSON fields
         $data = $this->normalizeDefaultProperty($data);
+        $data = $this->normalizeCustomStats($data);
 
         // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile);
@@ -101,6 +102,7 @@ class SettingItemService
     {
         // Normalize potential JSON fields
         $data = $this->normalizeDefaultProperty($data);
+        $data = $this->normalizeCustomStats($data);
 
         // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile, $id);
@@ -175,6 +177,25 @@ class SettingItemService
             $decoded = json_decode($data['default_property'], true);
             if (is_array($decoded)) {
                 $data['default_property'] = $decoded;
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Normalize custom_stats when it's passed as JSON string from FormData
+     * Extracted to avoid duplicated code in create/update methods.
+     *
+     * @param array $data
+     * @return array
+     */
+    private function normalizeCustomStats(array $data): array
+    {
+        if (isset($data['custom_stats']) && is_string($data['custom_stats'])) {
+            $decoded = json_decode($data['custom_stats'], true);
+            if (is_array($decoded)) {
+                $data['custom_stats'] = $decoded;
             }
         }
 

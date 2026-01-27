@@ -8,7 +8,6 @@ use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Kennofizet\RewardPlay\Repositories\Model\SettingItemSetRepository;
 use Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation\SettingItemSetValidationService;
 use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
-use Kennofizet\RewardPlay\Models\SettingOption;
 use Illuminate\Validation\ValidationException;
 
 class SettingItemSetService
@@ -58,6 +57,9 @@ class SettingItemSetService
      */
     public function createSettingItemSet(array $data, ?array $itemIds = null): SettingItemSet
     {
+        // Normalize potential JSON fields
+        $data = $this->normalizeCustomStats($data);
+
         // Validate data
         $this->validation->validateSettingItemSet($data, $itemIds);
 
@@ -77,6 +79,9 @@ class SettingItemSetService
                 \Illuminate\Support\Facades\Validator::make([], [])->errors()->add('id', 'Setting item set not found')
             );
         }
+
+        // Normalize potential JSON fields
+        $data = $this->normalizeCustomStats($data);
 
         // Validate data
         $this->validation->validateSettingItemSet($data, $itemIds, $id);
@@ -102,68 +107,21 @@ class SettingItemSetService
     }
 
     /**
-     * Build a mapping of stat keys => display names used across given item sets.
-     * Includes both default conversion keys (from HelperConstant::CONVERSION_KEYS)
-     * and custom stat keys (format: custom_key_{id}, resolved via SettingOption, including trashed).
+     * Normalize custom_stats when it's passed as JSON string from FormData
+     * Extracted to avoid duplicated code in create/update methods.
      *
-     * @param iterable|array $itemSets  Collection, array, or paginator of SettingItemSet objects/arrays
-     * @return array  mapping [ stat_key => display_name ]
+     * @param array $data
+     * @return array
      */
-    public function buildStatsMapping($itemSets): array
+    private function normalizeCustomStats(array $data): array
     {
-        $collected = [];
-
-        $collect = function ($data) use (&$collected, &$collect) {
-            if (!is_array($data) && !($data instanceof \ArrayAccess)) return;
-
-            foreach ($data as $k => $v) {
-                if (is_string($k) && $k !== '') {
-                    $collected[$k] = true;
-                }
-                if (is_array($v) || $v instanceof \ArrayAccess) {
-                    $collect($v);
-                }
-            }
-        };
-
-        // Iterate item sets (paginator, collection or array)
-        foreach ($itemSets as $set) {
-            // Support object (model) or array
-            $bonuses = [];
-            if (is_object($set)) {
-                $bonuses = $set->set_bonuses ?? [];
-            } elseif (is_array($set)) {
-                $bonuses = $set['set_bonuses'] ?? [];
-            }
-
-            if (!empty($bonuses)) {
-                $collect($bonuses);
+        if (isset($data['custom_stats']) && is_string($data['custom_stats'])) {
+            $decoded = json_decode($data['custom_stats'], true);
+            if (is_array($decoded)) {
+                $data['custom_stats'] = $decoded;
             }
         }
 
-        $result = [];
-
-        foreach (array_keys($collected) as $statKey) {
-            // Custom keys: custom_key_{id} or custom_key_{id}_n
-            if (str_starts_with($statKey, 'custom_key_')) {
-                if (preg_match('/^custom_key_(\d+)(?:_\d+)?$/', $statKey, $m)) {
-                    $customId = (int)$m[1];
-                    // include trashed custom options
-                    $option = SettingOption::withTrashed()->select('id', 'name')->find($customId);
-                    $result[$statKey] = $option ? $option->name : "Custom #{$customId}";
-                    continue;
-                }
-                // fallback: use raw key
-                $result[$statKey] = $statKey;
-                continue;
-            }
-
-            // Non-custom: strip duplicate suffixes like _2 and map to conversion keys
-            $baseKey = preg_replace('/_\d+$/', '', $statKey);
-            $display = HelperConstant::CONVERSION_KEYS[$baseKey] ?? ucfirst(str_replace('_', ' ', $baseKey));
-            $result[$statKey] = $display;
-        }
-
-        return $result;
+        return $data;
     }
 }

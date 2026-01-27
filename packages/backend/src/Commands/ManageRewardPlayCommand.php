@@ -714,7 +714,8 @@ class ManageRewardPlayCommand extends Command
                     $defaultProperty[$statKey] = (int)($baseValue * $randomFactor);
                 }
 
-                // Add custom options to wing and clothes items
+                // Add custom options to wing and clothes items (using custom_stats format)
+                $customStats = [];
                 if (($type === SettingItemConstant::ITEM_TYPE_WING || $type === SettingItemConstant::ITEM_TYPE_CLOTHES) && !empty($customOptions)) {
                     // Add 1-2 custom options to these item types
                     $numCustom = min(rand(1, 2), count($customOptions));
@@ -726,8 +727,11 @@ class ManageRewardPlayCommand extends Command
                     
                     foreach ($selectedCustomIndices as $idx) {
                         $customOption = $customOptions[$idx];
-                        // Use the rates data from the custom option
-                        $defaultProperty['custom_key_' . $customOption->id] = $customOption->rates;
+                        // Add to custom_stats array with name and properties
+                        $customStats[] = [
+                            'name' => $customOption->name,
+                            'properties' => $customOption->rates,
+                        ];
                     }
                 }
 
@@ -737,6 +741,7 @@ class ManageRewardPlayCommand extends Command
                     'description' => "A {$tier} tier {$typeName} item",
                     'type' => $type,
                     'default_property' => $defaultProperty,
+                    'custom_stats' => !empty($customStats) ? $customStats : null,
                     'image' => $imageUrl,
                     'zone_id' => $this->currentZoneId,
                 ]);
@@ -848,7 +853,7 @@ class ManageRewardPlayCommand extends Command
             }
             $setBonuses['8'] = $bonus8;
 
-            // Full set bonus (use some custom options)
+            // Full set bonus (only regular CONVERSION_KEYS)
             $bonusFull = [];
             $numStatsFull = min(rand(5, 7), count($conversionKeys));
             if ($numStatsFull == 1) {
@@ -861,28 +866,47 @@ class ManageRewardPlayCommand extends Command
                 $bonusFull[$stat] = rand(500, 1000);
             }
             
-            // Add 1-2 custom options to full bonus
+            $setBonuses['full'] = $bonusFull;
+
+            // Add custom_stats for item set (structured by level, same as set_bonuses)
+            $customStats = [];
             if (!empty($customOptions)) {
-                $numCustom = min(2, count($customOptions));
-                if ($numCustom == 1) {
-                    $selectedCustomIndices = [array_rand($customOptions, 1)];
-                } else {
-                    $selectedCustomIndices = (array)array_rand($customOptions, $numCustom);
-                }
-                foreach ($selectedCustomIndices as $idx) {
-                    $customOption = $customOptions[$idx];
-                    // Use the rates data from the custom option
-                    $bonusFull['custom_key_' . $customOption->id] = $customOption->rates;
+                // Add custom stats to some levels (2, 5, 8, full)
+                $levelsToAddCustom = ['2', '5', '8', 'full'];
+                
+                foreach ($levelsToAddCustom as $level) {
+                    // Randomly decide if this level should have custom stats (50% chance)
+                    if (rand(0, 1) === 1) {
+                        $numCustom = min(rand(1, 2), count($customOptions));
+                        if ($numCustom == 1) {
+                            $selectedCustomIndices = [array_rand($customOptions, 1)];
+                        } else {
+                            $selectedCustomIndices = (array)array_rand($customOptions, $numCustom);
+                        }
+                        
+                        $levelCustomStats = [];
+                        foreach ($selectedCustomIndices as $idx) {
+                            $customOption = $customOptions[$idx];
+                            // Add to custom_stats array with name and properties
+                            $levelCustomStats[] = [
+                                'name' => $customOption->name,
+                                'properties' => $customOption->rates,
+                            ];
+                        }
+                        
+                        if (!empty($levelCustomStats)) {
+                            $customStats[$level] = $levelCustomStats;
+                        }
+                    }
                 }
             }
-            
-            $setBonuses['full'] = $bonusFull;
 
             // Create item set
             $set = SettingItemSet::create([
                 'name' => $setName,
                 'description' => "Complete set of {$type} items with progressive bonuses",
                 'set_bonuses' => $setBonuses,
+                'custom_stats' => !empty($customStats) ? $customStats : null,
                 'zone_id' => $this->currentZoneId,
             ]);
 

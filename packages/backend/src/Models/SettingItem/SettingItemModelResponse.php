@@ -37,6 +37,7 @@ class SettingItemModelResponse extends BaseModelResponse
                 'description' => $settingItem->description,
                 'type' => $settingItem->type,
                 'default_property' => $settingItem->default_property,
+                'custom_stats' => $settingItem->custom_stats ?? [],
                 'image' => self::getImageFullUrl($settingItem->image)
             ];
 
@@ -58,6 +59,7 @@ class SettingItemModelResponse extends BaseModelResponse
             'description' => $settingItem->description,
             'type' => $settingItem->type,
             'default_property' => $settingItem->default_property,
+            'custom_stats' => $settingItem->custom_stats ?? [],
             'image' => self::getImageFullUrl($settingItem->image)
         ];
     }

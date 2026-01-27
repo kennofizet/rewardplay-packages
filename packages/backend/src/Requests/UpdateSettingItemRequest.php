@@ -31,8 +31,11 @@ class UpdateSettingItemRequest extends FormRequest
             'description' => 'nullable|string',
             'type' => 'sometimes|required|string|in:' . $allowedTypesString,
             'default_property' => 'nullable|json',
+            'custom_stats' => 'nullable|json',
+            'custom_stats.*.name' => 'required|string',
+            'custom_stats.*.properties' => 'required|array',
             'zone_id' => 'nullable|integer|exists:' . $zonesTableName . ',id',
-            'image' => 'nullable|file|image|max:2048',
+            'image' => 'nullable|file|image|max:2048'
         ];
     }
 }

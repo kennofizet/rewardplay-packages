@@ -45,10 +45,39 @@ class SettingItemValidationService
             throw new ValidationException($validator);
         }
 
-        $validatorStats = $this->statsCustomCheck($data['default_property']);
+        // Validate default_property
+        $defaultProperty = $data['default_property'] ?? [];
+        $validatorStats = $this->statsCustomCheck($defaultProperty, false); // false = don't allow custom_key_*
 
         if(!$validatorStats['success']){
             $validator->errors()->add('default_property', $validatorStats['message']);
+        }
+
+        // Validate custom_stats format: array of {name: string, properties: object}
+        if (isset($data['custom_stats'])) {
+            $customStats = $data['custom_stats'];
+            if (!is_array($customStats)) {
+                $validator->errors()->add('custom_stats', 'Custom stats must be an array');
+            } else {
+                foreach ($customStats as $index => $customStat) {
+                    if (!is_array($customStat)) {
+                        $validator->errors()->add("custom_stats.{$index}", "Custom stat at index {$index} must be an object");
+                        continue;
+                    }
+                    if (empty($customStat['name']) || !is_string($customStat['name'])) {
+                        $validator->errors()->add("custom_stats.{$index}.name", "Custom stat at index {$index} must have a name");
+                    }
+                    if (empty($customStat['properties']) || !is_array($customStat['properties'])) {
+                        $validator->errors()->add("custom_stats.{$index}.properties", "Custom stat at index {$index} must have properties object");
+                    } else {
+                        // Validate properties (rates) - should only contain CONVERSION_KEYS
+                        $propertiesValidator = $this->statsCustomCheck($customStat['properties'], false);
+                        if (!$propertiesValidator['success']) {
+                            $validator->errors()->add("custom_stats.{$index}.properties", $propertiesValidator['message']);
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -46,10 +46,6 @@ class DailyRewardService
             return $dailyReward;
         });
 
-        $weekDates = $weeklyRewards->map(function ($dailyReward) {
-            return Carbon::parse($dailyReward->date)->format('Y-m-d');
-        })->toArray();
-
         $stackBonuses = $this->settingStackBonusService->getSettingStackBonusesByDayRange(1, 7);
         $stackBonusesByDay = $stackBonuses->keyBy('day');
 
@@ -111,11 +107,9 @@ class DailyRewardService
         }
 
         $todayDailyReward = $this->settingDailyRewardService->getSettingDailyRewardByDate(Carbon::today());
-        $allCollectedItems = [];
 
         if ($todayDailyReward && !empty($todayDailyReward->items)) {
             $this->grantRewards($userId, $todayDailyReward->items);
-            $allCollectedItems = array_merge($allCollectedItems, $todayDailyReward->items);
             
             // Save transaction for daily reward
             UserEventTransaction::create([
@@ -130,7 +124,6 @@ class DailyRewardService
         $stackBonusForStreakDay = $this->settingStackBonusService->getSettingStackBonusByDay($currentWeeklyStreakDay);
         if ($stackBonusForStreakDay && !empty($stackBonusForStreakDay->rewards)) {
             $this->grantRewards($userId, $stackBonusForStreakDay->rewards);
-            $allCollectedItems = array_merge($allCollectedItems, $stackBonusForStreakDay->rewards);
             
             // Save transaction for stack bonus
             UserEventTransaction::create([
@@ -153,10 +146,37 @@ class DailyRewardService
             if ($rewardType == 'coin') {
                 // TODO: Integration with wallet/coins table
             } elseif ($rewardType == 'item' || isset($rewardItem['item_id'])) {
+                // Use new structure: properties.stats and custom_options
+                $bagProperties = [];
+                
+                // Get stats from properties.stats
+                if (isset($rewardItem['properties']['stats']) && is_array($rewardItem['properties']['stats'])) {
+                    $bagProperties['stats'] = $rewardItem['properties']['stats'];
+                }
+                
+                // Get custom_options (can be object or array)
+                if (isset($rewardItem['custom_options'])) {
+                    if (isset($rewardItem['custom_options']['name'])) {
+                        // Single object format - convert to array
+                        $bagProperties['custom_options'] = [$rewardItem['custom_options']];
+                    } elseif (is_array($rewardItem['custom_options'])) {
+                        // Array format
+                        $bagProperties['custom_options'] = $rewardItem['custom_options'];
+                    }
+                }
+                
+                // Fallback to old format for backward compatibility
+                if (empty($bagProperties['stats']) && isset($rewardItem['default_property']) && is_array($rewardItem['default_property'])) {
+                    $bagProperties['stats'] = $rewardItem['default_property'];
+                }
+                if (empty($bagProperties['custom_options']) && isset($rewardItem['custom_stats']) && is_array($rewardItem['custom_stats'])) {
+                    $bagProperties['custom_options'] = $rewardItem['custom_stats'];
+                }
+                
                 UserBagItem::create([
                     'user_id' => $userId,
                     'item_id' => $rewardItem['item_id'],
-                    'properties' => $rewardItem['properties'] ?? null,
+                    'properties' => !empty($bagProperties) ? $bagProperties : null,
                     'quantity' => $rewardItem['quantity'] ?? 1,
                     'acquired_at' => Carbon::now()
                 ]);

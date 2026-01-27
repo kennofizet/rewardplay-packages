@@ -37,6 +37,7 @@ class SettingItem extends BaseModel
         'description',
         'type',
         'default_property',
+        'custom_stats',
         'image',
         'zone_id',
     ];
@@ -48,6 +49,7 @@ class SettingItem extends BaseModel
      */
     protected $casts = [
         'default_property' => 'array',
+        'custom_stats' => 'array',
     ];
 
     /**

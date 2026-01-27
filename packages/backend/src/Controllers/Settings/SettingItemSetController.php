@@ -42,13 +42,9 @@ class SettingItemSetController extends Controller
 
         if ($request->expectsJson()) {
             $formattedSettingItemSets = SettingItemSetModelResponse::formatSettingItemSets($settingItemSets, $reponseMode);
-            
-            // Also include stats mapping for frontend translations (stat_key => display_name)
-            $statsMap = $this->settingItemSetService->buildStatsMapping($settingItemSets);
 
             return $this->apiResponseWithContext([
                 'setting_item_sets' => $formattedSettingItemSets,
-                'stats' => $statsMap,
             ]);
         }
 

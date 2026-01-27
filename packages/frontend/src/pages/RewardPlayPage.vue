@@ -49,6 +49,7 @@ import ZoneSelectPage from '../components/game/ZoneSelectPage.vue'
 import { ResourceLoader } from '../utils/resourceLoader'
 import MainGame from '../components/MainGame.vue'
 import { createTranslator } from '../i18n'
+import { loadGlobalStats, loadGlobalTypes, getStatName, getTypeName } from '../utils/globalData'
 
 const props = defineProps({
   // Resource URLs to load
@@ -169,11 +170,17 @@ const handleLoginSuccess = async (payload = {}) => {
    // If single zone, auto-select it
    if (userZones && userZones.length === 1) {
      handleZoneSelect(userZones[0])
+     return // handleZoneSelect will handle loading
    }
 
-   // Start loading resources after zone is set
+   // If no zones or single zone case, load global data and resources
    isLoading.value = true
    await loadUserData()
+   // Load global stats and types before loading resources
+   if (gameApi) {
+     await loadGlobalStats(gameApi)
+     await loadGlobalTypes(gameApi)
+   }
    loadAllResources()
 }
 
@@ -186,6 +193,11 @@ const handleZoneSelect = async (zone) => {
   // Proceed with loading now that zone is selected
   isLoading.value = true
   await loadUserData()
+  // Load global stats and types before loading resources
+  if (gameApi) {
+    await loadGlobalStats(gameApi)
+    await loadGlobalTypes(gameApi)
+  }
   loadAllResources()
 }
 
@@ -346,6 +358,9 @@ const translator = createTranslator(props.language)
 // Provide language and userData to all child components
 provide('language', props.language)
 provide('translator', translator)
+    // Provide wrapper functions that include translator
+    provide('getStatName', (statKey) => getStatName(statKey, translator))
+    provide('getTypeName', (type) => getTypeName(type, translator))
 
 // Provide userData (will be set after getUserData loads)
 const userData = ref(null)

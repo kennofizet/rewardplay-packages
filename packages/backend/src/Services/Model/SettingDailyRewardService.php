@@ -116,11 +116,28 @@ class SettingDailyRewardService
                 $item['type'] === HelperConstant::TYPE_ITEM && 
                 !empty($item['item_id'])) {
                 
-                // Fetch the SettingItem to get its default_property
+                // Fetch the SettingItem to get its default_property and custom_stats
                 $settingItem = SettingItem::findById($item['item_id']);
-                if ($settingItem && $settingItem->default_property) {
-                    // Add properties attribute from the item's default_property
-                    $item['properties'] = $settingItem->default_property;
+                if ($settingItem) {
+                    // Format: properties.stats for default_property, custom_options for custom_stats
+                    $defaultProperty = $settingItem->default_property ?? [];
+                    $customStats = $settingItem->custom_stats ?? [];
+                    
+                    // Structure: properties.stats contains the default stats
+                    $item['properties'] = [
+                        'stats' => $defaultProperty
+                    ];
+                    
+                    // Structure: custom_options - if multiple, use array; if single, use object
+                    if (!empty($customStats) && is_array($customStats)) {
+                        if (count($customStats) === 1) {
+                            // Single custom option - use object format
+                            $item['custom_options'] = $customStats[0];
+                        } else {
+                            // Multiple custom options - use array format
+                            $item['custom_options'] = $customStats;
+                        }
+                    }
                 }
             }
             $processedItems[] = $item;

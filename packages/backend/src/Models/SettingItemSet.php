@@ -33,6 +33,7 @@ class SettingItemSet extends BaseModel
         'name',
         'description',
         'set_bonuses',
+        'custom_stats',
         'zone_id',
     ];
 
@@ -43,5 +44,6 @@ class SettingItemSet extends BaseModel
      */
     protected $casts = [
         'set_bonuses' => 'array',
+        'custom_stats' => 'array',
     ];
 }

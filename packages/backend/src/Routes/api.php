@@ -26,7 +26,6 @@ Route::prefix($prefix)
         require_once __DIR__ . '/setting/setting-options.php';
         require_once __DIR__ . '/setting/setting-item-sets.php';
         require_once __DIR__ . '/setting/zones.php';
-        require_once __DIR__ . '/setting/stats.php';
 
         // New Settings Routes - IMPORTANT: Specific routes MUST come before apiResource
         Route::post('setting-stack-bonuses/suggest', [\Kennofizet\RewardPlay\Controllers\Settings\SettingStackBonusController::class, 'suggest']);
@@ -56,6 +55,9 @@ Route::prefix($prefix)
         Route::get('/player/custom-images', [PlayerController::class, 'getCustomImages']);
         // Get zones the current user can manage (for settings)
         Route::get('/player/managed-zones', [ZoneController::class, 'managed']);
+
+        // Global data endpoints (accessible to both player and manage)
+        require_once __DIR__ . '/setting/stats.php';
 
         // New Player Routes
         Route::get('/player/daily-rewards', [\Kennofizet\RewardPlay\Controllers\Player\DailyRewardController::class, 'index']);

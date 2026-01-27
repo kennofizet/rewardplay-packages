@@ -12,8 +12,9 @@ trait StatsCustomCheckTrait
      * Stats default in CONVERSION_KEYS and custom stats group.
      *
      * @param array|null $stats
+     * @param bool $allowCustomKeys Whether to allow custom_key_{id} format (for backward compatibility with set_bonuses)
      */
-    public function statsCustomCheck(array $stats)
+    public function statsCustomCheck(array $stats, bool $allowCustomKeys = true)
     {
          if (!is_array($stats)) {
             return [
@@ -29,6 +30,14 @@ trait StatsCustomCheckTrait
             $statKeyStr = trim((string)$statKey);
             $isCustom = str_starts_with($statKeyStr, 'custom_key_');
 
+            // If custom keys are not allowed, reject them
+            if ($isCustom && !$allowCustomKeys) {
+                return [
+                    "success" => false,
+                    "message" => "Custom key format '{$statKey}' is not allowed. Use custom_stats array instead."
+                ];
+            }
+
             // For non-custom stats allow duplicates by suffixing (power_2)
             $baseKey = $isCustom ? $statKeyStr : preg_replace('/_\d+$/', '', $statKeyStr);
 
@@ -39,8 +48,8 @@ trait StatsCustomCheckTrait
                 ];
             }
 
-            // Validate custom_key_{setting_option_id}
-            if ($isCustom) {
+            // Validate custom_key_{setting_option_id} (only if allowCustomKeys is true)
+            if ($isCustom && $allowCustomKeys) {
                 // Accept optional duplicate suffix: custom_key_{id} or custom_key_{id}_{n}
                 if (!preg_match('/^custom_key_(\d+)(?:_\d+)?$/', $statKeyStr, $m)) {
                     return [

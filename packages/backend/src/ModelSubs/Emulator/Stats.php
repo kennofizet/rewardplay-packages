@@ -31,29 +31,22 @@ class Stats
     }
 
     /**
-     * Get all stats (merged conversion keys + custom group stats from setting_options)
+     * Get all stats separated into stats and custom_options
      * 
-     * @return array
+     * @return array ['stats' => [...], 'custom_options' => [...]]
      */
     public static function getAllStats(): array
     {
-        // Start with base conversion keys
-        $allStats = self::getConversionKeys();
-        $statsMap = [];
+        // Get base conversion keys as stats
+        $stats = self::getConversionKeys();
         
-        // Build map of existing keys for quick lookup
-        foreach ($allStats as $stat) {
-            $statsMap[$stat['key']] = $stat['name'];
-        }
-        
-        // Get all custom keys from setting_options rates
-        // Use select to only get id, name, and rates columns to optimize query
+        // Get all custom options from setting_options
+        $customOptions = [];
         $settingOptions = SettingOption::select('id', 'name', 'rates')
             ->get();
         
-        // Process each setting_option to extract custom keys
         foreach ($settingOptions as $settingOption) {
-            // Decode rates if it's still a JSON string (cast might not apply with select())
+            // Decode rates if it's still a JSON string
             $rates = $settingOption->rates;
             if (is_string($rates)) {
                 $rates = json_decode($rates, true);
@@ -63,24 +56,17 @@ class Stats
                 continue;
             }
             
-             // Create custom key with format: custom_key_{id}_{original_key}
-             $customKey = "custom_key_{$settingOption->id}";
-                
-             // Skip if this custom key already exists
-             if (isset($statsMap[$customKey])) {
-                 continue;
-             }
-             
-             // Add custom stat entry
-             $allStats[] = [
-                 'key' => $customKey,
-                 'name' => $settingOption->name,
-                 'value' => $rates
-             ];
-             
-             $statsMap[$customKey] = $settingOption->name;
+            // Add custom option entry
+            $customOptions[] = [
+                'id' => $settingOption->id,
+                'name' => $settingOption->name,
+                'properties' => $rates
+            ];
         }
         
-        return $allStats;
+        return [
+            'stats' => $stats,
+            'custom_options' => $customOptions
+        ];
     }
 }

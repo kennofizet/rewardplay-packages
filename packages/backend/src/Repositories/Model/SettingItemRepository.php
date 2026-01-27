@@ -74,6 +74,7 @@ class SettingItemRepository
             'description' => $data['description'] ?? null,
             'type' => $data['type'] ?? '',
             'default_property' => $data['default_property'] ?? null,
+            'custom_stats' => $data['custom_stats'] ?? null,
             'image' => $data['image'] ?? null
         ]);
     }
@@ -108,9 +109,8 @@ class SettingItemRepository
         if (isset($data['type'])) {
             $updateData['type'] = $data['type'];
         }
-        if (isset($data['default_property'])) {
-            $updateData['default_property'] = $data['default_property'];
-        }
+        $updateData['default_property'] = $data['default_property'] ?? null;
+        $updateData['custom_stats'] = $data['custom_stats'] ?? null;
         if (isset($data['image'])) {
             $updateData['image'] = $data['image'];
         }

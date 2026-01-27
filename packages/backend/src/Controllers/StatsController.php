@@ -6,28 +6,12 @@ use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\ModelSubs\Emulator\Stats;
+use Kennofizet\RewardPlay\Models\SettingItem;
 
 class StatsController extends Controller
 {
     /**
-     * Get conversion keys list
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function getConversionKeys(Request $request): JsonResponse
-    {
-        if ($request->expectsJson()) {
-            return $this->apiResponseWithContext([
-                'conversion_keys' => Stats::getConversionKeys(),
-            ]);
-        }
-
-        return $this->apiErrorResponse();
-    }
-
-    /**
-     * Get all stats (merged conversion keys + custom group stats from setting_options)
+     * Get all stats separated into stats and custom_options
      * 
      * @param Request $request
      * @return JsonResponse
@@ -35,8 +19,27 @@ class StatsController extends Controller
     public function getAllStats(Request $request): JsonResponse
     {
         if ($request->expectsJson()) {
+            $allStats = Stats::getAllStats();
             return $this->apiResponseWithContext([
-                'stats' => Stats::getAllStats(),
+                'stats' => $allStats['stats'] ?? [],
+                'custom_options' => $allStats['custom_options'] ?? [],
+            ]);
+        }
+
+        return $this->apiErrorResponse();
+    }
+
+    /**
+     * Get item types list (accessible to both player and manage)
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getTypes(Request $request): JsonResponse
+    {
+        if ($request->expectsJson()) {
+            return $this->apiResponseWithContext([
+                'types' => SettingItem::getItemTypes(),
             ]);
         }
 

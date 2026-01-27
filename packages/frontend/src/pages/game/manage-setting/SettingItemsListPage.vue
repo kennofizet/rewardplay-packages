@@ -51,13 +51,18 @@
             <td>{{ item.id }}</td>
             <td>{{ item.name }}</td>
             <td>{{ item.slug }}</td>
-            <td>{{ item.type }}</td>
+            <td>{{ getTypeName ? getTypeName(item.type) : item.type }}</td>
             <td>
               <img v-if="item.image" :src="item.image" alt="" class="item-image" />
               <span v-else>-</span>
             </td>
             <td>
               <StatMapPreview :value="item.default_property" :max-items="3" />
+              <div v-if="item.custom_stats && item.custom_stats.length > 0" class="custom-stats-preview">
+                <div v-for="(customStat, idx) in item.custom_stats" :key="idx" class="custom-stat-tag">
+                  {{ customStat.name }}
+                </div>
+              </div>
             </td>
             <td>{{ truncateDescription(item.description) }}</td>
             <td class="actions-cell">
@@ -112,36 +117,40 @@
             <textarea v-model="formData.description" rows="3"></textarea>
           </div>
           <div class="form-group">
-            <label>{{ t('page.manageSetting.settingItems.form.defaultProperty') }}</label>
-            <div class="rates-list">
+            <label>{{ t('page.manageSetting.settingItems.form.defaultProperty') || 'Properties' }}</label>
+            <div class="properties-list">
               <div 
-                v-for="(prop, index) in defaultPropertiesList" 
+                v-for="(item, index) in propertiesList" 
                 :key="index"
-                class="rate-item"
+                class="property-item"
               >
-                <CustomSelect
-                  v-model="prop.key"
-                  :options="propertyKeyOptions"
-                  :placeholder="t('page.manageSetting.settingItems.selectKey')"
-                  @change="handlePropertyKeyChange(index)"
-                  trigger-class="rate-key-select"
-                />
-                <input 
-                  v-if="!prop.isCustom"
-                  v-model.number="prop.value"
-                  type="number"
-                  step="0.01"
-                  :placeholder="t('page.manageSetting.settingItems.valuePlaceholder')"
-                  class="rate-value-input"
-                />
-                <div 
-                  v-else-if="prop.isCustom"
-                  class="property-custom-value"
-                  :title="getPresetValuesTooltip(prop.key)"
-                >
-                  <span class="custom-value-label">{{ t('page.manageSetting.settingItems.presetValues') }}</span>
-                  <span class="custom-value-count">{{ getPresetValuesCount(prop.key) }} {{ t('page.manageSetting.settingItems.stats') }}</span>
-                </div>
+                <template v-if="item.type === 'custom_option' && item.name">
+                  <!-- Show display component for custom options (snapshot, doesn't depend on customOptions list) -->
+                  <CustomOptionDisplay
+                    :name="item.name"
+                    :properties="item.properties || {}"
+                    :stats-label="t('page.manageSetting.settingItems.stats')"
+                    class="property-display"
+                  />
+                </template>
+                <template v-else>
+                  <!-- Show selector for stats or when nothing selected yet -->
+                  <CustomSelect
+                    v-model="item.selectedValue"
+                    :options="propertyOptions"
+                    :placeholder="t('page.manageSetting.settingItems.selectKey') || 'Select Stat or Custom Option'"
+                    @change="handlePropertyChange(index)"
+                    trigger-class="property-select"
+                  />
+                  <input 
+                    v-if="item.type === 'stat' && item.selectedValue"
+                    v-model.number="item.value"
+                    type="number"
+                    step="0.01"
+                    :placeholder="t('page.manageSetting.settingItems.valuePlaceholder')"
+                    class="rate-value-input"
+                  />
+                </template>
                 <button 
                   type="button"
                   class="btn-remove-rate"
@@ -157,7 +166,7 @@
                 @click="addProperty"
               >
                 <span class="btn-add-icon">+</span>
-                <span>{{ t('page.manageSetting.settingItems.addOption') }}</span>
+                <span>{{ t('page.manageSetting.settingItems.addProperty') }}</span>
               </button>
             </div>
           </div>
@@ -194,24 +203,28 @@
 import { ref, onMounted, inject, computed, watch } from 'vue'
 import CustomSelect from '../../../components/CustomSelect.vue'
 import StatMapPreview from '../../../components/StatMapPreview.vue'
+import CustomOptionDisplay from '../../../components/CustomOptionDisplay.vue'
+import { getGlobalStats, getGlobalTypes, isStatsDataLoaded, isTypesDataLoaded } from '../../../utils/globalData'
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 const statHelpers = inject('statHelpers', null)
+const getTypeName = inject('getTypeName', null)
 const loading = ref(false)
 const loadingTypes = ref(false)
 const loadingKeys = ref(false)
 const error = ref(null)
 const settingItems = ref([])
-const conversionKeys = ref([])
+const stats = ref([])
+const customOptions = ref([])
 const itemTypes = ref([])
 const pagination = ref(null)
 const showModal = ref(false)
 const editingItem = ref(null)
 const saveLoading = ref(false)
 const saveFailed = ref(false)
-const defaultPropertiesList = ref([])
+const propertiesList = ref([])
 const selectedImageFile = ref(null)
 
 const typeOptions = computed(() => {
@@ -229,66 +242,113 @@ const typeOptionsWithEmpty = computed(() => {
   ]
 })
 
-const propertyKeyOptions = computed(() => {
-  const options = conversionKeys.value.map(stat => {
-    if (stat.value !== undefined) {
-      return {
-        value: stat.key,
-        label: stat.name,
-        isCustom: true,
-        customValue: stat.value
-      }
-    }
-    return {
+// Unified selector options: combines stats and custom_options
+const propertyOptions = computed(() => {
+  const options = []
+  
+  // Add regular stats
+  stats.value.forEach(stat => {
+    options.push({
       value: stat.key,
       label: `${stat.name} (${stat.key})`,
+      type: 'stat',
       isCustom: false
-    }
+    })
   })
+  
+  // Add custom options
+  customOptions.value.forEach(customOption => {
+    options.push({
+      value: customOption.id,
+      label: customOption.name,
+      type: 'custom_option',
+      isCustom: true,
+      properties: customOption.properties
+    })
+  })
+  
   return options
 })
 
-const isCustomStat = (key) => statHelpers ? statHelpers.isCustomStat(conversionKeys.value, key) : false
-const getCustomStatValue = (key) => statHelpers ? statHelpers.getCustomStatValue(conversionKeys.value, key) : null
-const getPresetValuesCount = (key) => statHelpers ? statHelpers.getPresetValuesCount(conversionKeys.value, key) : 0
-const getPresetValuesTooltip = (key) => {
-  const result = statHelpers ? statHelpers.getPresetValuesTooltip(conversionKeys.value, key) : null
-  if (result && result !== 'Preset Values (no value set)') {
-    return result
+
+const syncPropertiesToList = () => {
+  propertiesList.value = []
+  
+  // Add stats from default_property
+  const defaultProperty = formData.value.default_property || {}
+  if (statHelpers) {
+    const statsList = statHelpers.mapToList(defaultProperty, stats.value, { customPrefix: '' })
+    statsList.forEach(prop => {
+      if (prop.key) {
+        propertiesList.value.push({
+          selectedValue: prop.key,
+          type: 'stat',
+          key: prop.key,
+          value: prop.value,
+          name: null,
+          properties: {}
+        })
+      }
+    })
   }
-  return t('page.manageSetting.settingItems.presetValuesNoValue')
+  
+  // Add custom options from custom_stats
+  // Show them even if they don't exist in customOptions (deleted/renamed)
+  const customStats = formData.value.custom_stats || []
+  customStats.forEach(cs => {
+    // Try to find matching option, but use stored data if not found
+    const matchingOption = customOptions.value.find(opt => opt.name === cs.name)
+    // Use stored name and properties from custom_stats (snapshot), not from customOptions
+    propertiesList.value.push({
+      selectedValue: matchingOption ? matchingOption.id : `custom_${cs.name}`, // Use ID if exists, otherwise use name-based identifier
+      type: 'custom_option',
+      key: null,
+      value: null,
+      name: cs.name, // Use stored name
+      properties: cs.properties || {} // Use stored properties (snapshot)
+    })
+  })
 }
 
-const syncDefaultPropertiesToList = () => {
-  // Convert default_property map into editable list items
-  defaultPropertiesList.value = statHelpers ? statHelpers.mapToList(formData.value.default_property, conversionKeys.value, { customPrefix: 'custom_key_' }) : []
-}
-
-const handlePropertyKeyChange = (index) => {
-  const prop = defaultPropertiesList.value[index]
-  if (!prop) return
-  const customStatValue = getCustomStatValue(prop.key)
-  const isCustomKeyPrefix = prop.key && prop.key.startsWith('custom_key_')
-
-  if (customStatValue !== null || isCustomKeyPrefix) {
-    prop.isCustom = true
-    prop.value = customStatValue
-  } else {
-    prop.isCustom = false
-    if (prop.value === null || prop.value === undefined) prop.value = null
-  }
-}
 
 const addProperty = () => {
-  defaultPropertiesList.value.push({
-    key: '',
-    value: null,
-    isCustom: false
+  propertiesList.value.push({
+    selectedValue: null,
+    type: null, // 'stat' or 'custom_option'
+    key: null, // for stats
+    value: null, // for stats
+    name: null, // for custom options
+    properties: {} // for custom options
   })
 }
 
 const removeProperty = (index) => {
-  defaultPropertiesList.value.splice(index, 1)
+  propertiesList.value.splice(index, 1)
+}
+
+const handlePropertyChange = (index) => {
+  const item = propertiesList.value[index]
+  if (!item || !item.selectedValue) return
+  
+  // Find the selected option in unified list
+  const selected = propertyOptions.value.find(opt => opt.value === item.selectedValue)
+  if (!selected) return
+  
+  if (selected.type === 'stat') {
+    // It's a regular stat
+    item.type = 'stat'
+    item.key = selected.value
+    item.value = null
+    item.name = null
+    item.properties = {}
+  } else if (selected.type === 'custom_option') {
+    // It's a custom option
+    item.type = 'custom_option'
+    item.name = selected.label
+    item.properties = selected.properties || {}
+    item.key = null
+    item.value = null
+  }
 }
 
 const filters = ref({
@@ -303,6 +363,7 @@ const formData = ref({
   description: '',
   type: '',
   default_property: {},
+  custom_stats: [],
   image_preview: null
 })
 
@@ -365,9 +426,10 @@ const handleCreate = () => {
     description: '',
     type: '',
     default_property: {},
+    custom_stats: [],
     image_preview: null
   }
-  defaultPropertiesList.value = []
+  propertiesList.value = []
   showModal.value = true
 }
 
@@ -381,13 +443,14 @@ const handleEdit = async (item) => {
     description: item.description || '',
     type: item.type || '',
     default_property: item.default_property ? { ...item.default_property } : {},
+    custom_stats: item.custom_stats ? [...item.custom_stats] : [],
     image_preview: null
   }
-  // Ensure stats are loaded before syncing properties (needed for custom stats)
-  if (conversionKeys.value.length === 0) {
+  // Ensure stats are loaded before syncing properties
+  if (stats.value.length === 0) {
     await loadStats()
   }
-  syncDefaultPropertiesToList()
+  syncPropertiesToList()
   showModal.value = true
 }
 
@@ -403,48 +466,66 @@ const handleImageChange = (event) => {
   }
 }
 
-const loadItemTypes = async () => {
-  if (!gameApi) {
-    return
-  }
-
-  loadingTypes.value = true
-  try {
-    const response = await gameApi.getItemTypes()
-    if (response.data && response.data.datas && response.data.datas.item_types) {
-      itemTypes.value = response.data.datas.item_types
-    }
-  } catch (err) {
-    console.error('Error loading item types:', err)
-  } finally {
+const loadItemTypes = () => {
+  // Use global types data
+  if (isTypesDataLoaded()) {
+    itemTypes.value = getGlobalTypes()
     loadingTypes.value = false
+  } else {
+    loadingTypes.value = true
+    // Wait a bit for global data to load
+    const checkInterval = setInterval(() => {
+      if (isTypesDataLoaded()) {
+        itemTypes.value = getGlobalTypes()
+        loadingTypes.value = false
+        clearInterval(checkInterval)
+      }
+    }, 100)
+    setTimeout(() => {
+      clearInterval(checkInterval)
+      if (loadingTypes.value) {
+        loadingTypes.value = false
+      }
+    }, 5000)
   }
 }
 
-const loadStats = async () => {
-  if (!gameApi) {
-    return
-  }
-
-  loadingKeys.value = true
-  try {
-    const response = await gameApi.getAllStats()
-    if (response.data && response.data.datas && response.data.datas.stats) {
-      conversionKeys.value = response.data.datas.stats
-    }
-  } catch (err) {
-    console.error('Error loading stats:', err)
-  } finally {
+const loadStats = () => {
+  // Use global stats data
+  if (isStatsDataLoaded()) {
+    const globalData = getGlobalStats()
+    stats.value = globalData.stats || []
+    customOptions.value = globalData.custom_options || []
     loadingKeys.value = false
+  } else {
+    loadingKeys.value = true
+    // Wait a bit for global data to load
+    const checkInterval = setInterval(() => {
+      if (isStatsDataLoaded()) {
+        const globalData = getGlobalStats()
+        stats.value = globalData.stats || []
+        customOptions.value = globalData.custom_options || []
+        loadingKeys.value = false
+        clearInterval(checkInterval)
+      }
+    }, 100)
+    setTimeout(() => {
+      clearInterval(checkInterval)
+      if (loadingKeys.value) {
+        loadingKeys.value = false
+      }
+    }, 5000)
   }
 }
 
-// Watch conversionKeys to update custom stat selections when stats load
-watch(() => conversionKeys.value.length, (newLength, oldLength) => {
+// Watch stats and customOptions to update selections when they load
+watch([() => stats.value.length, () => customOptions.value.length], ([statsLength, customLength], [oldStatsLength, oldCustomLength]) => {
   // Only trigger if stats were just loaded (length changed from 0 to > 0)
-  if (newLength > 0 && oldLength === 0 && editingItem.value && formData.value.default_property) {
-    // Re-sync properties to update custom stat flags
-    syncDefaultPropertiesToList()
+  if ((statsLength > 0 && oldStatsLength === 0) || (customLength > 0 && oldCustomLength === 0)) {
+    if (editingItem.value) {
+      // Re-sync properties
+      syncPropertiesToList()
+    }
   }
 })
 
@@ -470,50 +551,41 @@ const handleSave = async () => {
   error.value = null
 
   try {
-    // Build default_property from list (allow duplicate keys by suffixing)
+    // Build default_property and custom_stats from unified properties list
     const defaultPropertyClean = {}
+    const customStatsClean = []
     const keyCounters = {}
     
-    defaultPropertiesList.value.forEach(prop => {
-      // Only include properties that have a key
-      if (!prop.key) {
-        return
-      }
-      
-      // Skip if value is invalid (null, undefined, or empty string)
-      if (prop.value === null || prop.value === undefined || prop.value === '') {
-        return
-      }
-      
-      // For custom stats, ensure the key exists in conversionKeys and use exact format
-      let keyToUse = prop.key
-      if (prop.isCustom && keyToUse.startsWith('custom_key_')) {
-        // Verify the key exists in conversionKeys to ensure we use the correct format
-        const matchingStat = conversionKeys.value.find(s => s.key === keyToUse)
-        if (matchingStat) {
-          // Use the exact key from conversionKeys
-          keyToUse = matchingStat.key
+    propertiesList.value.forEach(item => {
+      if (item.type === 'stat' && item.key) {
+        // Regular stat - add to default_property
+        if (item.value === null || item.value === undefined || item.value === '') {
+          return
         }
-        // If not found in conversionKeys, still use the key as-is (might be manually entered custom key)
-      }
-      
-      // Track key usage to allow duplicates by suffixing
-      if (!keyCounters[keyToUse]) {
-        keyCounters[keyToUse] = 0
-      }
-      keyCounters[keyToUse]++
-      const uniqueKey = keyCounters[keyToUse] === 1 ? keyToUse : `${keyToUse}_${keyCounters[keyToUse]}`
-      
-      if (prop.isCustom && keyToUse.startsWith('custom_key_')) {
-        defaultPropertyClean[uniqueKey] = prop.value
-      }else{
-        // Parse value as number (both custom and regular stats use numeric values for items)
-        const numValue = typeof prop.value === 'number' ? prop.value : parseFloat(prop.value)
+        
+        let keyToUse = item.key
+        
+        // Track key usage to allow duplicates by suffixing
+        if (!keyCounters[keyToUse]) {
+          keyCounters[keyToUse] = 0
+        }
+        keyCounters[keyToUse]++
+        const uniqueKey = keyCounters[keyToUse] === 1 ? keyToUse : `${keyToUse}_${keyCounters[keyToUse]}`
+        
+        // Parse value as number
+        const numValue = typeof item.value === 'number' ? item.value : parseFloat(item.value)
         
         // Only add if the value is a valid number
         if (!isNaN(numValue) && isFinite(numValue)) {
           defaultPropertyClean[uniqueKey] = numValue
         }
+      } else if (item.type === 'custom_option' && item.name && item.properties && Object.keys(item.properties).length > 0) {
+        // Custom option - use stored snapshot (name and properties), not look up by ID
+        // This ensures deleted/renamed options still save correctly
+        customStatsClean.push({
+          name: item.name, // Use stored name
+          properties: item.properties // Use stored properties
+        })
       }
     })
 
@@ -524,6 +596,10 @@ const handleSave = async () => {
 
     if (Object.keys(defaultPropertyClean).length > 0) {
       formDataToSend.append('default_property', JSON.stringify(defaultPropertyClean))
+    }
+    
+    if (customStatsClean.length > 0) {
+      formDataToSend.append('custom_stats', JSON.stringify(customStatsClean))
     }
 
     // Add image file if selected
@@ -591,7 +667,7 @@ const closeModal = () => {
     default_property: {},
     image_preview: null
   }
-  defaultPropertiesList.value = []
+  propertiesList.value = []
 }
 
 const truncateDescription = (description) => {
@@ -1004,5 +1080,50 @@ onMounted(() => {
   gap: 10px;
   padding: 20px;
   border-top: 1px solid #253344;
+}
+
+.custom-stats-preview {
+  margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.custom-stat-tag {
+  background: #1a2332;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.75em;
+  color: #f6a901;
+}
+
+.custom-stats-list {
+  margin-top: 10px;
+}
+
+.custom-stat-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.custom-option-select {
+  flex: 1;
+}
+
+.properties-list {
+  margin-top: 10px;
+}
+
+.property-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.property-select {
+  flex: 1;
 }
 </style>

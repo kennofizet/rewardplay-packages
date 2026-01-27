@@ -130,23 +130,6 @@ class SettingItemController extends Controller
     }
 
     /**
-     * Get item types list
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function getItemTypes(Request $request): JsonResponse
-    {
-        if ($request->expectsJson()) {
-            return $this->apiResponseWithContext([
-                'item_types' => SettingItem::getItemTypes(),
-            ]);
-        }
-
-        return $this->apiErrorResponse();
-    }
-
-    /**
      * Get items for a current user zone (for selecting items in set)
      * 
      * @param Request $request

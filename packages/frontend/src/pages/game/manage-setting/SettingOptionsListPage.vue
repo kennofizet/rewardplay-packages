@@ -143,6 +143,7 @@
 import { ref, onMounted, inject, computed, watch } from 'vue'
 import CustomSelect from '../../../components/CustomSelect.vue'
 import StatMapPreview from '../../../components/StatMapPreview.vue'
+import { getGlobalStats, isStatsDataLoaded, reloadGlobalStats } from '../../../utils/globalData'
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
@@ -211,17 +212,6 @@ const syncRatesFromList = () => {
 
 const syncRatesToList = () => {
   ratesList.value = statHelpers ? statHelpers.mapToList(formData.value.rates, conversionKeys.value, { customPrefix: 'custom_key_' }) : []
-}
-
-// Watch rates changes and sync to JSON
-const watchRates = () => {
-  // Initialize rates object with all conversion keys
-  conversionKeys.value.forEach(key => {
-    if (!(key.key in formData.value.rates)) {
-      formData.value.rates[key.key] = null
-    }
-  })
-  syncRatesToJson()
 }
 
 const loadSettingOptions = async () => {
@@ -299,21 +289,30 @@ const handleEdit = (option) => {
   showModal.value = true
 }
 
-const loadConversionKeys = async () => {
-  if (!gameApi) {
-    return
-  }
-
-  loadingKeys.value = true
-  try {
-    const response = await gameApi.getConversionKeys()
-    if (response.data && response.data.datas && response.data.datas.conversion_keys) {
-      conversionKeys.value = response.data.datas.conversion_keys
-    }
-  } catch (err) {
-    console.error('Error loading conversion keys:', err)
-  } finally {
+const loadConversionKeys = () => {
+  // Use global stats data (conversion keys are the stats)
+  if (isStatsDataLoaded()) {
+    const globalData = getGlobalStats()
+    // Convert stats array to conversion keys format (array of {key, name})
+    conversionKeys.value = globalData.stats || []
     loadingKeys.value = false
+  } else {
+    loadingKeys.value = true
+    // Wait a bit for global data to load
+    const checkInterval = setInterval(() => {
+      if (isStatsDataLoaded()) {
+        const globalData = getGlobalStats()
+        conversionKeys.value = globalData.stats || []
+        loadingKeys.value = false
+        clearInterval(checkInterval)
+      }
+    }, 100)
+    setTimeout(() => {
+      clearInterval(checkInterval)
+      if (loadingKeys.value) {
+        loadingKeys.value = false
+      }
+    }, 5000)
   }
 }
 
@@ -355,6 +354,13 @@ const handleSave = async () => {
       await gameApi.createSettingOption(data)
     }
     
+    // Reload global stats after create/update (custom options changed)
+    if (gameApi) {
+      await reloadGlobalStats(gameApi)
+      // Update local conversion keys
+      loadConversionKeys()
+    }
+    
     saveLoading.value = false
     saveFailed.value = false
     closeModal()
@@ -387,6 +393,14 @@ const handleDelete = async (option) => {
 
   try {
     await gameApi.deleteSettingOption(option.id)
+    
+    // Reload global stats after delete (custom options changed)
+    if (gameApi) {
+      await reloadGlobalStats(gameApi)
+      // Update local conversion keys
+      loadConversionKeys()
+    }
+    
     loadSettingOptions()
   } catch (err) {
     error.value = err.response?.data?.message || err.message || 'Failed to delete setting option'

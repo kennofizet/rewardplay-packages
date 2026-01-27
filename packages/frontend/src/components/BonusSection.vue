@@ -7,29 +7,33 @@
         :key="index"
         class="bonus-item"
       >
-        <CustomSelect
-          v-model="bonus.key"
-          :options="bonusKeyOptions"
-          :placeholder="selectKeyPlaceholder"
-          @change="handleKeyChange(index)"
-          trigger-class="bonus-key-select"
-        />
-        <input 
-          v-if="bonus.key && !bonus.isCustom"
-          v-model.number="bonus.value"
-          type="number"
-          step="0.01"
-          :placeholder="valuePlaceholder"
-          class="bonus-value-input"
-        />
-        <div 
-          v-else-if="bonus.key && bonus.isCustom"
-          class="bonus-custom-value"
-          :title="JSON.stringify(bonus.value, null, 2)"
-        >
-          <span class="custom-value-label">{{ t('page.manageSetting.settingItems.presetValues') }}</span>
-          <span class="custom-value-count">{{ Object.keys(bonus.value || {}).length }} {{ t('page.manageSetting.settingItems.stats') }}</span>
-        </div>
+        <template v-if="bonus.type === 'custom_option' && bonus.name">
+          <!-- Show display component for custom options (snapshot) -->
+          <CustomOptionDisplay
+            :name="bonus.name"
+            :properties="bonus.properties || {}"
+            :stats-label="t('page.manageSetting.settingItems.stats')"
+            class="bonus-custom-display"
+          />
+        </template>
+        <template v-else>
+          <!-- Show unified selector for stats or when nothing selected yet -->
+          <CustomSelect
+            v-model="bonus.selectedValue"
+            :options="unifiedOptions"
+            :placeholder="selectKeyPlaceholder"
+            @change="handleKeyChange(index)"
+            trigger-class="bonus-key-select"
+          />
+          <input 
+            v-if="bonus.type === 'stat' && bonus.selectedValue"
+            v-model.number="bonus.value"
+            type="number"
+            step="0.01"
+            :placeholder="valuePlaceholder"
+            class="bonus-value-input"
+          />
+        </template>
         <button 
           type="button"
           class="btn-remove-bonus"
@@ -52,8 +56,9 @@
 </template>
 
 <script setup>
-import { inject } from 'vue'
+import { inject, computed } from 'vue'
 import CustomSelect from './CustomSelect.vue'
+import CustomOptionDisplay from './CustomOptionDisplay.vue'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
@@ -70,6 +75,10 @@ const props = defineProps({
   bonusKeyOptions: {
     type: Array,
     required: true
+  },
+  customOptionOptions: {
+    type: Array,
+    default: () => []
   },
   selectKeyPlaceholder: {
     type: String,
@@ -90,6 +99,34 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['add', 'remove', 'key-change'])
+
+// Unified options combining stats and custom options
+const unifiedOptions = computed(() => {
+  const options = []
+  
+  // Add regular stats
+  props.bonusKeyOptions.forEach(stat => {
+    options.push({
+      value: stat.value,
+      label: stat.label,
+      type: 'stat',
+      isCustom: false
+    })
+  })
+  
+  // Add custom options
+  props.customOptionOptions.forEach(customOption => {
+    options.push({
+      value: customOption.value,
+      label: customOption.label,
+      type: 'custom_option',
+      isCustom: true,
+      properties: customOption.properties
+    })
+  })
+  
+  return options
+})
 
 const handleAdd = () => {
   emit('add')
@@ -211,5 +248,9 @@ const handleKeyChange = (index) => {
   font-size: 18px;
   font-weight: bold;
   line-height: 1;
+}
+
+.bonus-custom-display {
+  flex: 1;
 }
 </style>

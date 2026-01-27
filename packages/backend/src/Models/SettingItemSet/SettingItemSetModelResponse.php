@@ -35,6 +35,7 @@ class SettingItemSetModelResponse extends BaseModelResponse
                 'name' => $settingItemSet->name,
                 'description' => $settingItemSet->description,
                 'set_bonuses' => $settingItemSet->set_bonuses,
+                'custom_stats' => $settingItemSet->custom_stats ?? [],
                 'items' => $settingItemSet->items ? $settingItemSet->items->map(function($item) {
                     return [
                         'id' => $item->id,
@@ -60,7 +61,8 @@ class SettingItemSetModelResponse extends BaseModelResponse
             'id' => $settingItemSet->id,
             'name' => $settingItemSet->name,
             'description' => $settingItemSet->description,
-            'set_bonuses' => $settingItemSet->set_bonuses
+            'set_bonuses' => $settingItemSet->set_bonuses,
+            'custom_stats' => $settingItemSet->custom_stats ?? []
         ];
     }
 

@@ -35,7 +35,7 @@
                 <img :src="getImageUrl('character.hero')" alt="Hero">
               </div>
               <!-- Item Detail Panel (absolute positioned, appears next to character) -->
-              <div v-if="selectedItem && selectedItem.property" class="item-detail-panel">
+              <div v-if="selectedItem && selectedItem.properties" class="item-detail-panel">
                 <button class="item-detail-close" @click="closeItemDetail">×</button>
                 <div class="item-detail-header">
                   <img 
@@ -52,14 +52,48 @@
                 <div class="item-detail-body">
                   <h4 class="item-detail-properties-title">{{ t('component.bag.itemDetail.properties') }}</h4>
                   <div class="item-detail-properties">
-                    <div 
-                      v-for="(value, key) in selectedItem.property" 
-                      :key="key"
-                      class="item-detail-property"
-                    >
-                      <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
-                      <span class="item-detail-property-value">{{ value }}</span>
-                    </div>
+                    <!-- Display stats from properties.stats -->
+                    <template v-if="selectedItem.properties && selectedItem.properties.stats">
+                      <div 
+                        v-for="(value, key) in selectedItem.properties.stats" 
+                        :key="'stat-' + key"
+                        class="item-detail-property"
+                      >
+                        <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
+                        <span class="item-detail-property-value">{{ value }}</span>
+                      </div>
+                    </template>
+                    <!-- Display custom options from properties.custom_options -->
+                    <template v-if="selectedItem.properties && selectedItem.properties.custom_options">
+                      <div 
+                        v-for="(customOption, index) in (Array.isArray(selectedItem.properties.custom_options) ? selectedItem.properties.custom_options : [selectedItem.properties.custom_options])" 
+                        :key="'custom-' + index"
+                        class="item-detail-property custom-option"
+                      >
+                        <span class="item-detail-property-key">{{ customOption.name || 'Custom Option' }}:</span>
+                        <div class="custom-option-properties">
+                          <div 
+                            v-for="(value, key) in customOption.properties" 
+                            :key="key"
+                            class="custom-option-stat"
+                          >
+                            <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
+                            <span class="item-detail-property-value">{{ value }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                    <!-- Fallback: display flat properties (for old format) -->
+                    <template v-if="selectedItem.properties && !selectedItem.properties.stats && !selectedItem.properties.custom_options">
+                      <div 
+                        v-for="(value, key) in selectedItem.properties" 
+                        :key="key"
+                        class="item-detail-property"
+                      >
+                        <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
+                        <span class="item-detail-property-value">{{ typeof value === 'object' ? JSON.stringify(value) : value }}</span>
+                      </div>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -155,8 +189,10 @@ import { ref, inject, computed, unref, onMounted, watch } from 'vue'
 const gameApi = inject('gameApi')
 import ItemBox from '../../components/game/ItemBox.vue'
 import { getFileImageUrl } from '../../utils/imageResolverRuntime'
+import { getStatName } from '../../utils/globalData'
 const translator = inject('translator', null)
 const userData = inject('userData', null)
+const getStatNameFunc = inject('getStatName', getStatName)
 const t = translator || ((key) => key)
 
 // Fake data for game items
@@ -239,7 +275,7 @@ const initializeBagItems = () => {
           id: item.id,
           item_id: item.item_id || item.id,
           quantity: item.quantity,
-          property: item.property || {},
+          properties: item.properties || {},
           key_image: itemDetail.key_image,
           name: itemDetail.name,
         }
@@ -358,11 +394,8 @@ const filterBag = (type) => {
 }
 
 const formatPropertyKey = (key) => {
-  // Format property keys: crit_dmg -> Crit Dmg, crit -> Crit
-  return key
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+  // Use global getStatName function for default stats
+  return getStatNameFunc(key)
 }
 
 const formatPower = (power) => {
@@ -843,6 +876,28 @@ const formatPower = (power) => {
   align-items: center;
   padding: 8px 12px;
   background: rgba(240, 240, 240, 0.8);
+}
+
+.item-detail-property.custom-option {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.custom-option-properties {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding-left: 12px;
+}
+
+.custom-option-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(220, 220, 220, 0.6);
   border-radius: 6px;
   border: 1px solid rgba(105, 105, 105, 0.2);
   transition: all 0.2s ease;

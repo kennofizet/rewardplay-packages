@@ -70,7 +70,6 @@ export function createGameApi(backendUrl, token) {
 
     // Setting Items CRUD
     getSettingItems: (params) => api.get('/api/rewardplay/setting-items', { params }),
-    getItemTypes: () => api.get('/api/rewardplay/setting-items/types'),
     createSettingItem: (data) => {
       // If data is FormData, use multipart/form-data, otherwise use JSON
       if (data instanceof FormData) {
@@ -105,9 +104,9 @@ export function createGameApi(backendUrl, token) {
     updateSettingOption: (id, data) => api.put(`/api/rewardplay/setting-options/${id}`, data),
     deleteSettingOption: (id) => api.delete(`/api/rewardplay/setting-options/${id}`),
 
-    // Stats
-    getConversionKeys: () => api.get('/api/rewardplay/stats/conversion-keys'),
+    // Global data (accessible to both player and manage)
     getAllStats: () => api.get('/api/rewardplay/stats/all'),
+    getTypes: () => api.get('/api/rewardplay/types'),
     getRewardTypes: (mode) => api.get('/api/rewardplay/stats/reward-types', { params: { mode } }),
 
     // Setting Item Sets CRUD
