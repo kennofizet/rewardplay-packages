@@ -387,6 +387,8 @@ export default {
       buffTop1: 'tăng cường top 1: 10% xu',
       buffCheckin: 'Tăng Cường Checkin:',
       power: 'Sức Mạnh',
+      level: 'Lv',
+      exp: 'EXP',
       sword: 'Kiếm',
       hat: 'Mũ',
       shirt: 'Áo',

@@ -385,6 +385,8 @@ export default {
       buffTop1: 'buff top 1: 10% coin',
       buffCheckin: 'Buff Checkin:',
       power: 'Power',
+      level: 'Lv',
+      exp: 'EXP',
       sword: 'Sword',
       hat: 'Hat',
       shirt: 'Shirt',

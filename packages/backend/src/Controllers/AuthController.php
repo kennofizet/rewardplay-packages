@@ -73,25 +73,11 @@ class AuthController extends Controller
             return $this->apiErrorResponse('User not authenticated', 401);
         }
 
-        // Demo user data - load from config so it's easier to replace or override
-        $itemDetails = config('rewardplay-demo.item_details', []);
-        $bagItems = config('rewardplay-demo.bag_items', []);
-        $swordItems = config('rewardplay-demo.sword_items', []);
-        $otherItems = config('rewardplay-demo.other_items', []);
-        $shopItems = config('rewardplay-demo.shop_items', []);
-
         return $this->apiResponseWithContext([
             'coin' => 1000000,
             'box_coin' => 100,
             'ruby' => 1000,
-            'power' => 125000,
-            'user_bag' => [
-                'bag' => $bagItems,
-                'sword' => $swordItems,
-                'other' => $otherItems,
-                'shop' => $shopItems,
-            ],
-            'item_detail' => $itemDetails,
+            'power' => 125000
         ]);
     }
 }

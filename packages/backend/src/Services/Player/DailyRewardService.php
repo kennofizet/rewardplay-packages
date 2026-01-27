@@ -5,8 +5,7 @@ namespace Kennofizet\RewardPlay\Services\Player;
 use Kennofizet\RewardPlay\Services\Model\SettingDailyRewardService;
 use Kennofizet\RewardPlay\Services\Model\SettingStackBonusService;
 use Kennofizet\RewardPlay\Models\UserDailyStatus;
-use Kennofizet\RewardPlay\Models\UserBagItem;
-use Kennofizet\RewardPlay\Models\UserEventTransaction;
+use Kennofizet\RewardPlay\Models\User;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Carbon\Carbon;
 use Exception;
@@ -99,6 +98,11 @@ class DailyRewardService
 
     public function collectReward($userId)
     {
+        $user = User::findById($userId);
+        if (!$user) {
+            throw new Exception("User not found");
+        }
+
         $userDailyStatus = $this->getUserDailyStatus($userId);
 
         if ($userDailyStatus->last_claim_date 
@@ -109,11 +113,10 @@ class DailyRewardService
         $todayDailyReward = $this->settingDailyRewardService->getSettingDailyRewardByDate(Carbon::today());
 
         if ($todayDailyReward && !empty($todayDailyReward->items)) {
-            $this->grantRewards($userId, $todayDailyReward->items, 'daily_reward');
+            $this->grantRewards($user, $todayDailyReward->items, 'daily_reward');
             
-            // Save transaction for daily reward using UserEventTransactionActions
-            UserEventTransaction::createTransaction([
-                'user_id' => $userId,
+            // Save transaction for daily reward using User model method
+            $user->hasTransaction([
                 'model_type' => \Kennofizet\RewardPlay\Models\SettingDailyReward::class,
                 'model_id' => $todayDailyReward->id,
                 'items' => $todayDailyReward->items,
@@ -123,11 +126,10 @@ class DailyRewardService
         $currentWeeklyStreakDay = $userDailyStatus->consecutive_login_days;
         $stackBonusForStreakDay = $this->settingStackBonusService->getSettingStackBonusByDay($currentWeeklyStreakDay);
         if ($stackBonusForStreakDay && !empty($stackBonusForStreakDay->rewards)) {
-            $this->grantRewards($userId, $stackBonusForStreakDay->rewards, 'stack_bonus');
+            $this->grantRewards($user, $stackBonusForStreakDay->rewards, 'stack_bonus');
             
-            // Save transaction for stack bonus using UserEventTransactionActions
-            UserEventTransaction::createTransaction([
-                'user_id' => $userId,
+            // Save transaction for stack bonus using User model method
+            $user->hasTransaction([
                 'model_type' => \Kennofizet\RewardPlay\Models\SettingStackBonus::class,
                 'model_id' => $stackBonusForStreakDay->id,
                 'items' => $stackBonusForStreakDay->rewards,
@@ -138,7 +140,7 @@ class DailyRewardService
         $userDailyStatus->save();
     }
 
-    protected function grantRewards($userId, array $rewards, string $rewardSource = 'daily_reward')
+    protected function grantRewards(User $user, array $rewards, string $rewardSource = 'daily_reward')
     {
         foreach ($rewards as $rewardItem) {
             $rewardType = $rewardItem['type'] ?? HelperConstant::TYPE_GEAR;
@@ -173,9 +175,8 @@ class DailyRewardService
                     $bagProperties['custom_options'] = $rewardItem['custom_stats'];
                 }
                 
-                // Use UserBagItemActions::createBagItem which handles duplicate checking
-                UserBagItem::createBagItem([
-                    'user_id' => $userId,
+                // Use User model method to give item
+                $user->giveItem([
                     'item_id' => $rewardItem['item_id'],
                     'item_type' => $rewardType, // Set item_type from rewardType
                     'properties' => !empty($bagProperties) ? $bagProperties : null,

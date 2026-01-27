@@ -33,7 +33,10 @@
             <div class="col-lg12-12 hero-show-wrapper">
               <div class="hero-show">
                 <img :src="getImageUrl('character.hero')" alt="Hero">
+                <LevelBadge :level="userLevel" />
               </div>
+              <!-- EXP Bar under hero character -->
+              <ExpBar :current-exp="currentExp" :total-exp-needed="totalExpNeeded" />
               <!-- Item Detail Panel (absolute positioned, appears next to character) -->
               <div v-if="selectedItem && canShowItemDetail(selectedItem)" class="item-detail-panel">
                 <button class="item-detail-close" @click="closeItemDetail">×</button>
@@ -188,6 +191,8 @@
 import { ref, inject, computed, unref, onMounted, watch } from 'vue'
 const gameApi = inject('gameApi')
 import ItemBox from '../../components/game/ItemBox.vue'
+import ExpBar from '../../components/game/ExpBar.vue'
+import LevelBadge from '../../components/game/LevelBadge.vue'
 import { getFileImageUrl } from '../../utils/imageResolverRuntime'
 import { getStatName } from '../../utils/globalData'
 const translator = inject('translator', null)
@@ -201,6 +206,9 @@ const coinAmount = ref(0)
 const boxCoinAmount = ref(0)
 const rubyAmount = ref(0)
 const userPower = ref(0)
+const userLevel = ref(1)
+const currentExp = ref(0)
+const totalExpNeeded = ref(100)
 
 // Selected item for detail panel
 const selectedItem = ref(null)
@@ -267,6 +275,15 @@ const initializeBagItems = () => {
   }
   if (userDataValue.power !== undefined) {
     userPower.value = userDataValue.power
+  }
+  if (userDataValue.level !== undefined) {
+    userLevel.value = userDataValue.level
+  }
+  if (userDataValue.exp !== undefined) {
+    currentExp.value = userDataValue.exp
+  }
+  if (userDataValue.exp_needed !== undefined) {
+    totalExpNeeded.value = userDataValue.exp_needed
   }
   
   // Merge items with item details for each category
@@ -619,6 +636,7 @@ const formatPower = (power) => {
 
 .hero-show {
   display: block;
+  position: relative;
 }
 
 .hero-show img {
