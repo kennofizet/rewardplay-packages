@@ -374,6 +374,8 @@ export default {
       collect: 'Nhận',
       reward: 'PHẦN THƯỞNG',
       dailyReward: 'Phần Thưởng Hàng Ngày',
+      more: 'thêm',
+      allItems: 'Tất Cả Vật Phẩm',
     },
     luckyWheel: {
       spin: 'QUAY',

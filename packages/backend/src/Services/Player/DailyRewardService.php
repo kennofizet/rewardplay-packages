@@ -50,7 +50,6 @@ class DailyRewardService
         $stackBonusesByDay = $stackBonuses->keyBy('day');
 
         return [
-            'current_streak' => $userDailyStatus->consecutive_login_days,
             'weekly_streak' => $userDailyStatus->consecutive_login_days > sizeof($stackBonusesByDay) ? sizeof($stackBonusesByDay) : $userDailyStatus->consecutive_login_days,
             'is_claimed_today' => $isClaimedToday,
             'stack_bonuses' => $stackBonusesByDay,

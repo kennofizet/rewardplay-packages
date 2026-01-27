@@ -372,6 +372,8 @@ export default {
       collect: 'collect',
       reward: 'REWARD',
       dailyReward: 'Daily Reward',
+      more: 'more',
+      allItems: 'All Items',
     },
     luckyWheel: {
       spin: 'SPIN',

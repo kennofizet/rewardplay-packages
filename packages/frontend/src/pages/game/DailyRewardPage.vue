@@ -14,9 +14,8 @@
           :is-current="day.current"
         >
           <RewardItem
-            v-for="(reward, index) in day.rewards"
-            :key="index"
-            :text="reward"
+            v-if="day.rewards"
+            :text="day.rewards"
           />
         </WeekDay>
       </div>
@@ -72,13 +71,31 @@ const weekDays = computed(() => {
         const bonus = bonuses[dayNum]
         const rewards = bonus?.rewards || []
         
+        // Limit to 3 items and create description array with count
+        const limitedRewards = rewards.slice(0, 3)
+        const totalCount = rewards.length
+        const showCount = totalCount > 3 ? 3 : totalCount
+        
+        let rewardsData
+        if (limitedRewards.length > 0) {
+            const descriptionArray = limitedRewards.map(r => `${r.type} x${r.quantity}`)
+            rewardsData = {
+                items: descriptionArray,
+                count: showCount,
+                total: totalCount,
+                allItems: rewards // Store full array for tooltip
+            }
+        } else {
+            rewardsData = null
+        }
+        
         return {
             name: bonus?.name || t('component.dailyReward.day') + ' ' + dayNum,
             day: dayNum,
             completed: dayNum < weeklyStreak || (dayNum === weeklyStreak && state.value.is_claimed_today),
             past: dayNum < weeklyStreak,
             current: dayNum === weeklyStreak && !state.value.is_claimed_today,
-            rewards: rewards.map(r => `${r.type} x${r.quantity}`)
+            rewards: rewardsData
         }
     })
 })
@@ -116,17 +133,38 @@ const rewards = computed(() => {
         
         const dayNumInCycle = index + 1
         
-        const isCurrent = (dateDate.toISOString() === new Date().toISOString()) && !r.claimed
+        const isCurrent = (dateDate.toLocaleDateString() === new Date().toLocaleDateString()) && !r.claimed
         const isCollected = r.claimed
         
-        const firstItem = r.items?.[0]
+        const items = r.items || []
+        const limitedItems = items.slice(0, 3) // Limit to 3 items
+        const firstItem = limitedItems[0]
         const type = firstItem?.type || 'item'
+        
+        // Create description array with count
+        let description
+        if (limitedItems.length > 0) {
+            const descriptionArray = limitedItems.map(item => `x${item.quantity} ${item.type}`)
+            const totalCount = items.length
+            const showCount = totalCount > 3 ? 3 : totalCount
+            
+            description = {
+                items: descriptionArray,
+                count: showCount,
+                total: totalCount,
+                allItems: items, // Store full array for tooltip
+                extraInfo: extraInfo
+            }
+        } else {
+            // Fallback when no items
+            description = extraInfo ? `${t('component.dailyReward.dailyReward')} ${extraInfo}` : t('component.dailyReward.dailyReward')
+        }
         
         return {
             original_date: r.date,
             day: `${t('component.dailyReward.day')} ${dayOfMonth}`, // Show actual day of month
             title: firstItem ? firstItem.type.toUpperCase() : t('component.dailyReward.reward'),
-            description: firstItem ? `x${firstItem.quantity} ${extraInfo}` : t('component.dailyReward.dailyReward'),
+            description: description,
             rarity: r.is_epic ? 'epic' : (dayNumInCycle % 3 === 0 ? 'rare' : 'common'),
             isCurrent: isCurrent,
             isCollected: isCollected,
@@ -143,7 +181,6 @@ const loadData = async () => {
     loading.value = true
     try {
         const res = await gameApi.getPlayerDailyRewardState()
-        // Expected response: { current_streak: 3, stack_config: {}, month_rewards: [] }
         state.value = res.data?.datas || {}
     } catch(e) {
         console.error(e)
