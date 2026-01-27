@@ -34,6 +34,9 @@ Route::prefix($prefix)
         Route::post('setting-daily-rewards/suggest', [\Kennofizet\RewardPlay\Controllers\Settings\SettingDailyRewardController::class, 'suggest']);
         Route::get('setting-daily-rewards', [\Kennofizet\RewardPlay\Controllers\Settings\SettingDailyRewardController::class, 'index']);
         Route::post('setting-daily-rewards', [\Kennofizet\RewardPlay\Controllers\Settings\SettingDailyRewardController::class, 'store']);
+
+        Route::post('setting-level-exps/suggest', [\Kennofizet\RewardPlay\Controllers\Settings\SettingLevelExpController::class, 'suggest']);
+        Route::apiResource('setting-level-exps', \Kennofizet\RewardPlay\Controllers\Settings\SettingLevelExpController::class);
     });
 
 // Protected routes (require token validation)

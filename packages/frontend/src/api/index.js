@@ -129,6 +129,14 @@ export function createGameApi(backendUrl, token) {
     saveDailyRewardConfig: (data) => api.post('/api/rewardplay/setting-daily-rewards', data), // Update or Create based on date
     suggestDailyRewards: (data) => api.post('/api/rewardplay/setting-daily-rewards/suggest', data),
 
+    // Setting Level Exps (Manage)
+    getLevelExps: (params) => api.get('/api/rewardplay/setting-level-exps', { params }),
+    getLevelExp: (id) => api.get(`/api/rewardplay/setting-level-exps/${id}`),
+    createLevelExp: (data) => api.post('/api/rewardplay/setting-level-exps', data),
+    updateLevelExp: (id, data) => api.put(`/api/rewardplay/setting-level-exps/${id}`, data),
+    deleteLevelExp: (id) => api.delete(`/api/rewardplay/setting-level-exps/${id}`),
+    suggestLevelExps: () => api.post('/api/rewardplay/setting-level-exps/suggest'),
+
     // Player Daily Rewards & Bag
     getPlayerDailyRewardState: () => api.get('/api/rewardplay/player/daily-rewards'), // Includes stack info
     collectDailyReward: () => api.post('/api/rewardplay/player/daily-rewards/collect'),

@@ -5,6 +5,7 @@ namespace Kennofizet\RewardPlay\Controllers;
 use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Kennofizet\RewardPlay\Services\ImageManifestService;
+use Kennofizet\RewardPlay\Models\User;
 
 class AuthController extends Controller
 {
@@ -73,11 +74,16 @@ class AuthController extends Controller
             return $this->apiErrorResponse('User not authenticated', 401);
         }
 
+        $user = User::findById($userId);
+        if (!$user) {
+            return $this->apiErrorResponse('User not found', 404);
+        }
+
         return $this->apiResponseWithContext([
-            'coin' => 1000000,
-            'box_coin' => 100,
-            'ruby' => 1000,
-            'power' => 125000
+            'coin' => $user->getCoin(),
+            'box_coin' => $user->getBoxCoin(),
+            'ruby' => $user->getRuby(),
+            'power' => $user->getPower()
         ]);
     }
 }

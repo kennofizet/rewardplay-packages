@@ -281,6 +281,12 @@ export default {
           deleteFailed: 'Không thể xóa',
           saveFailed: 'Không thể lưu',
           loadFailed: 'Không thể tải'
+        },
+        pagination: {
+          prev: 'Trước',
+          next: 'Sau',
+          page: 'Trang',
+          of: 'của'
         }
       },
       settingDailyRewards: {
@@ -309,6 +315,42 @@ export default {
           toggleEpicFailed: 'Không thể thay đổi trạng thái đặc biệt',
           saveFailed: 'Không thể lưu',
           unknownItem: 'Vật Phẩm Không Xác Định'
+        }
+      },
+      settingLevelExps: {
+        title: 'Cấp Độ',
+        create: 'Tạo Cấp Độ Mới',
+        suggest: 'Gợi Ý Dữ Liệu Mặc Định',
+        edit: 'Chỉnh Sửa Cấp Độ',
+        loading: 'Đang tải...',
+        saving: 'Đang lưu...',
+        save: 'Lưu',
+        cancel: 'Hủy',
+        delete: 'Xóa',
+        table: {
+          id: 'ID',
+          lv: 'Cấp Độ',
+          expNeeded: 'Kinh Nghiệm Cần',
+          actions: 'Hành động'
+        },
+        form: {
+          lv: 'Cấp Độ',
+          expNeeded: 'Kinh Nghiệm Cần Để Lên Cấp'
+        },
+        messages: {
+          suggestSuccess: 'Dữ liệu kinh nghiệm cấp độ đã được tạo thành công!',
+          suggestFailed: 'Không thể gợi ý dữ liệu',
+          deleteFailed: 'Không thể xóa',
+          saveFailed: 'Không thể lưu',
+          loadFailed: 'Không thể tải',
+          confirmDelete: 'Bạn có chắc chắn muốn xóa cấp độ này?',
+          invalidData: 'Vui lòng nhập giá trị cấp độ và kinh nghiệm hợp lệ'
+        },
+        pagination: {
+          prev: 'Trước',
+          next: 'Sau',
+          page: 'Trang',
+          of: 'của'
         }
       },
     },

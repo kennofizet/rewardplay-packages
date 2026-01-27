@@ -45,6 +45,22 @@
           </tr>
         </tbody>
       </table>
+
+      <div v-if="pagination" class="pagination">
+        <button 
+          :disabled="pagination.current_page === 1"
+          @click="changePage(pagination.current_page - 1)"
+        >
+          {{ t('page.manageSetting.settingStackBonuses.pagination.prev') }}
+        </button>
+        <span>{{ t('page.manageSetting.settingStackBonuses.pagination.page') }} {{ pagination.current_page }} {{ t('page.manageSetting.settingStackBonuses.pagination.of') }} {{ pagination.last_page }}</span>
+        <button 
+          :disabled="pagination.current_page === pagination.last_page"
+          @click="changePage(pagination.current_page + 1)"
+        >
+          {{ t('page.manageSetting.settingStackBonuses.pagination.next') }}
+        </button>
+      </div>
     </div>
 
     <!-- Modal Implementation -->
@@ -98,11 +114,17 @@ const gameApi = inject('gameApi')
 const loading = ref(false)
 const error = ref(null)
 const bonuses = ref([])
+const pagination = ref(null)
 const showModal = ref(false)
 const editingItem = ref(null)
 const formData = ref({ name: '', day: 3, rewards: [{ type: 'coin', quantity: 100 }] })
 const saving = ref(false)
 const rewardTypes = ref([])
+
+const filters = ref({
+  currentPage: 1,
+  perPage: 15
+})
 
 const loadRewardTypes = async () => {
     try {
@@ -119,15 +141,29 @@ const loadBonuses = async () => {
     if (!gameApi) return
     loading.value = true
     try {
-        const res = await gameApi.getStackBonuses()
+        const params = {
+            currentPage: filters.value.currentPage,
+            perPage: filters.value.perPage
+        }
+        const res = await gameApi.getStackBonuses(params)
         if(res.data && res.data.datas && res.data.datas.bonuses) {
             bonuses.value = res.data.datas.bonuses.data || []
+            pagination.value = {
+                current_page: res.data.datas.bonuses.current_page,
+                last_page: res.data.datas.bonuses.last_page,
+                total: res.data.datas.bonuses.total
+            }
         }
     } catch (e) {
         error.value = e.message || t('page.manageSetting.settingStackBonuses.messages.loadFailed')
     } finally {
         loading.value = false
     }
+}
+
+const changePage = (page) => {
+    filters.value.currentPage = page
+    loadBonuses()
 }
 
 const handleCreate = () => {
@@ -142,6 +178,7 @@ const handleSuggest = async () => {
     loading.value = true
     try {
         const response = await gameApi.suggestStackBonuses()
+        filters.value.currentPage = 1
         await loadBonuses()
         alert('Stack bonuses created successfully!')
     } catch (e) {
@@ -170,6 +207,10 @@ const removeReward = (index) => {
 const handleDelete = async (item) => {
     try {
         await gameApi.deleteStackBonus(item.id)
+        // Reset to page 1 if current page becomes empty
+        if (bonuses.value.length === 1 && filters.value.currentPage > 1) {
+            filters.value.currentPage = 1
+        }
         loadBonuses()
     } catch (e) {
         alert(t('page.manageSetting.settingStackBonuses.messages.deleteFailed'))
@@ -230,4 +271,9 @@ onMounted(() => {
 .reward-inline { display: inline-block; background: #1a2332; padding: 2px 6px; border-radius: 4px; margin-right: 5px; font-size: 0.85em; }
 .btn-danger.small { padding: 2px 6px; font-size: 0.8em; }
 .btn-secondary.small { padding: 4px 8px; font-size: 0.9em; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; padding: 15px; }
+.pagination button { background: #2f3e52; border: 1px solid #4a5b70; color: #d0d4d6; padding: 8px 16px; cursor: pointer; border-radius: 4px; }
+.pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+.pagination button:not(:disabled):hover { background: #3d4f66; }
+.pagination span { color: #d0d4d6; }
 </style>

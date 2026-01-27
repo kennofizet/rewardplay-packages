@@ -5,6 +5,7 @@ namespace Kennofizet\RewardPlay\Models\User;
 use Kennofizet\RewardPlay\Models\User;
 use Kennofizet\RewardPlay\Models\UserBagItem;
 use Kennofizet\RewardPlay\Models\UserEventTransaction;
+use Kennofizet\RewardPlay\Models\UserProfile;
 use Carbon\Carbon;
 
 trait UserActions
@@ -60,5 +61,49 @@ trait UserActions
             'model_id' => $data['model_id'] ?? null,
             'items' => $data['items'] ?? null,
         ]);
+    }
+
+    /**
+     * Get user's coin amount from profile
+     * 
+     * @return int
+     */
+    public function getCoin(): int
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->coin ?? 0;
+    }
+
+    /**
+     * Get user's ruby amount from profile
+     * 
+     * @return int
+     */
+    public function getRuby(): int
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->ruby ?? 0;
+    }
+
+    /**
+     * Get user's box_coin amount
+     * Currently returns 0, to be implemented later
+     * 
+     * @return int
+     */
+    public function getBoxCoin(): int
+    {
+        return 0;
+    }
+
+    /**
+     * Get user's power
+     * Currently returns 0, to be implemented later
+     * 
+     * @return int
+     */
+    public function getPower(): int
+    {
+        return 0;
     }
 }

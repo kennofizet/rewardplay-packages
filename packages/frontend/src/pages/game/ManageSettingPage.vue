@@ -30,6 +30,7 @@ import SettingOptionsListPage from './manage-setting/SettingOptionsListPage.vue'
 import SettingItemSetsListPage from './manage-setting/SettingItemSetsListPage.vue'
 import SettingStackBonusListPage from './manage-setting/SettingStackBonusListPage.vue'
 import SettingDailyRewardConfigPage from './manage-setting/SettingDailyRewardConfigPage.vue'
+import SettingLevelExpListPage from './manage-setting/SettingLevelExpListPage.vue'
 import ManageZonesPage from './manage-setting/ManageZonesPage.vue'
 
 const translator = inject('translator', null)
@@ -63,7 +64,8 @@ const allMenuItems = [
   { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets'), requiresZone: true },
   { key: 'manage-zones', label: t('page.manageSetting.menu.manageZones'), requiresZone: false },
   { key: 'setting-stack-bonuses', label: t('page.manageSetting.settingStackBonuses.title'), requiresZone: true },
-  { key: 'setting-daily-rewards', label: t('page.manageSetting.settingDailyRewards.title'), requiresZone: true }
+  { key: 'setting-daily-rewards', label: t('page.manageSetting.settingDailyRewards.title'), requiresZone: true },
+  { key: 'setting-level-exps', label: t('page.manageSetting.settingLevelExps.title'), requiresZone: true }
 ]
 
 const menuItems = computed(() => {
@@ -83,7 +85,8 @@ const currentPageComponent = computed(() => {
     'setting-item-sets': SettingItemSetsListPage,
     'manage-zones': ManageZonesPage,
     'setting-stack-bonuses': SettingStackBonusListPage,
-    'setting-daily-rewards': SettingDailyRewardConfigPage
+    'setting-daily-rewards': SettingDailyRewardConfigPage,
+    'setting-level-exps': SettingLevelExpListPage
   }
   return pageMap[currentPage.value] || SettingItemsListPage
 })

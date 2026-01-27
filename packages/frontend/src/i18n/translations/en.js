@@ -279,6 +279,12 @@ export default {
           deleteFailed: 'Failed to delete',
           saveFailed: 'Failed to save',
           loadFailed: 'Failed to load'
+        },
+        pagination: {
+          prev: 'Previous',
+          next: 'Next',
+          page: 'Page',
+          of: 'of'
         }
       },
       settingDailyRewards: {
@@ -307,6 +313,42 @@ export default {
           toggleEpicFailed: 'Failed to toggle epic status',
           saveFailed: 'Failed to save',
           unknownItem: 'Unknown Item'
+        }
+      },
+      settingLevelExps: {
+        title: 'Level Experience',
+        create: 'Create New Level',
+        suggest: 'Suggest Default Data',
+        edit: 'Edit Level',
+        loading: 'Loading...',
+        saving: 'Saving...',
+        save: 'Save',
+        cancel: 'Cancel',
+        delete: 'Delete',
+        table: {
+          id: 'ID',
+          lv: 'Level',
+          expNeeded: 'EXP Needed',
+          actions: 'Actions'
+        },
+        form: {
+          lv: 'Level',
+          expNeeded: 'EXP Needed to Level Up'
+        },
+        messages: {
+          suggestSuccess: 'Level exp data created successfully!',
+          suggestFailed: 'Failed to suggest data',
+          deleteFailed: 'Failed to delete',
+          saveFailed: 'Failed to save',
+          loadFailed: 'Failed to load',
+          confirmDelete: 'Are you sure you want to delete this level?',
+          invalidData: 'Please enter valid level and exp values'
+        },
+        pagination: {
+          prev: 'Previous',
+          next: 'Next',
+          page: 'Page',
+          of: 'of'
         }
       },
     },
