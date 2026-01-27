@@ -71,10 +71,10 @@ const weekDays = computed(() => {
         const bonus = bonuses[dayNum]
         const rewards = bonus?.rewards || []
         
-        // Limit to 3 items and create description array with count
-        const limitedRewards = rewards.slice(0, 3)
+        // Limit to 1 items and create description array with count
+        const limitedRewards = rewards.slice(0, 1)
         const totalCount = rewards.length
-        const showCount = totalCount > 3 ? 3 : totalCount
+        const showCount = totalCount > 1 ? 1 : totalCount
         
         let rewardsData
         if (limitedRewards.length > 0) {
@@ -137,7 +137,7 @@ const rewards = computed(() => {
         const isCollected = r.claimed
         
         const items = r.items || []
-        const limitedItems = items.slice(0, 3) // Limit to 3 items
+        const limitedItems = items.slice(0, 2) // Limit to 2 items
         const firstItem = limitedItems[0]
         const type = firstItem?.type || 'item'
         
@@ -146,7 +146,7 @@ const rewards = computed(() => {
         if (limitedItems.length > 0) {
             const descriptionArray = limitedItems.map(item => `x${item.quantity} ${item.type}`)
             const totalCount = items.length
-            const showCount = totalCount > 3 ? 3 : totalCount
+            const showCount = totalCount > 2 ? 2 : totalCount
             
             description = {
                 items: descriptionArray,
