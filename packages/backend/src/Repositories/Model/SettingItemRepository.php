@@ -92,7 +92,7 @@ class SettingItemRepository
         // Handle image upload
         if ($imageFile) {
             // Delete old image if exists
-            $this->deleteImageFile($settingItem->image);
+            // $this->deleteImageFile($settingItem->image);
             
             // Upload new image
             $data['image'] = $this->handleImageUpload($imageFile);

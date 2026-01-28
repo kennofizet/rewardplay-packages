@@ -2,7 +2,10 @@
   <div 
     :class="['item-box', { 'item-empty': isEmpty }]"
     :style="boxStyle"
+    :draggable="draggable"
     @click="$emit('click')"
+    @dblclick="$emit('dblclick')"
+    @dragstart="$emit('dragstart', $event)"
   >
     <img v-if="image" :src="image" :alt="alt">
     <div v-if="quantity && quantity > 1" class="item-quantity">
@@ -31,10 +34,14 @@ const props = defineProps({
   quantity: {
     type: Number,
     default: null
+  },
+  draggable: {
+    type: Boolean,
+    default: false
   }
 })
 
-defineEmits(['click'])
+defineEmits(['click', 'dblclick', 'dragstart'])
 
 const getImageUrl = (key) => getFileImageUrl(key)
 
@@ -48,8 +55,8 @@ const boxStyle = computed(() => {
 <style scoped>
 .item-box {
   position: relative;
-  width: 66px;
-  height: 66px;
+  width: 109px;
+  height: 109px;
   margin: 10px;
   background-size: cover;
   display: inline-block;

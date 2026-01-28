@@ -4,6 +4,8 @@ namespace Kennofizet\RewardPlay\Controllers;
 
 use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
+use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\RewardPlay\Models\UserProfile;
 
 class RankingController extends Controller
 {
@@ -20,140 +22,51 @@ class RankingController extends Controller
             return $this->apiErrorResponse('User not authenticated', 401);
         }
 
-        // Fake ranking data
+        // Get current user's coin
+        $currentUser = User::findById($userId);
+        $myCoin = $currentUser ? $currentUser->getCoin() : 0;
+
+        // Get top users by coin (all time)
+        $topUsers = UserProfile::orderBy('coin', 'desc')
+            ->limit(10)
+            ->with('user')
+            ->get()
+            ->map(function ($profile) {
+                return [
+                    'id' => $profile->user_id,
+                    'name' => $profile->user->name ?? 'Player ' . $profile->user_id,
+                    'avatar' => $profile->user->avatar ?? null,
+                    'coin' => $profile->coin ?? 0,
+                    'type' => 'USER'
+                ];
+            })
+            ->toArray();
+
+        // Calculate user's rank
+        $myRank = UserProfile::where('coin', '>', $myCoin)->count() + 1;
+
+        // Get top week users (last 7 days - simplified, using all time for now)
+        // TODO: Implement proper weekly ranking based on coin gained in last 7 days
+        $topWeek = UserProfile::orderBy('coin', 'desc')
+            ->limit(8)
+            ->with('user')
+            ->get()
+            ->map(function ($profile) {
+                return [
+                    'id' => $profile->user_id,
+                    'name' => $profile->user->name ?? 'Player ' . $profile->user_id,
+                    'avatar' => $profile->user->avatar ?? null,
+                    'coin' => $profile->coin ?? 0,
+                    'type' => 'USER'
+                ];
+            })
+            ->toArray();
+
         $ranking_data = [
-            'my_rank' => 15,
-            'my_coin' => 2850,
-            'top_users' => [
-                [
-                    'id' => 1,
-                    'name' => 'Player 1',
-                    'avatar' => null,
-                    'coin' => 5700,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 2,
-                    'name' => 'Player 2',
-                    'avatar' => null,
-                    'coin' => 4500,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 3,
-                    'name' => 'Player 3',
-                    'avatar' => null,
-                    'coin' => 3200,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 4,
-                    'name' => 'Player 4',
-                    'avatar' => null,
-                    'coin' => 2900,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 5,
-                    'name' => 'Player 5',
-                    'avatar' => null,
-                    'coin' => 2750,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 6,
-                    'name' => 'Player 6',
-                    'avatar' => null,
-                    'coin' => 2600,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 7,
-                    'name' => 'Player 7',
-                    'avatar' => null,
-                    'coin' => 2450,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 8,
-                    'name' => 'Player 8',
-                    'avatar' => null,
-                    'coin' => 2300,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 9,
-                    'name' => 'Player 9',
-                    'avatar' => null,
-                    'coin' => 2150,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 10,
-                    'name' => 'Player 10',
-                    'avatar' => null,
-                    'coin' => 2000,
-                    'type' => 'USER'
-                ],
-            ],
-            'top_week' => [
-                [
-                    'id' => 1,
-                    'name' => 'Player 1',
-                    'avatar' => null,
-                    'coin' => 200,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 2,
-                    'name' => 'Player 2',
-                    'avatar' => null,
-                    'coin' => 190,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 3,
-                    'name' => 'Player 3',
-                    'avatar' => null,
-                    'coin' => 180,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 4,
-                    'name' => 'Player 4',
-                    'avatar' => null,
-                    'coin' => 170,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 5,
-                    'name' => 'Player 5',
-                    'avatar' => null,
-                    'coin' => 160,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 6,
-                    'name' => 'Player 6',
-                    'avatar' => null,
-                    'coin' => 150,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 7,
-                    'name' => 'Player 7',
-                    'avatar' => null,
-                    'coin' => 140,
-                    'type' => 'USER'
-                ],
-                [
-                    'id' => 8,
-                    'name' => 'Player 8',
-                    'avatar' => null,
-                    'coin' => 130,
-                    'type' => 'USER'
-                ]
-            ],
+            'my_rank' => $myRank,
+            'my_coin' => $myCoin,
+            'top_users' => $topUsers,
+            'top_week' => $topWeek,
         ];
 
         return $this->apiResponseWithContext($ranking_data);

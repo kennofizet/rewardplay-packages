@@ -20,6 +20,7 @@ class UserProfile extends BaseModel
         'lv',
         'coin',
         'ruby',
+        'gears',
     ];
 
     protected $casts = [
@@ -28,6 +29,7 @@ class UserProfile extends BaseModel
         'lv' => 'integer',
         'coin' => 'integer',
         'ruby' => 'integer',
+        'gears' => 'array',
     ];
 
     public function getTable()

@@ -9,7 +9,7 @@ trait UserBagItemActions
     public static function getByUser($userId)
     {
         return self::with('item')
-            ->where('user_id', $userId)
+            ->byUser($userId)
             ->get();
     }
 
@@ -40,9 +40,9 @@ trait UserBagItemActions
 
         // Check for existing item with same user_id, item_id, item_type, and properties
         // We need to compare JSON properties, so we'll fetch all matching items and compare in PHP
-        $query = self::where('user_id', $userId)
-            ->where('item_id', $itemId)
-            ->where('item_type', $itemType);
+        $query = self::byUser($userId)
+            ->byItemId($itemId)
+            ->byItemType($itemType);
 
         // Get all candidates and compare properties in PHP (more reliable for JSON comparison)
         $candidates = $query->get();

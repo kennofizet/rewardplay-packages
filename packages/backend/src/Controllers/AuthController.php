@@ -6,6 +6,7 @@ use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Kennofizet\RewardPlay\Services\ImageManifestService;
 use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\RewardPlay\Models\UserProfile\UserProfileConstant;
 
 class AuthController extends Controller
 {
@@ -86,7 +87,10 @@ class AuthController extends Controller
             'power' => $user->getPower(),
             'lv' => $user->getLevel(),
             'exp' => $user->getExp(),
-            'exp_needed' => $user->getExpNeed()
+            'exp_needed' => $user->getExpNeed(),
+            'stats' => $user->getStats(),
+            'gears' => $user->getGears(),
+            'gear_wear_config' => UserProfileConstant::GEAR_WEAR_CONFIG
         ]);
     }
 }

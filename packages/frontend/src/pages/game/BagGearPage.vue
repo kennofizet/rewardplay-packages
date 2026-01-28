@@ -5,28 +5,97 @@
         <div class="col-lg12-7 hero-gear hero-info">
           <div class="left-wp-gear col-lg12-4">
             <div class="box-item-weapon-main">
-              <ItemBox 
-                v-for="item in mainWeapons" 
-                :key="item.key"
-                :image="getImageUrl(item.key_image)"
-                :alt="item.name"
-              />
+              <div
+                v-for="slot in mainWeapons" 
+                :key="slot.key"
+                class="gear-slot"
+                :class="{ 
+                  'gear-slot-highlight': dragOverSlot === slot.key,
+                  'gear-slot-worn': getGearForSlot(slot.key)
+                }"
+                @click="handleGearSlotClick(slot.key)"
+                @dblclick="handleGearSlotDoubleClick(slot.key)"
+                @dragover="handleDragOver($event, slot.key)"
+                @dragleave="handleDragLeave"
+                @drop="handleDrop($event, slot.key)"
+                @dragstart="handleGearSlotDragStart($event, slot.key)"
+                draggable="true"
+              >
+                <img 
+                  v-if="getGearImage(slot.key)" 
+                  :src="getGearImage(slot.key)" 
+                  :alt="getGearForSlot(slot.key)?.item?.name || slot.name"
+                  class="gear-image"
+                >
+                <img 
+                  v-else
+                  :src="getImageUrl(slot.key_image)" 
+                  :alt="slot.name"
+                  class="gear-placeholder"
+                >
+              </div>
             </div>
             <div class="box-item-weapon-sp">
-              <ItemBox 
-                v-for="item in specialWeapons" 
-                :key="item.key"
-                :image="getImageUrl(item.key_image)"
-                :alt="item.name"
-              />
+              <div
+                v-for="slot in specialWeapons" 
+                :key="slot.key"
+                class="gear-slot"
+                :class="{ 
+                  'gear-slot-highlight': dragOverSlot === slot.key,
+                  'gear-slot-worn': getGearForSlot(slot.key)
+                }"
+                @click="handleGearSlotClick(slot.key)"
+                @dblclick="handleGearSlotDoubleClick(slot.key)"
+                @dragover="handleDragOver($event, slot.key)"
+                @dragleave="handleDragLeave"
+                @drop="handleDrop($event, slot.key)"
+                @dragstart="handleGearSlotDragStart($event, slot.key)"
+                draggable="true"
+              >
+                <img 
+                  v-if="getGearImage(slot.key)" 
+                  :src="getGearImage(slot.key)" 
+                  :alt="getGearForSlot(slot.key)?.item?.name || slot.name"
+                  class="gear-image"
+                >
+                <img 
+                  v-else
+                  :src="getImageUrl(slot.key_image)" 
+                  :alt="slot.name"
+                  class="gear-placeholder"
+                >
+              </div>
             </div>
             <div class="box-item-weapon-sp-hit">
-              <ItemBox 
-                v-for="item in specialItems" 
-                :key="item.key"
-                :image="getImageUrl(item.key_image)"
-                :alt="item.name"
-              />
+              <div
+                v-for="slot in specialItems" 
+                :key="slot.key"
+                class="gear-slot"
+                :class="{ 
+                  'gear-slot-highlight': dragOverSlot === slot.key,
+                  'gear-slot-worn': getGearForSlot(slot.key)
+                }"
+                @click="handleGearSlotClick(slot.key)"
+                @dblclick="handleGearSlotDoubleClick(slot.key)"
+                @dragover="handleDragOver($event, slot.key)"
+                @dragleave="handleDragLeave"
+                @drop="handleDrop($event, slot.key)"
+                @dragstart="handleGearSlotDragStart($event, slot.key)"
+                draggable="true"
+              >
+                <img 
+                  v-if="getGearImage(slot.key)" 
+                  :src="getGearImage(slot.key)" 
+                  :alt="getGearForSlot(slot.key)?.item?.name || slot.name"
+                  class="gear-image"
+                >
+                <img 
+                  v-else
+                  :src="getImageUrl(slot.key_image)" 
+                  :alt="slot.name"
+                  class="gear-placeholder"
+                >
+              </div>
             </div>
           </div>
           <div class="hero-animation col-lg12-8">
@@ -38,7 +107,11 @@
               <!-- EXP Bar under hero character -->
               <ExpBar :current-exp="currentExp" :total-exp-needed="totalExpNeeded" />
               <!-- Item Detail Panel (absolute positioned, appears next to character) -->
-              <div v-if="selectedItem && canShowItemDetail(selectedItem)" class="item-detail-panel">
+              <div 
+                v-if="selectedItem && canShowItemDetail(selectedItem)" 
+                class="item-detail-panel"
+                :class="{ 'is-wear': isSelectedItemWorn }"
+              >
                 <button class="item-detail-close" @click="closeItemDetail">×</button>
                 <div class="item-detail-header">
                   <img 
@@ -98,6 +171,22 @@
                       </div>
                     </template>
                   </div>
+                  <div v-if="selectedItem && selectedItem.item_type === 'gear'" class="item-detail-actions">
+                    <button 
+                      v-if="!isSelectedItemWorn" 
+                      class="btn-wear" 
+                      @click="handleWearItem(selectedItem)"
+                    >
+                      {{ t('component.bag.wear') }}
+                    </button>
+                    <button 
+                      v-else 
+                      class="btn-exit" 
+                      @click="handleUnwearItem(getWornSlotKey)"
+                    >
+                      {{ t('component.bag.exit') }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -127,14 +216,22 @@
           </div>
         </div>
         <div class="col-lg12-5 right-wp-gear">
-          <div class="col-lg12-9 right-wp-gear-list right-wp-gear-package-data right-wp-gear-package-data-all show">
+          <div 
+            class="col-lg12-9 right-wp-gear-list right-wp-gear-package-data right-wp-gear-package-data-all show"
+            @dragover="handleBagDragOver($event)"
+            @dragleave="handleBagDragLeave"
+            @drop="handleBagDrop($event)"
+          >
             <ItemBox 
               v-for="(item, index) in bagItems" 
               :key="index"
               :image="item && item.key_image ? getImageUrl(item.key_image) : null"
               :is-empty="!item || !item.key_image"
               :quantity="item && item.quantity ? item.quantity : null"
+              :draggable="item && item.item_type === 'gear'"
               @click="handleItemClick(item)"
+              @dblclick="handleItemDoubleClick(item)"
+              @dragstart="handleDragStart($event, item)"
             />
           </div>
           <div class="col-lg12-3 menu-item-bag-data">
@@ -197,6 +294,8 @@ import { getFileImageUrl } from '../../utils/imageResolverRuntime'
 import { getStatName } from '../../utils/globalData'
 const translator = inject('translator', null)
 const userData = inject('userData', null)
+const gearWearConfig = inject('gearWearConfig', null)
+const updateUserData = inject('updateUserData', null)
 const getStatNameFunc = inject('getStatName', getStatName)
 const t = translator || ((key) => key)
 
@@ -213,6 +312,16 @@ const totalExpNeeded = ref(100)
 // Selected item for detail panel
 const selectedItem = ref(null)
 
+// Worn gears from userData
+const wornGears = ref({})
+
+// Dragging state
+const draggingItem = ref(null)
+const dragOverSlot = ref(null)
+
+// Debounce timer for reloading userData
+let reloadUserDataTimer = null
+
 // Computed property to normalize property/properties for template compatibility
 const selectedItemProperties = computed(() => {
   if (!selectedItem.value) return null
@@ -220,29 +329,125 @@ const selectedItemProperties = computed(() => {
   return selectedItem.value.property || selectedItem.value.properties || null
 })
 
+// Check if selected item is currently worn
+const isSelectedItemWorn = computed(() => {
+  if (!selectedItem.value) return false
+  
+  // If selectedItem has _wornSlotKey, it's definitely worn
+  if (selectedItem.value._wornSlotKey) return true
+  
+  // Otherwise check by item_id (for items clicked from bag)
+  if (selectedItem.value.item_id) {
+    return Object.values(wornGears.value).some(gear => 
+      gear && gear.item_id === selectedItem.value.item_id
+    )
+  }
+  
+  // Also check by id (UserBagItem id)
+  if (selectedItem.value.id) {
+    // We need to check if this UserBagItem id matches any worn gear
+    // Since worn gears store item_id (SettingItem id), not UserBagItem id,
+    // we need to check if the selected item's item_id matches
+    if (selectedItem.value.item_id) {
+      return Object.values(wornGears.value).some(gear => 
+        gear && gear.item_id === selectedItem.value.item_id
+      )
+    }
+  }
+  
+  return false
+})
+
+// Find which slot the selected item is worn in
+const getWornSlotKey = computed(() => {
+  if (!selectedItem.value) return null
+  
+  // If selectedItem has _wornSlotKey, use that (set when clicking worn gear slot)
+  if (selectedItem.value._wornSlotKey) {
+    return selectedItem.value._wornSlotKey
+  }
+  
+  // Otherwise find by item_id
+  if (selectedItem.value.item_id) {
+    for (const [slotKey, gear] of Object.entries(wornGears.value)) {
+      if (gear && gear.item_id === selectedItem.value.item_id) {
+        return slotKey
+      }
+    }
+  }
+  
+  return null
+})
+
 // Current filter type (default to 'bag' which shows bag items)
 const currentFilter = ref('bag')
 
-const mainWeapons = computed(() => [
-  { key: 'main-weapon-1', name: t('component.bag.sword'), key_image: 'bag.sword' },
-  { key: 'main-weapon-2', name: t('component.bag.sword'), key_image: 'bag.sword' },
-  { key: 'main-weapon-3', name: t('component.bag.hat'), key_image: 'bag.hat' },
-  { key: 'main-weapon-4', name: t('component.bag.shirt'), key_image: 'bag.shirt' },
-  { key: 'main-weapon-5', name: t('component.bag.trouser'), key_image: 'bag.trouser' },
-  { key: 'main-weapon-6', name: t('component.bag.shoe'), key_image: 'bag.shoe' }
-])
+// Map item_type to translation key
+const getKeyImageManifest = (itemType) => {
+  return `bag.${itemType}`
+}
+// Map item_type to translation key
+const getItemTypeName = (itemType) => {
+  return t(`component.types.${itemType}`)
+}
 
-const specialWeapons = computed(() => [
-  { key: 'special-weapon-1', name: t('component.bag.necklace'), key_image: 'bag.necklace' },
-  { key: 'special-weapon-2', name: t('component.bag.bracelet'), key_image: 'bag.bracelet' },
-  { key: 'special-weapon-3', name: t('component.bag.ring'), key_image: 'bag.ring' },
-  { key: 'special-weapon-4', name: t('component.bag.ring'), key_image: 'bag.ring' }
-])
+// Convert config slot to display format
+const convertSlotToDisplay = (slot) => {
+  if(wornGears.value[slot.key]){
+    return {
+      key: slot.key,
+      item_type: wornGears.value[slot.key].item_type,
+      name: wornGears.value[slot.key].item.name,
+      image: wornGears.value[slot.key].item.image
+    }
+  }
+  return {
+    key: slot.key,
+    item_type: slot.item_type,
+    name: getItemTypeName(slot.item_type),
+    key_image: getKeyImageManifest(slot.item_image_manifest)
+  }
+}
 
-const specialItems = computed(() => [
-  { key: 'special-item-1', name: t('component.bag.clothes'), key_image: 'bag.clothes' },
-  { key: 'special-item-2', name: t('component.bag.wing'), key_image: 'bag.wing' }
-])
+// Get gear slots from config or fallback to default
+const mainWeapons = computed(() => {
+  if (gearWearConfig.value && gearWearConfig.value.main_weapons) {
+    return gearWearConfig.value.main_weapons.map(convertSlotToDisplay)
+  }
+  // Fallback to default structure
+  return [
+    { key: 'main-weapon-1', item_image_manifest: 'sword', item_type: 'sword' },
+    { key: 'main-weapon-2', item_image_manifest: 'sword', item_type: 'sword' },
+    { key: 'main-weapon-3', item_image_manifest: 'hat', item_type: 'hat' },
+    { key: 'main-weapon-4', item_image_manifest: 'shirt', item_type: 'shirt' },
+    { key: 'main-weapon-5', item_image_manifest: 'trouser', item_type: 'trouser' },
+    { key: 'main-weapon-6', item_image_manifest: 'shoe', item_type: 'shoe' }
+  ].map(convertSlotToDisplay)
+})
+
+const specialWeapons = computed(() => {
+  if (gearWearConfig.value && gearWearConfig.value.special_weapons) {
+    return gearWearConfig.value.special_weapons.map(convertSlotToDisplay)
+  }
+  // Fallback to default structure
+  return [
+    { key: 'special-weapon-1', item_image_manifest: 'necklace', item_type: 'necklace' },
+    { key: 'special-weapon-2', item_image_manifest: 'bracelet', item_type: 'bracelet' },
+    { key: 'special-weapon-3', item_image_manifest: 'ring', item_type: 'ring' },
+    { key: 'special-weapon-4', item_image_manifest: 'ring', item_type: 'ring' }
+  ].map(convertSlotToDisplay)
+})
+
+const specialItems = computed(() => {
+  if (gearWearConfig.value && gearWearConfig.value.special_items) {
+    return gearWearConfig.value.special_items.map(convertSlotToDisplay)
+  }
+  // Fallback to default structure
+  return [
+    { key: 'special-item-1', item_image_manifest: 'clothes', item_type: 'clothes' },
+    { key: 'special-item-2', item_image_manifest: 'wing', item_type: 'wing' }
+  ].map(convertSlotToDisplay)
+})
 
 // Initialize bag items with 50 empty slots
 const MIN_BAG_ITEMS = 50
@@ -285,35 +490,13 @@ const initializeBagItems = () => {
   if (userDataValue.exp_needed !== undefined) {
     totalExpNeeded.value = userDataValue.exp_needed
   }
-  
-  // Merge items with item details for each category
-  const itemDetails = userDataValue.item_detail || {}
-  
-  // Helper function to enrich items with details
-  const enrichItems = (items) => {
-    return items.map(item => {
-      const itemId = item.item_id || item.id
-      const itemDetail = itemDetails[itemId]
-      if (itemDetail) {
-        return {
-          id: item.id,
-          item_id: item.item_id || item.id,
-          quantity: item.quantity,
-          properties: item.properties || {},
-          key_image: itemDetail.key_image,
-          name: itemDetail.name,
-        }
-      }
-      return item
-    })
+  if (userDataValue.gears !== undefined) {
+    wornGears.value = userDataValue.gears || {}
   }
-  
-  // Enrich all categories from user_bag
-  const userBag = userDataValue.user_bag || {}
-  allItems.value.bag = enrichItems(userBag.bag || [])
-  allItems.value.sword = enrichItems(userBag.sword || [])
-  allItems.value.other = enrichItems(userBag.other || [])
-  allItems.value.shop = enrichItems(userBag.shop || [])
+  if (userDataValue.gear_wear_config !== undefined) {
+    // gearWearConfig is provided globally, but we can also update it here if needed
+    // The config should already be set from RewardPlayPage
+  }
   
   // Update displayed items based on current filter
   updateDisplayedItems()
@@ -339,7 +522,8 @@ const loadBagData = async () => {
       const mapItems = (items) => {
         return items.map(bi => ({
           id: bi.id,
-          item_id: bi.item_id,
+          item: bi.item,
+          item_type: bi.item_type,
           quantity: bi.quantity,
           property: bi.properties || {},
           key_image: bi.item?.image || 'bag.other', // Fallback image
@@ -456,6 +640,338 @@ const formatPower = (power) => {
   }
   return power.toString()
 }
+
+// Get gear for a specific slot
+const getGearForSlot = (slotKey) => {
+  return wornGears.value[slotKey] || null
+}
+
+// Get gear image for slot
+const getGearImage = (slotKey) => {
+  const gear = getGearForSlot(slotKey)
+  if (gear && gear.item && gear.item.image) {
+    return gear.item.image
+  }
+  return null
+}
+
+// Check if slot can accept item
+const canAcceptItemSlotKey = (slotKey, itemCheck) => {
+  if (!itemCheck) return false
+  
+  // Case 1: Check if itemCheck.item_type is 'gear' (for items in bag)
+  if (itemCheck.item_type !== 'gear') {
+    return false
+  }
+  
+  // Get slot config from gearWearConfig
+  let slotConfig = null
+  if (gearWearConfig.value) {
+    const allSlots = [
+      ...(gearWearConfig.value.main_weapons || []),
+      ...(gearWearConfig.value.special_weapons || []),
+      ...(gearWearConfig.value.special_items || [])
+    ]
+    slotConfig = allSlots.find(slot => slot.key === slotKey)
+  }
+  
+  // If no slot config found, fallback to computed slots
+  if (!slotConfig) {
+    const allComputedSlots = [...mainWeapons.value, ...specialWeapons.value, ...specialItems.value]
+    const computedSlot = allComputedSlots.find(slot => slot.key === slotKey)
+    if (!computedSlot) return false
+    // For computed slots, we can't check item.type match, so just return true if item_type is gear
+    return true
+  }
+  
+  // Case 2: Check if itemCheck.item.type matches slot.item_type
+  // itemCheck.item.type is the actual item type (sword, hat, etc.)
+  // slot.item_type is the required type for that slot
+  const itemActualType = itemCheck.item?.type || null
+  if (itemActualType && slotConfig.item_type) {
+    return itemActualType === slotConfig.item_type
+  }
+  
+  // If item doesn't have item.type, fallback to checking if slot exists
+  return true
+}
+
+// Reload userData from backend
+const reloadUserData = async () => {
+  if (!gameApi || !gameApi.getUserData) return
+
+  try {
+    const response = await gameApi.getUserData()
+    if (response.data && response.data.success && response.data.datas) {
+      if (userData.value) {
+        Object.assign(userData.value, response.data.datas)
+        // Update local refs
+        if (userData.value.power !== undefined) {
+          userPower.value = userData.value.power
+        }
+        if (userData.value.gears !== undefined) {
+          wornGears.value = userData.value.gears || {}
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error reloading userData:', error)
+  }
+}
+
+// Schedule reload of userData after 5 seconds
+const scheduleUserDataReload = () => {
+  // Clear existing timer
+  if (reloadUserDataTimer) {
+    clearTimeout(reloadUserDataTimer)
+  }
+
+  // Set new timer for 5 seconds
+  reloadUserDataTimer = setTimeout(() => {
+    reloadUserData()
+    reloadUserDataTimer = null
+  }, 5000)
+}
+
+// Wear item to slot
+const wearItemToSlot = async (item, slotKey) => {
+  if (!item || item.item_type !== 'gear') {
+    return false
+  }
+
+  if (!canAcceptItemSlotKey(slotKey, item)) {
+    return false
+  }
+
+  // Get item ID (UserBagItem id)
+  const itemId = item.id
+  if (!itemId) {
+    console.error('Item ID is required')
+    return false
+  }
+
+  // Prepare gear mapping: only send slotKey -> itemId
+  const gearMapping = { [slotKey]: itemId }
+
+  // Save to database (backend will fetch real data)
+  try {
+    const response = await gameApi.saveGears(gearMapping)
+    
+    // Update worn gears from backend response (real data)
+    if (response.data && response.data.datas && response.data.datas.gears) {
+      wornGears.value = response.data.datas.gears
+      
+      // Update userData with backend-calculated values
+      if (userData.value) {
+        if (response.data.datas.power !== undefined) {
+          userData.value.power = response.data.datas.power
+          userPower.value = response.data.datas.power
+        }
+        if (response.data.datas.stats !== undefined) {
+          userData.value.stats = response.data.datas.stats
+        }
+        userData.value.gears = response.data.datas.gears
+      }
+    }
+    
+    // Schedule reload of userData after 5 seconds (if no other wear action happens)
+    scheduleUserDataReload()
+  } catch (error) {
+    console.error('Error saving gears:', error)
+    return false
+  }
+
+  return true
+}
+
+// Find appropriate slot for item based on config
+const findSlotForItem = (item) => {
+  if (!item || item.item_type !== 'gear') return null
+  
+  // Get item's actual type (sword, hat, etc.) from item.type
+  const itemActualType = item.item?.type || null
+  if (!itemActualType) return null
+  
+  // Get all slots from config
+  if (!gearWearConfig.value) return null
+  
+  const allSlots = [
+    ...(gearWearConfig.value.main_weapons || []),
+    ...(gearWearConfig.value.special_weapons || []),
+    ...(gearWearConfig.value.special_items || [])
+  ]
+  
+  // Find first slot that matches the item's type and is empty or can be replaced
+  const matchingSlotEmpty = allSlots.find(slot => slot.item_type === itemActualType && !getGearForSlot(slot.key))
+  const matchingSlot = allSlots.find(slot => slot.item_type === itemActualType)
+  if (matchingSlotEmpty) {
+    return matchingSlotEmpty.key
+  }
+  if (matchingSlot) {
+    return matchingSlot.key
+  }
+  return null
+}
+
+// Handle wear button click
+const handleWearItem = async (item) => {
+  if (!item || item.item_type !== 'gear') return
+
+  // Find appropriate slot based on item type and config
+  const slotKey = findSlotForItem(item)
+  if (!slotKey) {
+    console.warn('No available slot found for item')
+    return
+  }
+  
+  const success = await wearItemToSlot(item, slotKey)
+  
+  if (success) {
+    selectedItem.value = null
+  }
+}
+
+// Handle double-click to wear
+const handleItemDoubleClick = async (item) => {
+  if (item && item.item_type === 'gear') {
+    await handleWearItem(item)
+  }
+}
+
+// Handle drag start
+const handleDragStart = (event, item) => {
+  if (item && item.item_type === 'gear') {
+    draggingItem.value = item
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', '')
+  }
+}
+
+// Handle drag over
+const handleDragOver = (event, slotKey) => {
+  if (draggingItem.value && canAcceptItemSlotKey(slotKey, draggingItem.value)) {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    dragOverSlot.value = slotKey
+  }
+}
+
+// Handle drag leave
+const handleDragLeave = () => {
+  dragOverSlot.value = null
+}
+
+// Handle drop
+const handleDrop = async (event, slotKey) => {
+  event.preventDefault()
+  dragOverSlot.value = null
+  
+  if (draggingItem.value) {
+    await wearItemToSlot(draggingItem.value, slotKey)
+    draggingItem.value = null
+  }
+}
+
+// Handle gear slot click to view detail
+const handleGearSlotClick = (slotKey) => {
+  const gear = getGearForSlot(slotKey)
+  if (gear) {
+    selectedItem.value = {
+      ...gear,
+      item_id: gear.item_id,
+      item_type: gear.item_type,
+      properties: gear.properties,
+      key_image: gear.item?.image ? gear.item.image : null,
+      name: gear.item?.name || 'Gear',
+      _wornSlotKey: slotKey // Store slot key for easy reference
+    }
+  }
+}
+
+// Handle gear slot double click to unwear
+const handleGearSlotDoubleClick = async (slotKey) => {
+  const gear = getGearForSlot(slotKey)
+  if (gear) {
+    await handleUnwearItem(slotKey)
+  }
+}
+
+// Handle gear slot drag start (for dragging worn gear to bag)
+const handleGearSlotDragStart = (event, slotKey) => {
+  const gear = getGearForSlot(slotKey)
+  if (gear) {
+    // Store the slot key in draggingItem so we can unwear it when dropped
+    draggingItem.value = {
+      ...gear,
+      _wornSlotKey: slotKey,
+      item_type: 'gear'
+    }
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', '')
+  }
+}
+
+// Handle drag over bag area
+const handleBagDragOver = (event) => {
+  // Allow drop if dragging a worn gear
+  if (draggingItem.value && draggingItem.value._wornSlotKey) {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+// Handle drag leave bag area
+const handleBagDragLeave = () => {
+  // Optional: add visual feedback
+}
+
+// Handle drop on bag area (to unwear gear)
+const handleBagDrop = async (event) => {
+  event.preventDefault()
+  
+  if (draggingItem.value && draggingItem.value._wornSlotKey) {
+    const slotKey = draggingItem.value._wornSlotKey
+    await handleUnwearItem(slotKey)
+    draggingItem.value = null
+  }
+}
+
+// Handle unwear/remove gear
+const handleUnwearItem = async (slotKey) => {
+  if (!slotKey) return
+  
+  // Remove gear by sending null/0 to backend
+  const gearMapping = { [slotKey]: 0 }
+  
+  try {
+    const response = await gameApi.saveGears(gearMapping)
+    
+    // Update worn gears from backend response
+    if (response.data && response.data.datas && response.data.datas.gears) {
+      wornGears.value = response.data.datas.gears
+      
+      // Update userData with backend-calculated values
+      if (userData.value) {
+        if (response.data.datas.power !== undefined) {
+          userData.value.power = response.data.datas.power
+          userPower.value = response.data.datas.power
+        }
+        if (response.data.datas.stats !== undefined) {
+          userData.value.stats = response.data.datas.stats
+        }
+        userData.value.gears = response.data.datas.gears
+      }
+    }
+    
+    // Close detail panel
+    selectedItem.value = null
+    
+    // Schedule reload of userData after 5 seconds
+    scheduleUserDataReload()
+  } catch (error) {
+    console.error('Error removing gear:', error)
+  }
+}
 </script>
 
 <style scoped>
@@ -562,14 +1078,6 @@ const formatPower = (power) => {
   margin: 24px;
 }
 
-/* Item Box */
-.item-box {
-  width: 111px;
-  height: 111px;
-  margin: 10px;
-  background-size: cover;
-}
-
 .box-item-weapon-main {
   display: inline-block;
   margin-top: 30px;
@@ -577,9 +1085,16 @@ const formatPower = (power) => {
   text-align: center;
 }
 
-.box-item-weapon-main .item-box img {
-  width: 70%;
-  margin-top: 10px;
+.box-item-weapon-main .gear-slot {
+  width: 111px;
+  height: 111px;
+  margin: 10px;
+}
+
+.box-item-weapon-main .gear-slot img {
+  width: 82%;
+  /* margin-top: 10px; */
+  place-self: anchor-center;
 }
 
 .box-item-weapon-sp {
@@ -588,18 +1103,32 @@ const formatPower = (power) => {
   text-align: center;
 }
 
-.box-item-weapon-sp .item-box img {
-  width: 70%;
-  margin-top: 10px;
+.box-item-weapon-sp .gear-slot {
+  width: 111px;
+  height: 111px;
+  margin: 10px;
+}
+
+.box-item-weapon-sp .gear-slot img {
+  width: 82%;
+  place-self: anchor-center;
+  /* margin-top: 10px; */
 }
 
 .box-item-weapon-sp-hit {
   text-align: center;
 }
 
-.box-item-weapon-sp-hit .item-box img {
-  width: 70%;
-  margin-top: 10px;
+.box-item-weapon-sp-hit .gear-slot {
+  width: 111px;
+  height: 111px;
+  margin: 10px;
+}
+
+.box-item-weapon-sp-hit .gear-slot img {
+  width: 82%;
+  /* margin-top: 10px; */
+  place-self: anchor-center;
 }
 
 /* Right Weapon Gear */
@@ -780,16 +1309,6 @@ const formatPower = (power) => {
   background: transparent;
 }
 
-.right-wp-gear-list .item-box {
-  display: inline-block;
-  text-align: center;
-}
-
-.right-wp-gear-list .item-box img {
-  width: 70%;
-  margin-top: 10px;
-}
-
 /* Menu Item Bag */
 .menu-item-bag-data {
   margin-top: 20px;
@@ -841,7 +1360,13 @@ const formatPower = (power) => {
   font-family: Nanami, sans-serif;
   height: calc(100% + 32px);
   overflow-y: auto;
-  z-index: 11;
+  z-index: 15;
+}
+
+.item-detail-panel.is-wear {
+  right: 59%;
+  left: auto;
+  transform: translateX(0);
 }
 
 .item-detail-close {
@@ -970,5 +1495,123 @@ const formatPower = (power) => {
   font-family: Nanami, sans-serif;
   font-size: 14px;
   font-weight: 700;
+}
+
+/* Item Detail Actions */
+.item-detail-actions {
+  padding: 15px 20px;
+  border-top: 1px solid rgba(105, 105, 105, 0.3);
+  margin-top: 10px;
+}
+
+.btn-wear {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #f6a901 0%, #ff8c00 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: Nanami, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(246, 169, 1, 0.3);
+}
+
+.btn-wear:hover {
+  background: linear-gradient(135deg, #ff8c00 0%, #f6a901 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(246, 169, 1, 0.4);
+}
+
+.btn-wear:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(246, 169, 1, 0.3);
+}
+
+.btn-exit {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-exit:hover {
+  background: linear-gradient(135deg, #c82333 0%, #dc3545 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+}
+
+.btn-exit:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Gear Slots */
+.gear-slot {
+  position: relative;
+  width: 111px;
+  height: 111px;
+  margin: 10px;
+  background-size: cover;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjYiIGhlaWdodD0iNjYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjY2IiBoZWlnaHQ9IjY2IiBmaWxsPSIjM0EzQTNBIiBzdHJva2U9IiM1NTUiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==');
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  border-radius: 4px;
+}
+
+.gear-slot img {
+  width: 100%;
+  padding: 8px;
+  display: block;
+  object-fit: contain;
+}
+
+.gear-slot-worn {
+  border: 2px solid #f6a901;
+  box-shadow: 0 0 10px rgba(246, 169, 1, 0.5);
+  background-color: rgba(246, 169, 1, 0.1);
+}
+
+.gear-slot-highlight {
+  border: 3px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+  background-color: rgba(0, 255, 0, 0.2);
+  transform: scale(1.05);
+}
+
+.gear-slot:hover {
+  border-color: #f6a901;
+  box-shadow: 0 0 8px rgba(246, 169, 1, 0.4);
+}
+
+.gear-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
+
+.gear-placeholder {
+  width: 100%;
+  padding: 8px;
+  display: block;
+  object-fit: contain;
+  opacity: 0.6;
 }
 </style>

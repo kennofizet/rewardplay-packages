@@ -444,6 +444,8 @@ export default {
         properties: 'Properties',
         item: 'Item',
       },
+      wear: 'Wear',
+      exit: 'Exit',
     },
     stats: {
       power: 'Power',

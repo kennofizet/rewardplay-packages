@@ -7,6 +7,7 @@ use Kennofizet\RewardPlay\Models\UserBagItem;
 use Kennofizet\RewardPlay\Models\UserEventTransaction;
 use Kennofizet\RewardPlay\Models\UserProfile;
 use Kennofizet\RewardPlay\Models\SettingLevelExp;
+use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Carbon\Carbon;
 
 trait UserActions
@@ -98,17 +99,6 @@ trait UserActions
     }
 
     /**
-     * Get user's power
-     * Currently returns 0, to be implemented later
-     * 
-     * @return int
-     */
-    public function getPower(): int
-    {
-        return 0;
-    }
-
-    /**
      * Get exp needed for user's current level
      * 
      * @return int
@@ -164,5 +154,111 @@ trait UserActions
     {
         $profile = UserProfile::getOrCreateProfile($this->id);
         return $profile->current_exp ?? 0;
+    }
+
+    /**
+     * Get user's worn gears
+     * 
+     * @return array
+     */
+    public function getGears(): array
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->gears ?? [];
+    }
+
+    /**
+     * Save/update user's worn gears
+     * 
+     * @param array $gears - Array of gear items with slot keys
+     * @return UserProfile
+     */
+    public function saveGears(array $gears): UserProfile
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        $profile->gears = $gears;
+        $profile->save();
+        
+        return $profile->fresh();
+    }
+
+    /**
+     * Calculate total power from all worn gears
+     * Power is calculated from properties.stats.power of all gears
+     * 
+     * @return int
+     */
+    public function getPower(): int
+    {
+        $gears = $this->getGears();
+        $totalPower = 0;
+
+        foreach ($gears as $slot => $gear) {
+            if (!is_array($gear) || !isset($gear['properties'])) {
+                continue;
+            }
+
+            $properties = $gear['properties'];
+            if (isset($properties['stats']) && is_array($properties['stats'])) {
+                $stats = $properties['stats'];
+                if (isset($stats[HelperConstant::POWER_KEY])) {
+                    $totalPower += (int)$stats[HelperConstant::POWER_KEY];
+                }
+            }
+        }
+
+        return $totalPower;
+    }
+
+    /**
+     * Calculate total stats from all worn gears
+     * Aggregates all stats from properties.stats and properties.custom_options[].properties of all gears
+     * 
+     * @return array
+     */
+    public function getStats(): array
+    {
+        $gears = $this->getGears();
+        $totalStats = [];
+
+        foreach ($gears as $slot => $gear) {
+            if (!is_array($gear) || !isset($gear['properties'])) {
+                continue;
+            }
+
+            $properties = $gear['properties'];
+            
+            // Add stats from properties.stats
+            if (isset($properties['stats']) && is_array($properties['stats'])) {
+                foreach ($properties['stats'] as $statKey => $statValue) {
+                    if (!isset($totalStats[$statKey])) {
+                        $totalStats[$statKey] = 0;
+                    }
+                    $totalStats[$statKey] += (int)$statValue;
+                }
+            }
+
+            // Add stats from properties.custom_options[].properties
+            if (isset($properties['custom_options'])) {
+                $customOptions = $properties['custom_options'];
+                // Handle both array and single object
+                $customOptionsArray = is_array($customOptions) && isset($customOptions[0]) 
+                    ? $customOptions 
+                    : [$customOptions];
+                
+                foreach ($customOptionsArray as $customOption) {
+                    if (is_array($customOption) && isset($customOption['properties']) && is_array($customOption['properties'])) {
+                        foreach ($customOption['properties'] as $statKey => $statValue) {
+                            if (!isset($totalStats[$statKey])) {
+                                $totalStats[$statKey] = 0;
+                            }
+                            $totalStats[$statKey] += (int)$statValue;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $totalStats;
     }
 }

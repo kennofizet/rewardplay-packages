@@ -352,6 +352,11 @@ const loadUserData = async () => {
     if (response.data && response.data.success) {
       // Store user data to be provided to child components
       userData.value = response.data.datas
+      
+      // Store gear wear config if available
+      if (response.data.datas && response.data.datas.gear_wear_config) {
+        gearWearConfig.value = response.data.datas.gear_wear_config
+      }
     }
   } catch (error) {
     console.error('Error loading user data:', error)
@@ -376,6 +381,10 @@ provide('translator', translator)
 // Provide userData (will be set after getUserData loads)
 const userData = ref(null)
 provide('userData', userData)
+
+// Gear wear config (will be set from userData)
+const gearWearConfig = ref(null)
+provide('gearWearConfig', gearWearConfig)
 
 // Global function to update userData
 const updateUserData = async (updates = {}) => {

@@ -66,6 +66,7 @@ Route::prefix($prefix)
         Route::get('/player/daily-rewards', [\Kennofizet\RewardPlay\Controllers\Player\DailyRewardController::class, 'index']);
         Route::post('/player/daily-rewards/collect', [\Kennofizet\RewardPlay\Controllers\Player\DailyRewardController::class, 'collect']);
         Route::get('/player/bag', [\Kennofizet\RewardPlay\Controllers\Player\BagController::class, 'index']);
+        Route::post('/player/bag/gears', [\Kennofizet\RewardPlay\Controllers\Player\BagController::class, 'saveGears']);
 
         Route::options('/manifest', function () {
             return response('', 200)

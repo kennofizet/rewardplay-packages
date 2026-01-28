@@ -446,6 +446,8 @@ export default {
         properties: 'Thuộc tính',
         item: 'Vật phẩm',
       },
+      wear: 'Mặc',
+      exit: 'Tháo',
     },
     stats: {
       power: 'Sức Mạnh',

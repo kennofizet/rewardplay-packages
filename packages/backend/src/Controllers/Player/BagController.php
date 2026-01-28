@@ -5,6 +5,7 @@ namespace Kennofizet\RewardPlay\Controllers\Player;
 use Kennofizet\RewardPlay\Controllers\Controller;
 use Kennofizet\RewardPlay\Services\Player\BagService;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
+use Kennofizet\RewardPlay\Requests\SaveGearsRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemConstant;
@@ -44,5 +45,33 @@ class BagController extends Controller
         }
 
         return $this->apiErrorResponse();
+    }
+
+    /**
+     * Save/update user's worn gears
+     * 
+     * @param SaveGearsRequest $request
+     * @return JsonResponse
+     */
+    public function saveGears(SaveGearsRequest $request): JsonResponse
+    {
+        $userId = $request->attributes->get('rewardplay_user_id');
+        
+        if (empty($userId)) {
+            return $this->apiErrorResponse('User not authenticated', 401);
+        }
+
+        $validated = $request->validated();
+        $gearMapping = $validated['gears'];
+
+        try {
+            $result = $this->service->saveGears($userId, $gearMapping);
+
+            return $this->apiResponseWithContext($result);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->apiErrorResponse($e->getMessage(), 400, $e->errors());
+        } catch (\Exception $e) {
+            return $this->apiErrorResponse($e->getMessage(), 500);
+        }
     }
 }

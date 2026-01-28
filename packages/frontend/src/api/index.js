@@ -141,6 +141,7 @@ export function createGameApi(backendUrl, token) {
     getPlayerDailyRewardState: () => api.get('/api/rewardplay/player/daily-rewards'), // Includes stack info
     collectDailyReward: () => api.post('/api/rewardplay/player/daily-rewards/collect'),
     getPlayerBag: () => api.get('/api/rewardplay/player/bag'),
+    saveGears: (gears) => api.post('/api/rewardplay/player/bag/gears', { gears }),
   }
 }
 
