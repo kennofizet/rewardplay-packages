@@ -28,6 +28,7 @@ import { ref, computed, inject, watch } from 'vue'
 import SettingItemsListPage from './manage-setting/SettingItemsListPage.vue'
 import SettingOptionsListPage from './manage-setting/SettingOptionsListPage.vue'
 import SettingItemSetsListPage from './manage-setting/SettingItemSetsListPage.vue'
+import SettingStatsTransformListPage from './manage-setting/SettingStatsTransformListPage.vue'
 import SettingStackBonusListPage from './manage-setting/SettingStackBonusListPage.vue'
 import SettingDailyRewardConfigPage from './manage-setting/SettingDailyRewardConfigPage.vue'
 import SettingLevelExpListPage from './manage-setting/SettingLevelExpListPage.vue'
@@ -62,6 +63,7 @@ const allMenuItems = [
   { key: 'setting-items', label: t('page.manageSetting.menu.settingItems'), requiresZone: true },
   { key: 'setting-options', label: t('page.manageSetting.menu.settingOptions'), requiresZone: true },
   { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets'), requiresZone: true },
+  { key: 'setting-stats-transform', label: t('page.manageSetting.menu.settingStatsTransform'), requiresZone: true },
   { key: 'manage-zones', label: t('page.manageSetting.menu.manageZones'), requiresZone: false },
   { key: 'setting-stack-bonuses', label: t('page.manageSetting.settingStackBonuses.title'), requiresZone: true },
   { key: 'setting-daily-rewards', label: t('page.manageSetting.settingDailyRewards.title'), requiresZone: true },
@@ -83,6 +85,7 @@ const currentPageComponent = computed(() => {
     'setting-items': SettingItemsListPage,
     'setting-options': SettingOptionsListPage,
     'setting-item-sets': SettingItemSetsListPage,
+    'setting-stats-transform': SettingStatsTransformListPage,
     'manage-zones': ManageZonesPage,
     'setting-stack-bonuses': SettingStackBonusListPage,
     'setting-daily-rewards': SettingDailyRewardConfigPage,

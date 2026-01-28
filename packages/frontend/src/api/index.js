@@ -104,6 +104,14 @@ export function createGameApi(backendUrl, token) {
     updateSettingOption: (id, data) => api.put(`/api/rewardplay/setting-options/${id}`, data),
     deleteSettingOption: (id) => api.delete(`/api/rewardplay/setting-options/${id}`),
 
+    // Setting Stats Transforms CRUD
+    getSettingStatsTransforms: (params) => api.get('/api/rewardplay/setting-stats-transforms', { params }),
+    createSettingStatsTransform: (data) => api.post('/api/rewardplay/setting-stats-transforms', data),
+    updateSettingStatsTransform: (id, data) => api.put(`/api/rewardplay/setting-stats-transforms/${id}`, data),
+    deleteSettingStatsTransform: (id) => api.delete(`/api/rewardplay/setting-stats-transforms/${id}`),
+    suggestSettingStatsTransforms: () => api.post('/api/rewardplay/setting-stats-transforms/suggest'),
+    getSettingStatsTransformsAllowedKeys: () => api.get('/api/rewardplay/setting-stats-transforms/allowed-keys'),
+
     // Global data (accessible to both player and manage)
     getAllStats: () => api.get('/api/rewardplay/stats/all'),
     getTypes: () => api.get('/api/rewardplay/types'),

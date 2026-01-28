@@ -7,6 +7,7 @@ use Kennofizet\RewardPlay\Models\UserBagItem;
 use Kennofizet\RewardPlay\Models\UserEventTransaction;
 use Kennofizet\RewardPlay\Models\UserProfile;
 use Kennofizet\RewardPlay\Models\SettingLevelExp;
+use Kennofizet\RewardPlay\Services\Model\SettingStatsTransformService;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Carbon\Carbon;
 
@@ -184,28 +185,16 @@ trait UserActions
 
     /**
      * Calculate total power from all worn gears
-     * Power is calculated from properties.stats.power of all gears
+     * Power is calculated from converted stats (using getStats which applies transforms)
      * 
      * @return int
      */
     public function getPower(): int
     {
-        $gears = $this->getGears();
-        $totalPower = 0;
-
-        foreach ($gears as $slot => $gear) {
-            if (!is_array($gear) || !isset($gear['properties'])) {
-                continue;
-            }
-
-            $properties = $gear['properties'];
-            if (isset($properties['stats']) && is_array($properties['stats'])) {
-                $stats = $properties['stats'];
-                if (isset($stats[HelperConstant::POWER_KEY])) {
-                    $totalPower += (int)$stats[HelperConstant::POWER_KEY];
-                }
-            }
-        }
+        $stats = $this->getStats();
+        
+        // Get power from converted stats
+        $totalPower = isset($stats[HelperConstant::POWER_KEY]) ? (int)$stats[HelperConstant::POWER_KEY] : 0;
 
         return $totalPower;
     }
@@ -213,6 +202,7 @@ trait UserActions
     /**
      * Calculate total stats from all worn gears
      * Aggregates all stats from properties.stats and properties.custom_options[].properties of all gears
+     * Applies stats transforms to convert source stats to target stats
      * 
      * @return array
      */
@@ -256,6 +246,38 @@ trait UserActions
                         }
                     }
                 }
+            }
+        }
+
+        // Apply stats transforms        
+        $transforms = app(SettingStatsTransformService::class)->getActiveTransforms();
+        
+        // Apply each transform
+        foreach ($transforms as $transform) {
+            $targetKey = $transform['target_key'];
+            $conversions = $transform['conversions'] ?? [];
+            
+            if (empty($conversions) || !is_array($conversions)) {
+                continue;
+            }
+            
+            // Apply each conversion (each source_key has its own conversion_value)
+            foreach ($conversions as $conversion) {
+                $sourceKey = $conversion['source_key'] ?? null;
+                $conversionValue = (float)($conversion['conversion_value'] ?? 0);
+                
+                if (!$sourceKey || !isset($totalStats[$sourceKey])) {
+                    continue;
+                }
+                
+                // Convert source stat to target stat
+                $sourceValue = (float)$totalStats[$sourceKey];
+                $convertedValue = $sourceValue * $conversionValue;
+                
+                if (!isset($totalStats[$targetKey])) {
+                    $totalStats[$targetKey] = 0;
+                }
+                $totalStats[$targetKey] += $convertedValue;
             }
         }
 

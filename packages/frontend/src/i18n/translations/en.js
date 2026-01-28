@@ -35,6 +35,7 @@ export default {
         settingItems: 'Setting Items',
         settingOptions: 'Setting Options',
         settingItemSets: 'Item Sets',
+        settingStatsTransform: 'Stats Transform',
         manageZones: 'Manage Zones',
       },
       settingItems: {
@@ -153,6 +154,57 @@ export default {
         },
         confirm: {
           delete: 'Are you sure you want to delete "{name}"?',
+        },
+      },
+      settingStatsTransform: {
+        title: 'Stats Transform',
+        create: 'Create New',
+        createModal: 'Create Stats Transform',
+        edit: 'Edit Stats Transform',
+        searchPlaceholder: 'Search by target key...',
+        loading: 'Loading...',
+        saving: 'Saving...',
+        saveFailed: 'Failed',
+        selectTargetKey: 'Select Target Key',
+        selectSourceKey: 'Select Source Key',
+        addConversion: 'Add Conversion',
+        removeConversion: 'Remove',
+        valuePlaceholder: 'Conversion Value',
+        conversionsHint: 'Add conversions by selecting a source stat and entering a conversion value for each',
+        table: {
+          id: 'ID',
+          target_key: 'Target Key',
+          conversions: 'Conversions',
+          actions: 'Actions',
+        },
+        actions: {
+          edit: 'Edit',
+          delete: 'Delete',
+          cancel: 'Cancel',
+        },
+        pagination: {
+          prev: 'Previous',
+          next: 'Next',
+          page: 'Page',
+          of: 'of',
+        },
+        form: {
+          target_key: 'Target Key *',
+          conversions: 'Conversions *',
+        },
+        errors: {
+          apiNotAvailable: 'Game API not available',
+          targetKeyRequired: 'Target key is required',
+          conversionsRequired: 'At least one conversion is required',
+          sourceKeysCannotIncludeTarget: 'Source key cannot be the same as target key',
+        },
+        suggest: 'Suggest Default Data',
+        confirm: {
+          delete: 'Are you sure you want to delete stats transform for "{target_key}"?',
+          suggest: 'This will create default stats transforms. Continue?',
+        },
+        messages: {
+          suggestSuccess: 'Default stats transforms created successfully',
         },
       },
       settingItemSets: {

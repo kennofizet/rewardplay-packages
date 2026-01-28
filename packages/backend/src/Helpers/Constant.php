@@ -48,6 +48,15 @@ class Constant
         self::RESISTANCE_KEY => 'Resistance',
     ];
 
+    /**
+     * Conversion keys that can accept conversions from other stats
+     * These are the target stats that can receive converted values
+     */
+    const CONVERSION_KEYS_ACCEPT_CONVERT = [
+        self::POWER_KEY => 'Power',
+        self::CV_KEY => 'CV'
+    ];
+
     // Reward Types
     const TYPE_COIN = 'coin';
     const TYPE_EXP = 'exp';

@@ -25,6 +25,7 @@ Route::prefix($prefix)
         require_once __DIR__ . '/setting/setting-items.php';
         require_once __DIR__ . '/setting/setting-options.php';
         require_once __DIR__ . '/setting/setting-item-sets.php';
+        require_once __DIR__ . '/setting/setting-stats-transforms.php';
         require_once __DIR__ . '/setting/zones.php';
 
         // New Settings Routes - IMPORTANT: Specific routes MUST come before apiResource

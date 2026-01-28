@@ -35,6 +35,7 @@ export default {
         settingItems: 'Vật Phẩm',
         settingOptions: 'Thuộc Tính',
         settingItemSets: 'Bộ Vật Phẩm',
+        settingStatsTransform: 'Chuyển Đổi Thuộc Tính',
         manageZones: 'Quản Lý Vùng',
       },  
       settingItems: {
@@ -153,6 +154,57 @@ export default {
         },
         confirm: {
           delete: 'Bạn có chắc muốn xóa "{name}"?',
+        },
+      },
+      settingStatsTransform: {
+        title: 'Chuyển Đổi Thuộc Tính',
+        create: 'Tạo Mới',
+        createModal: 'Tạo Chuyển Đổi Thuộc Tính',
+        edit: 'Chỉnh Sửa Chuyển Đổi Thuộc Tính',
+        searchPlaceholder: 'Tìm kiếm theo thuộc tính đích...',
+        loading: 'Đang tải...',
+        saving: 'Đang lưu...',
+        saveFailed: 'Thất bại',
+        selectTargetKey: 'Chọn Thuộc Tính Đích',
+        selectSourceKey: 'Chọn Thuộc Tính Nguồn',
+        addConversion: 'Thêm Chuyển Đổi',
+        removeConversion: 'Xóa',
+        valuePlaceholder: 'Giá Trị Chuyển Đổi',
+        conversionsHint: 'Thêm chuyển đổi bằng cách chọn thuộc tính nguồn và nhập giá trị chuyển đổi cho mỗi cái',
+        table: {
+          id: 'ID',
+          target_key: 'Thuộc Tính Đích',
+          conversions: 'Chuyển Đổi',
+          actions: 'Hành động',
+        },
+        actions: {
+          edit: 'Sửa',
+          delete: 'Xóa',
+          cancel: 'Hủy',
+        },
+        pagination: {
+          prev: 'Trước',
+          next: 'Tiếp',
+          page: 'Trang',
+          of: 'của',
+        },
+        form: {
+          target_key: 'Thuộc Tính Đích *',
+          conversions: 'Chuyển Đổi *',
+        },
+        errors: {
+          apiNotAvailable: 'Game API không khả dụng',
+          targetKeyRequired: 'Vui lòng chọn thuộc tính đích',
+          conversionsRequired: 'Vui lòng thêm ít nhất một chuyển đổi',
+          sourceKeysCannotIncludeTarget: 'Thuộc tính nguồn không thể giống với thuộc tính đích',
+        },
+        suggest: 'Gợi Ý Dữ Liệu Mặc Định',
+        confirm: {
+          delete: 'Bạn có chắc muốn xóa chuyển đổi thuộc tính cho "{target_key}"?',
+          suggest: 'Điều này sẽ tạo các chuyển đổi thuộc tính mặc định. Tiếp tục?',
+        },
+        messages: {
+          suggestSuccess: 'Đã tạo các chuyển đổi thuộc tính mặc định thành công',
         },
       },
       settingItemSets: {
