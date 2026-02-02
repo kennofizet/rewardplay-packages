@@ -410,21 +410,33 @@ export default {
       title: 'My Rank',
       position: 'Position',
       myCoin: 'My Coin',
+      myLevel: 'My Level',
+      myPower: 'My Power',
     },
     topWeek: {
       title: 'LEADERBOARD',
     },
     topCoin: {
-      title: 'Top 10 Coin',
+      title: 'Top 10',
       header: {
         top: 'Top',
         member: 'Member',
-        coin: '# of Coin',
+        coin: 'Coin',
+        level: 'Level',
+        power: 'Power',
       },
       period: {
-        now: 'Now',
+        day: 'Today',
         week: 'This Week',
         month: 'This Month',
+        year: 'This Year',
+      },
+    },
+    ranking: {
+      metric: {
+        coin: 'Coin',
+        level: 'Level',
+        power: 'Power',
       },
     },
     login: {

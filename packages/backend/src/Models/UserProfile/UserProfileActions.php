@@ -3,6 +3,9 @@
 namespace Kennofizet\RewardPlay\Models\UserProfile;
 
 use Kennofizet\RewardPlay\Models\UserProfile;
+use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\RewardPlay\Models\UserRankingSnapshot;
+use Kennofizet\RewardPlay\Models\UserRankingSnapshot\UserRankingSnapshotConstant;
 use Kennofizet\RewardPlay\Models\SettingLevelExp;
 
 trait UserProfileActions
@@ -83,5 +86,32 @@ trait UserProfileActions
         $this->save();
         
         return $this->fresh();
+    }
+
+    /**
+     * Refresh ranking snapshot for this profile (day/week/month/year) when coin, level, exp, ruby or gears change.
+     * Called from UserProfile::boot() saved event so leaderboards stay up to date.
+     */
+    public function refreshRankingSnapshot(): void
+    {
+        $userId = (int) $this->user_id;
+        $zoneId = $this->zone_id ? (int) $this->zone_id : null;
+        $coin = (int) ($this->coin ?? 0);
+        $level = (int) ($this->lv ?? 1);
+
+        $user = User::findById($userId);
+        $power = $user ? $user->getPower() : 0;
+
+        $periodTypes = [
+            UserRankingSnapshotConstant::PERIOD_DAY,
+            UserRankingSnapshotConstant::PERIOD_WEEK,
+            UserRankingSnapshotConstant::PERIOD_MONTH,
+            UserRankingSnapshotConstant::PERIOD_YEAR,
+        ];
+
+        foreach ($periodTypes as $periodType) {
+            $periodKey = UserRankingSnapshot::getCurrentPeriodKey($periodType);
+            UserRankingSnapshot::upsertForUser($userId, $zoneId, $periodType, $periodKey, $coin, $level, $power, true);
+        }
     }
 }

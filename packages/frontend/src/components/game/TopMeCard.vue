@@ -12,7 +12,15 @@
       </div>
       <div class="metric">
         <div class="metric__label">{{ t('component.topMe.myCoin') }}</div>
-        <div class="metric__value">{{ coin }}</div>
+        <div class="metric__value">{{ formatNumber(coin) }}</div>
+      </div>
+      <div class="metric">
+        <div class="metric__label">{{ t('component.topMe.myLevel') }}</div>
+        <div class="metric__value">{{ formatNumber(level) }}</div>
+      </div>
+      <div class="metric">
+        <div class="metric__label">{{ t('component.topMe.myPower') }}</div>
+        <div class="metric__value">{{ formatNumber(power) }}</div>
       </div>
     </div>
   </div>
@@ -32,6 +40,14 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  level: {
+    type: Number,
+    default: 1,
+  },
+  power: {
+    type: Number,
+    default: 0,
+  },
   loading: {
     type: Boolean,
     default: false,
@@ -44,6 +60,11 @@ const props = defineProps({
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
+
+const formatNumber = (n) => {
+  if (typeof n !== 'number') return String(n ?? 0)
+  return n.toLocaleString('en-US', { maximumFractionDigits: 0 }).replace(/,/g, '.')
+}
 
 defineEmits(['retry'])
 </script>
@@ -73,8 +94,12 @@ defineEmits(['retry'])
 
 .card__metrics {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+.card__metrics .metric:nth-child(1) {
+  grid-column: 1 / -1;
 }
 
 .metric {

@@ -68,5 +68,13 @@ class UserProfile extends BaseModel
                 $profile->lv = $currentLv;
             }
         });
+
+        // When coin, level, exp, ruby or gears change, refresh ranking snapshot (day/week/month/year)
+        static::saved(function ($profile) {
+            $rankingAttrs = ['coin', 'lv', 'current_exp', 'total_exp', 'ruby', 'gears'];
+            if ($profile->wasChanged($rankingAttrs)) {
+                $profile->refreshRankingSnapshot();
+            }
+        });
     }
 }

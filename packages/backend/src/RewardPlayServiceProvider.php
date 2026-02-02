@@ -35,6 +35,7 @@ class RewardPlayServiceProvider extends ServiceProvider
             $this->commands([
                 \Kennofizet\RewardPlay\Commands\PublishImagesCommand::class,
                 \Kennofizet\RewardPlay\Commands\ManageRewardPlayCommand::class,
+                \Kennofizet\RewardPlay\Commands\SnapshotRankingCommand::class,
             ]);
         }
 

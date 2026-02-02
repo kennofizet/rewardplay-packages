@@ -412,21 +412,33 @@ export default {
       title: 'Xếp Hạng Của Tôi',
       position: 'Vị Trí',
       myCoin: 'Xu Của Tôi',
+      myLevel: 'Cấp Của Tôi',
+      myPower: 'Sức Mạnh Của Tôi',
     },
     topWeek: {
       title: 'BẢNG XẾP HẠNG',
     },
     topCoin: {
-      title: 'Top 10 Xu',
+      title: 'Top 10',
       header: {
         top: 'Hạng',
         member: 'Thành Viên',
-        coin: 'Số Xu',
+        coin: 'Xu',
+        level: 'Cấp',
+        power: 'Sức Mạnh',
       },
       period: {
-        now: 'Hiện Tại',
+        day: 'Hôm Nay',
         week: 'Tuần Này',
         month: 'Tháng Này',
+        year: 'Năm Nay',
+      },
+    },
+    ranking: {
+      metric: {
+        coin: 'Xu',
+        level: 'Cấp',
+        power: 'Sức Mạnh',
       },
     },
     login: {

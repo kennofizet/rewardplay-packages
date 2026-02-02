@@ -22,7 +22,7 @@
           </div>
         </div>
         <div class="player-card__name">{{ player.name || `PLAYER ${index + 1}` }}</div>
-        <div class="player-card__score">{{ formatScore(player.score || player.coin || 0) }}</div>
+        <div class="player-card__score">{{ formatScore(player[valueKey] ?? player.score ?? player.coin ?? 0) }}</div>
         <div class="player-card__badge">
           <span>{{ index + 1 }}</span>
         </div>
@@ -42,7 +42,7 @@
           </div>
         </div>
         <div class="ranked-item__name">{{ player.name || `PLAYER ${index + 4}` }}</div>
-        <div class="ranked-item__score">{{ formatScore(player.score || player.coin || 0) }}</div>
+        <div class="ranked-item__score">{{ formatScore(player[valueKey] ?? player.score ?? player.coin ?? 0) }}</div>
       </div>
     </div>
   </div>
@@ -62,6 +62,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  valueKey: {
+    type: String,
+    default: 'coin', // coin | level | power
+  },
   loading: {
     type: Boolean,
     default: false,
@@ -71,6 +75,8 @@ const props = defineProps({
     default: null,
   },
 })
+
+const { valueKey } = props
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
@@ -218,8 +224,8 @@ defineEmits(['retry'])
 }
 
 .coin-icon--small {
-  width: 32px;
-  height: 32px;
+  width: 33px;
+  height: 33px;
 }
 
 .coin-icon__person {

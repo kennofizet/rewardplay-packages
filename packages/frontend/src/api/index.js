@@ -54,8 +54,8 @@ export function createGameApi(backendUrl, token) {
     getCustomImages: (params) => api.get('/api/rewardplay/player/custom-images', { params }),
     // Manifest
     getManifest: () => api.get('/api/rewardplay/manifest'),
-    // Ranking
-    getRanking: () => api.get('/api/rewardplay/ranking'),
+    // Ranking (period: day | week | month | year)
+    getRanking: (period = 'day') => api.get('/api/rewardplay/ranking', { params: { period } }),
     // Zones the current user can manage (for settings)
     getManagedZones: () => api.get('/api/rewardplay/player/managed-zones'),
     // Zone management (settings)

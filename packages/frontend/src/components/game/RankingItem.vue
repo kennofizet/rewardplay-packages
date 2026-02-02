@@ -33,19 +33,19 @@
           { 'u-text--white': rank > 3 }
         ]"
       >
-        <strong>{{ user.coin }}</strong>
+        <strong>{{ displayValue }}</strong>
       </div>
     </div>
   </li>
 </template>
 
 <script setup>
-import { inject } from 'vue'
+import { inject, computed } from 'vue'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
-defineProps({
+const props = defineProps({
   rank: {
     type: Number,
     required: true
@@ -58,9 +58,21 @@ defineProps({
       name: '',
       avatar: '',
       coin: 0,
+      level: 1,
+      power: 0,
       type: 'USER'
     })
+  },
+  valueKey: {
+    type: String,
+    default: 'coin' // coin | level | power
   }
+})
+
+const displayValue = computed(() => {
+  const v = props.user[props.valueKey]
+  if (typeof v === 'number') return v.toLocaleString('en-US', { maximumFractionDigits: 0 }).replace(/,/g, '.')
+  return String(v ?? 0)
 })
 </script>
 

@@ -3,72 +3,34 @@
 namespace Kennofizet\RewardPlay\Controllers;
 
 use Kennofizet\RewardPlay\Controllers\Controller;
+use Kennofizet\RewardPlay\Services\Player\RankingService;
+use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 use Illuminate\Http\Request;
-use Kennofizet\RewardPlay\Models\User;
-use Kennofizet\RewardPlay\Models\UserProfile;
+use Illuminate\Http\JsonResponse;
 
 class RankingController extends Controller
 {
+    public function __construct(
+        protected RankingService $rankingService
+    ) {
+    }
 
     /**
-     * Get ranking data
+     * Get ranking data for a period (day, week, month, year).
+     * Returns top coin, top level, top power and current user's ranks/values.
      */
-    public function getRanking(Request $request)
+    public function getRanking(Request $request): JsonResponse
     {
-        // Middleware ValidateRewardPlayToken already validated token and attached user id
         $userId = $request->attributes->get('rewardplay_user_id');
-
         if (empty($userId)) {
             return $this->apiErrorResponse('User not authenticated', 401);
         }
 
-        // Get current user's coin
-        $currentUser = User::findById($userId);
-        $myCoin = $currentUser ? $currentUser->getCoin() : 0;
+        $period = $request->query('period', 'day');
+        $zoneId = BaseModelActions::currentUserZoneId();
 
-        // Get top users by coin (all time)
-        $topUsers = UserProfile::orderBy('coin', 'desc')
-            ->limit(10)
-            ->with('user')
-            ->get()
-            ->map(function ($profile) {
-                return [
-                    'id' => $profile->user_id,
-                    'name' => $profile->user->name ?? 'Player ' . $profile->user_id,
-                    'avatar' => $profile->user->avatar ?? null,
-                    'coin' => $profile->coin ?? 0,
-                    'type' => 'USER'
-                ];
-            })
-            ->toArray();
+        $data = $this->rankingService->getRankingData((int) $userId, $zoneId, $period);
 
-        // Calculate user's rank
-        $myRank = UserProfile::where('coin', '>', $myCoin)->count() + 1;
-
-        // Get top week users (last 7 days - simplified, using all time for now)
-        // TODO: Implement proper weekly ranking based on coin gained in last 7 days
-        $topWeek = UserProfile::orderBy('coin', 'desc')
-            ->limit(8)
-            ->with('user')
-            ->get()
-            ->map(function ($profile) {
-                return [
-                    'id' => $profile->user_id,
-                    'name' => $profile->user->name ?? 'Player ' . $profile->user_id,
-                    'avatar' => $profile->user->avatar ?? null,
-                    'coin' => $profile->coin ?? 0,
-                    'type' => 'USER'
-                ];
-            })
-            ->toArray();
-
-        $ranking_data = [
-            'my_rank' => $myRank,
-            'my_coin' => $myCoin,
-            'top_users' => $topUsers,
-            'top_week' => $topWeek,
-        ];
-
-        return $this->apiResponseWithContext($ranking_data);
+        return $this->apiResponseWithContext($data);
     }
 }
