@@ -1,7 +1,7 @@
 <template>
   <div class="bag-content" :style="bagContentStyle">
     <div class="main">
-      <div class="table12">
+      <div class="table12 table12-with-lines">
         <div class="col-lg12-7 hero-gear hero-info">
           <div class="left-wp-gear col-lg12-4">
             <div class="box-item-weapon-main">
@@ -100,6 +100,18 @@
           </div>
           <div class="hero-animation col-lg12-8">
             <div class="col-lg12-12 hero-show-wrapper">
+              <!-- SVG Lines inside same wrapper as panels so coordinates match (hero-show-wrapper has min-height) -->
+              <svg 
+                v-if="selectedItem && isSelectedItemWorn && setBonusesForSelectedItem.length > 0"
+                class="set-bonus-lines"
+                ref="linesSvgRef"
+              >
+                <path
+                  v-if="linePathRef"
+                  :d="linePathRef"
+                  class="bonus-line"
+                />
+              </svg>
               <div class="hero-show">
                 <img :src="getImageUrl('character.hero')" alt="Hero">
                 <LevelBadge :level="userLevel" />
@@ -111,6 +123,7 @@
                 v-if="selectedItem && canShowItemDetail(selectedItem)" 
                 class="item-detail-panel"
                 :class="{ 'is-wear': isSelectedItemWorn }"
+                ref="itemDetailPanelRef"
               >
                 <button class="item-detail-close" @click="closeItemDetail">×</button>
                 <div class="item-detail-header">
@@ -192,7 +205,7 @@
             </div>
             <div class="cup-item box-item-h-lg float-left">
               <img :src="getImageUrl('bag.cup')" alt="Cup">
-              <span>buff top 1: 10% coin</span>
+              <span>---</span>
             </div>
             <div class="craft-item float-left box-item-smm event">
               <img :src="getImageUrl('bag.event')" alt="Event">
@@ -205,12 +218,52 @@
             </div>
             <div class="bonus-item box-item-h-lg float-left">
               <img :src="getImageUrl('bag.bonus')" alt="Bonus">
-              <span>{{ t('component.bag.buffCheckin') }} <span>{{ bonusCheckin }}%</span></span>
+              <span>---</span>
             </div>
             <div class="power-display-wrapper">
               <div class="power-display" :style="powerBackgroundStyle">
                 <div class="power-title">{{ t('component.bag.power') }}</div>
-                <div class="power-value">{{ formatPower(userPower) }}</div>
+                <div class="power-value">{{ formatPower(userPower) }}                </div>
+              </div>
+            </div>
+            <!-- Set Bonuses Card (position absolute, right of item-detail-panel) -->
+            <div 
+              v-if="selectedItem && isSelectedItemWorn && setBonusesForSelectedItem.length > 0"
+              class="set-bonus-card"
+            >
+              <div class="set-bonus-card-header">
+                <h3 class="set-bonus-card-title">{{ t('component.bag.itemDetail.setBonuses') }}</h3>
+              </div>
+              <div class="set-bonus-card-body">
+                <div 
+                  v-for="(bonusData, index) in setBonusesForSelectedItem"
+                  :key="'set-bonus-' + index"
+                  class="set-bonus-item"
+                  :data-bonus-index="index"
+                  ref="bonusItemRefs"
+                >
+                  <div class="set-bonus-header">
+                    <span class="set-bonus-set-name">{{ bonusData.setName }}</span>
+                    <span class="set-bonus-count">({{ bonusData.itemCount }}/{{ bonusData.totalItems }})</span>
+                  </div>
+                  <div class="set-bonus-content">
+                    <div 
+                      v-for="(bonus, level) in bonusData.bonuses"
+                      :key="'bonus-' + level"
+                      class="set-bonus-level"
+                    >
+                      <span class="set-bonus-level-label">{{ level === 'full' ? t('component.bag.itemDetail.fullSetBonus') : `${level} ${t('component.bag.itemDetail.items')}` }}:</span>
+                      <div class="set-bonus-stats">
+                        <template v-for="(value, statKey) in bonus" :key="'stat-' + statKey">
+                          <span class="set-bonus-stat-inline">
+                            <span class="item-detail-property-key">{{ formatPropertyKey(statKey) }}:</span>
+                            <span class="item-detail-property-value">+{{ value }}</span>
+                          </span>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -285,7 +338,7 @@
 </template>
 
 <script setup>
-import { ref, inject, computed, unref, onMounted, watch } from 'vue'
+import { ref, inject, computed, unref, onMounted, watch, nextTick } from 'vue'
 const gameApi = inject('gameApi')
 import ItemBox from '../../components/game/ItemBox.vue'
 import ExpBar from '../../components/game/ExpBar.vue'
@@ -300,7 +353,6 @@ const getStatNameFunc = inject('getStatName', getStatName)
 const t = translator || ((key) => key)
 
 // Fake data for game items
-const bonusCheckin = ref(10)
 const coinAmount = ref(0)
 const boxCoinAmount = ref(0)
 const rubyAmount = ref(0)
@@ -311,6 +363,10 @@ const totalExpNeeded = ref(100)
 
 // Selected item for detail panel
 const selectedItem = ref(null)
+const itemDetailPanelRef = ref(null)
+const bonusItemRefs = ref([])
+const linesSvgRef = ref(null)
+const linePathRef = ref('')
 
 // Worn gears from userData
 const wornGears = ref({})
@@ -328,6 +384,96 @@ const selectedItemProperties = computed(() => {
   // Support both property (singular) and properties (plural) for compatibility
   return selectedItem.value.property || selectedItem.value.properties || null
 })
+
+// Get current_sets and gears_sets from userData
+const currentSets = computed(() => {
+  const userDataValue = unref(userData)
+  return userDataValue?.current_sets || []
+})
+
+const gearsSets = computed(() => {
+  const userDataValue = unref(userData)
+  return userDataValue?.gears_sets || {}
+})
+
+// Get set bonuses for the selected item (if it's worn)
+const setBonusesForSelectedItem = computed(() => {
+  if (!selectedItem.value || !isSelectedItemWorn.value) {
+    return []
+  }
+
+  const slotKey = selectedItem.value._wornSlotKey
+  if (!slotKey) return []
+
+  // Get set indices for this slot from gears_sets
+  const setIndices = gearsSets.value[slotKey] || []
+  if (setIndices.length === 0) return []
+
+  // Get set data from current_sets
+  const bonuses = []
+  setIndices.forEach(index => {
+    const set = currentSets.value[index]
+    if (set && set.current_bonus && Object.keys(set.current_bonus).length > 0) {
+      bonuses.push({
+        setName: set.set_name || `Set ${set.set_id}`,
+        itemCount: set.item_count,
+        totalItems: set.total_items,
+        bonuses: set.current_bonus
+      })
+    }
+  })
+
+  return bonuses
+})
+
+// Calculate smooth line path from detail panel to bonus card (called after DOM is ready)
+// SVG lives inside hero-show-wrapper so coordinates are relative to that container
+const updateLinePath = () => {
+  linePathRef.value = ''
+  if (!itemDetailPanelRef.value) return
+
+  const bonusCard = document.querySelector('.set-bonus-card')
+  if (!bonusCard) return
+
+  const svg = linesSvgRef.value
+  // Container is hero-show-wrapper (same as SVG parent) – has min-height so coordinates are correct
+  const container = svg?.parentElement
+  if (!container) return
+
+  const detailPanel = itemDetailPanelRef.value
+  const containerRect = container.getBoundingClientRect()
+  const detailRect = detailPanel.getBoundingClientRect()
+  const bonusRect = bonusCard.getBoundingClientRect()
+
+  // Coordinates relative to hero-show-wrapper (same as SVG viewport)
+  const startX = detailRect.right - containerRect.left
+  const startY = detailRect.top + detailRect.height / 2 - containerRect.top
+  const endX = bonusRect.left - containerRect.left
+  const endY = bonusRect.top + bonusRect.height / 2 - containerRect.top
+
+  if (isNaN(startX) || isNaN(startY) || isNaN(endX) || isNaN(endY)) return
+
+  const controlX1 = startX + (endX - startX) * 0.5
+  const controlY1 = startY - 40
+  const controlX2 = endX - (endX - startX) * 0.5
+  const controlY2 = endY - 40
+
+  linePathRef.value = `M ${startX} ${startY} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${endX} ${endY}`
+}
+
+// Watch for changes and update line path after DOM/layout is ready
+watch([selectedItem, setBonusesForSelectedItem], async () => {
+  linePathRef.value = ''
+  if (!selectedItem.value || !isSelectedItemWorn.value || setBonusesForSelectedItem.value.length === 0) return
+
+  await nextTick()
+  // Wait for refs and layout (two frames so getBoundingClientRect is correct)
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      updateLinePath()
+    })
+  })
+}, { deep: true })
 
 // Check if selected item is currently worn
 const isSelectedItemWorn = computed(() => {
@@ -981,6 +1127,10 @@ const handleUnwearItem = async (slotKey) => {
   display: block;
 }
 
+.table12-with-lines {
+  position: relative;
+}
+
 .table12 .col-lg12-12 {
   display: block;
   float: left;
@@ -1352,7 +1502,7 @@ const handleUnwearItem = async (slotKey) => {
   top: 17px;
   left: 50%;
   transform: translateX(20px);
-  z-index: 1;
+  z-index: 2;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 8px;
   padding: 20px;
@@ -1502,6 +1652,136 @@ const handleUnwearItem = async (slotKey) => {
   padding: 15px 20px;
   border-top: 1px solid rgba(105, 105, 105, 0.3);
   margin-top: 10px;
+}
+
+.set-bonus-card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(105, 105, 105, 0.3);
+  background: rgba(240, 240, 240, 0.8);
+  border-radius: 8px 8px 0 0;
+}
+
+.set-bonus-card-title {
+  margin: 0;
+  color: dimgray;
+  font-family: Nanami, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.set-bonus-card-body {
+  padding: 12px;
+}
+
+.set-bonus-item {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: rgba(240, 240, 240, 0.5);
+  border: 1px solid rgba(105, 105, 105, 0.15);
+  border-radius: 4px;
+  position: relative;
+}
+
+.set-bonus-item:hover {
+  background: rgba(230, 230, 230, 0.7);
+  border-color: rgba(105, 105, 105, 0.3);
+}
+
+.set-bonus-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.set-bonus-set-name {
+  color: dimgray;
+  font-family: Nanami, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.set-bonus-count {
+  color: rgba(105, 105, 105, 0.7);
+  font-family: Nanami, sans-serif;
+  font-size: 11px;
+}
+
+.set-bonus-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.set-bonus-level {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.set-bonus-level-label {
+  color: dimgray;
+  font-family: Nanami, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.set-bonus-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: 0;
+}
+
+.set-bonus-stat-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* SVG Lines for connecting detail to bonuses – inside hero-show-wrapper so path coords match */
+.set-bonus-lines {
+  position: absolute;
+  top: 57px;
+  left: 110px;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+.set-bonus-card {
+  position: absolute;
+  top: 17px;
+  /* Right of item-detail-panel when worn (panel has right: 59%, so panel ends at 41% from left) */
+  left: calc(41% + 20px);
+  width: 280px;
+  max-height: 500px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(105, 105, 105, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  overflow-y: auto;
+}
+
+.bonus-line {
+  fill: none;
+  stroke: #f6a901;
+  stroke-width: 2;
+  stroke-opacity: 0.6;
+  stroke-dasharray: 5, 5;
+  animation: dash 2s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -20;
+  }
 }
 
 .btn-wear {

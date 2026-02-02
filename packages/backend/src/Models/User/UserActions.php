@@ -7,6 +7,9 @@ use Kennofizet\RewardPlay\Models\UserBagItem;
 use Kennofizet\RewardPlay\Models\UserEventTransaction;
 use Kennofizet\RewardPlay\Models\UserProfile;
 use Kennofizet\RewardPlay\Models\SettingLevelExp;
+use Kennofizet\RewardPlay\Models\SettingItemSet;
+use Kennofizet\RewardPlay\Models\SettingItemSetItem;
+use Kennofizet\RewardPlay\Models\UserProfile\UserProfileConstant;
 use Kennofizet\RewardPlay\Services\Model\SettingStatsTransformService;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Carbon\Carbon;
@@ -282,5 +285,145 @@ trait UserActions
         }
 
         return $totalStats;
+    }
+
+    /**
+     * Get current sets from worn gears
+     * Returns array of sets with: set_id, item_count, current_bonus
+     * 
+     * @return array
+     */
+    public function getCurrentSets(): array
+    {
+        $gears = $this->getGears();
+        $currentSets = [];
+
+        // Extract all item_ids from gears
+        $wornItemIds = [];
+        foreach ($gears as $slot => $gear) {
+            if (is_array($gear) && isset($gear['item_id'])) {
+                $wornItemIds[] = (int)$gear['item_id'];
+            }
+        }
+
+        if (empty($wornItemIds)) {
+            return [];
+        }
+
+        // Get all sets that contain any of the worn items
+        // Get unique set IDs first
+        $setIds = SettingItemSetItem::whereIn('item_id', $wornItemIds)
+            ->distinct()
+            ->pluck('set_id')
+            ->toArray();
+
+        if (empty($setIds)) {
+            return [];
+        }
+
+        // Get all sets with items relationship loaded
+        $sets = SettingItemSet::whereIn('id', $setIds)
+            ->with('items')
+            ->get();
+
+        // For each set, count how many items the user is wearing
+        foreach ($sets as $set) {
+            // Get item IDs in this set
+            $setItemIds = $set->items->pluck('id')->toArray();
+            
+            // Count how many items from this set the user is wearing
+            $itemCount = count(array_intersect($wornItemIds, $setItemIds));
+
+            if ($itemCount === 0) {
+                continue;
+            }
+
+            // Get total items in the set
+            $totalItemsInSet = $set->items->count();
+
+            // Collect all bonuses that are less than or equal to current item count
+            $currentBonuses = [];
+            $setBonuses = $set->set_bonuses ?? [];
+
+            // Add bonuses for levels <= item_count
+            foreach ($setBonuses as $level => $bonus) {
+                if ($level === 'full') {
+                    // Only include full bonus if user has all items
+                    if ($itemCount >= $totalItemsInSet) {
+                        $currentBonuses['full'] = $bonus;
+                    }
+                } else {
+                    $levelInt = (int)$level;
+                    if ($levelInt <= $itemCount) {
+                        $currentBonuses[$level] = $bonus;
+                    }
+                }
+            }
+
+            $currentSets[] = [
+                'set_id' => $set->id,
+                'set_name' => $set->name ?? null,
+                'item_count' => $itemCount,
+                'total_items' => $totalItemsInSet,
+                'current_bonus' => $currentBonuses,
+            ];
+        }
+
+        return $currentSets;
+    }
+
+    /**
+     * Get gears_sets mapping - which sets are active per individual slot
+     * Returns array like: ['main-weapon-1' => [0, 1], 'special-item-1' => [1]]
+     * where values are indices in current_sets array
+     * 
+     * @return array
+     */
+    public function getGearsSets(): array
+    {
+        $gears = $this->getGears();
+        $currentSets = $this->getCurrentSets();
+        $gearsSets = [];
+
+        // Create a map of set_id to index in current_sets
+        $setIdToIndex = [];
+        foreach ($currentSets as $index => $set) {
+            $setIdToIndex[$set['set_id']] = $index;
+        }
+
+        // Get all slot keys from gear config
+        $allSlots = UserProfileConstant::getAllGearSlots();
+        
+        // For each individual slot, find which sets have items in that slot
+        foreach ($allSlots as $slot) {
+            $slotKey = $slot['key'];
+            $slotSetIndices = [];
+            
+            // Get item_id from this specific slot
+            if (isset($gears[$slotKey]) && is_array($gears[$slotKey]) && isset($gears[$slotKey]['item_id'])) {
+                $itemId = (int)$gears[$slotKey]['item_id'];
+                
+                // Find which sets contain this item
+                $setIds = SettingItemSetItem::where('item_id', $itemId)
+                    ->distinct()
+                    ->pluck('set_id')
+                    ->toArray();
+                
+                // Map set IDs to indices in current_sets
+                foreach ($setIds as $setId) {
+                    if (isset($setIdToIndex[$setId])) {
+                        $slotSetIndices[] = $setIdToIndex[$setId];
+                    }
+                }
+            }
+            
+            // Remove duplicates and sort
+            $slotSetIndices = array_unique($slotSetIndices);
+            sort($slotSetIndices);
+            
+            $gearsSets[$slotKey] = array_values($slotSetIndices);
+        }
+
+        return $gearsSets;
     }
 }

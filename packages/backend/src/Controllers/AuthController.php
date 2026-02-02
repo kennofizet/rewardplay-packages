@@ -90,6 +90,8 @@ class AuthController extends Controller
             'exp_needed' => $user->getExpNeed(),
             'stats' => $user->getStats(),
             'gears' => $user->getGears(),
+            'current_sets' => $user->getCurrentSets(),
+            'gears_sets' => $user->getGearsSets(),
             'gear_wear_config' => UserProfileConstant::GEAR_WEAR_CONFIG
         ]);
     }
