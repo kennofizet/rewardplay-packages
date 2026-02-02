@@ -657,32 +657,36 @@ const updateDisplayedItems = () => {
   bagItems.value = [...currentItems, ...emptySlots]
 }
 
+// Map API user_bag items to frontend expected format (shared by loadBagData and saveGears response)
+const mapBagItems = (items) => {
+  if (!items || !Array.isArray(items)) return []
+  return items.map(bi => ({
+    id: bi.id,
+    item: bi.item,
+    item_type: bi.item_type,
+    quantity: bi.quantity,
+    property: bi.properties || {},
+    key_image: bi.item?.image || 'bag.other',
+    name: bi.item?.name || 'Gear',
+  }))
+}
+
+// Apply user_bag from API (getPlayerBag or saveGears response) to local allItems and refresh display
+const applyUserBagToAllItems = (bagData) => {
+  if (!bagData) return
+  allItems.value.bag = mapBagItems(bagData.bag || [])
+  allItems.value.sword = mapBagItems(bagData.sword || [])
+  allItems.value.other = mapBagItems(bagData.other || [])
+  allItems.value.shop = mapBagItems(bagData.shop || [])
+  updateDisplayedItems()
+}
+
 const loadBagData = async () => {
   if (!gameApi) return
   try {
     const res = await gameApi.getPlayerBag()
     if (res.data?.datas?.user_bag) {
-      const bagData = res.data.datas.user_bag
-      // Map API items to frontend expected format
-      // BagItem from API has item relation loaded
-      const mapItems = (items) => {
-        return items.map(bi => ({
-          id: bi.id,
-          item: bi.item,
-          item_type: bi.item_type,
-          quantity: bi.quantity,
-          property: bi.properties || {},
-          key_image: bi.item?.image || 'bag.other', // Fallback image
-          name: bi.item?.name || 'Gear',
-        }))
-      }
-
-      allItems.value.bag = mapItems(bagData.bag || [])
-      allItems.value.sword = mapItems(bagData.sword || [])
-      allItems.value.other = mapItems(bagData.other || [])
-      allItems.value.shop = mapItems(bagData.shop || [])
-      
-      updateDisplayedItems()
+      applyUserBagToAllItems(res.data.datas.user_bag)
     }
   } catch (e) {
     console.error("Failed to load bag data", e)
@@ -920,6 +924,11 @@ const wearItemToSlot = async (item, slotKey) => {
       }
     }
     
+    // Update local bag: wear removed 1 item (backend sub 1; if 0 removed and sorted)
+    if (response.data?.datas?.user_bag) {
+      applyUserBagToAllItems(response.data.datas.user_bag)
+    }
+    
     // Schedule reload of userData after 5 seconds (if no other wear action happens)
     scheduleUserDataReload()
   } catch (error) {
@@ -1107,6 +1116,11 @@ const handleUnwearItem = async (slotKey) => {
         }
         userData.value.gears = response.data.datas.gears
       }
+    }
+    
+    // Update local bag: unwear added 1 item back (backend += if found, else add new)
+    if (response.data?.datas?.user_bag) {
+      applyUserBagToAllItems(response.data.datas.user_bag)
     }
     
     // Close detail panel

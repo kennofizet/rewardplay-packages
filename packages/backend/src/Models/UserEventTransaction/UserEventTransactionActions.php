@@ -3,6 +3,7 @@
 namespace Kennofizet\RewardPlay\Models\UserEventTransaction;
 
 use Kennofizet\RewardPlay\Models\UserEventTransaction;
+use Carbon\Carbon;
 
 trait UserEventTransactionActions
 {
@@ -38,12 +39,16 @@ trait UserEventTransactionActions
 
     /**
      * Create a new user event transaction
-     * 
-     * @param array $data - Transaction data (user_id, zone_id, model_type, model_id, items)
+     * One transaction per (user, zone, model_type, model_id) per claim_date is allowed.
+     *
+     * @param array $data - Transaction data (user_id, zone_id, model_type, model_id, claim_date, items)
      * @return UserEventTransaction
      */
     public static function createTransaction(array $data): UserEventTransaction
     {
+        if (empty($data['claim_date'])) {
+            $data['claim_date'] = Carbon::today()->toDateString();
+        }
         return UserEventTransaction::create($data);
     }
 }

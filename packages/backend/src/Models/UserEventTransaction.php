@@ -16,6 +16,7 @@ class UserEventTransaction extends BaseModel
         'zone_id',
         'model_type',
         'model_id',
+        'claim_date',
         'items',
     ];
 

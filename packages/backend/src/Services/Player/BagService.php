@@ -6,6 +6,7 @@ use Kennofizet\RewardPlay\Models\UserBagItem;
 use Kennofizet\RewardPlay\Models\User;
 use Kennofizet\RewardPlay\Models\UserProfile\UserProfileConstant;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
+use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemConstant;
 use Illuminate\Validation\ValidationException;
 
 class BagService
@@ -74,10 +75,31 @@ class BagService
                 ]);
             }
             
-            // If userBagItemId is null or 0, remove gear from slot
+            // If userBagItemId is null or 0, unwear: remove gear from slot and add 1 item back to bag
             if (empty($userBagItemId)) {
+                $currentGear = $gears[$slotKey] ?? null;
+                if ($currentGear && !empty($currentGear['item_id'])) {
+                    // Add 1 item back to bag (giveItem: if found same item+properties will +=, else create new)
+                    $user->giveItem([
+                        'item_id' => $currentGear['item_id'],
+                        'item_type' => $currentGear['item_type'] ?? 'gear',
+                        'properties' => $currentGear['properties'] ?? [],
+                        'quantity' => 1,
+                    ]);
+                }
                 unset($gears[$slotKey]);
                 continue;
+            }
+            
+            // Wear: if slot already has an item, return it to bag first, then wear the new item
+            $currentGear = $gears[$slotKey] ?? null;
+            if ($currentGear && !empty($currentGear['item_id'])) {
+                $user->giveItem([
+                    'item_id' => $currentGear['item_id'],
+                    'item_type' => $currentGear['item_type'] ?? 'gear',
+                    'properties' => $currentGear['properties'] ?? [],
+                    'quantity' => 1,
+                ]);
             }
             
             // Fetch UserBagItem and verify it belongs to the user
@@ -89,6 +111,13 @@ class BagService
             if (!$userBagItem) {
                 throw ValidationException::withMessages([
                     "gears.{$slotKey}" => ["UserBagItem not found or doesn't belong to user: {$userBagItemId}"]
+                ]);
+            }
+            
+            // Check item found and quantity >= 1 (can sub to 0)
+            if ($userBagItem->quantity < 1) {
+                throw ValidationException::withMessages([
+                    "gears.{$slotKey}" => ["Item quantity must be at least 1 to wear"]
                 ]);
             }
             
@@ -108,8 +137,6 @@ class BagService
             }
             
             // Verify item's actual type matches slot's required type
-            // userBagItem->item->type is the actual item type (sword, hat, etc.)
-            // slotConfig['item_type'] is the required type for that slot
             if (!$userBagItem->item) {
                 throw ValidationException::withMessages([
                     "gears.{$slotKey}" => ["Item not found for UserBagItem: {$userBagItemId}"]
@@ -127,6 +154,13 @@ class BagService
                 ]);
             }
             
+            // Decrement bag: subtract 1 from this UserBagItem; if quantity becomes 0, remove from bag
+            $userBagItem->decrement('quantity', 1);
+            $userBagItem = $userBagItem->fresh();
+            if ($userBagItem && $userBagItem->quantity <= 0) {
+                $userBagItem->delete();
+            }
+            
             // Build gear data from database (protect against tampering)
             $gears[$slotKey] = [
                 'item_id' => $userBagItem->item_id,
@@ -142,10 +176,19 @@ class BagService
 
         $user->saveGears($gears);
 
+        // Return updated user_bag so frontend can sync (wear: sub 1 / remove; unwear: += or add new)
+        $categorized = $this->getUserBagCategorized($userId);
+        $responseMode = UserBagItemConstant::PLAYER_API_RESPONSE_BAG_PAGE;
+        $formattedCategorized = [];
+        foreach ($categorized as $category => $items) {
+            $formattedCategorized[$category] = UserBagItemModelResponse::formatUserBagItems($items, $responseMode);
+        }
+
         return [
             'gears' => $user->getGears(),
             'power' => $user->getPower(),
             'stats' => $user->getStats(),
+            'user_bag' => $formattedCategorized,
         ];
     }
 
