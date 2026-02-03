@@ -165,6 +165,11 @@ class SettingItemService
                 'name' => $item->name,
                 'type' => $type,
                 'image' => \Kennofizet\RewardPlay\Core\Model\BaseModelResponse::getImageFullUrl($item->image),
+                'actions' => [
+                    'is_box_random' => SettingItemConstant::isBoxRandom($type),
+                    'is_gear' => SettingItemConstant::isGearSlotType($type),
+                    'is_ticket' => SettingItemConstant::isTicket($type),
+                ],
             ];
         })->toArray();
 

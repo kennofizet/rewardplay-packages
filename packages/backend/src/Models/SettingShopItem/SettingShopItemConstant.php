@@ -12,6 +12,7 @@ class SettingShopItemConstant
     const CATEGORY_TICKET = 'ticket';
     const CATEGORY_BOX_RANDOM = 'box_random';
     const CATEGORY_EVENT = 'event';
+    const CATEGORY_CUSTOM = 'custom';
 
     const PRICE_TYPE_COIN = 'coin';
     const PRICE_TYPE_GEM = 'gem';

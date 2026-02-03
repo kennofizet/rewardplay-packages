@@ -20,6 +20,8 @@ class StoreSettingShopItemRequest extends FormRequest
             SettingShopItemConstant::CATEGORY_GEAR,
             SettingShopItemConstant::CATEGORY_TICKET,
             SettingShopItemConstant::CATEGORY_BOX_RANDOM,
+            SettingShopItemConstant::CATEGORY_EVENT,
+            SettingShopItemConstant::CATEGORY_CUSTOM
         ]);
         $priceTypes = implode(',', [
             SettingShopItemConstant::PRICE_TYPE_COIN,
