@@ -41,6 +41,7 @@
 
 <script setup>
 import { inject, computed } from 'vue'
+import { formatCompactNumber } from '../../utils/numberFormat'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
@@ -71,8 +72,7 @@ const props = defineProps({
 
 const displayValue = computed(() => {
   const v = props.user[props.valueKey]
-  if (typeof v === 'number') return v.toLocaleString('en-US', { maximumFractionDigits: 0 }).replace(/,/g, '.')
-  return String(v ?? 0)
+  return formatCompactNumber(v)
 })
 </script>
 

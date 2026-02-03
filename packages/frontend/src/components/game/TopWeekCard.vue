@@ -22,7 +22,7 @@
           </div>
         </div>
         <div class="player-card__name">{{ player.name || `PLAYER ${index + 1}` }}</div>
-        <div class="player-card__score">{{ formatScore(player[valueKey] ?? player.score ?? player.coin ?? 0) }}</div>
+        <div class="player-card__score">{{ formatCompactNumber(player[valueKey] ?? player.score ?? player.coin ?? 0) }}</div>
         <div class="player-card__badge">
           <span>{{ index + 1 }}</span>
         </div>
@@ -42,7 +42,7 @@
           </div>
         </div>
         <div class="ranked-item__name">{{ player.name || `PLAYER ${index + 4}` }}</div>
-        <div class="ranked-item__score">{{ formatScore(player[valueKey] ?? player.score ?? player.coin ?? 0) }}</div>
+        <div class="ranked-item__score">{{ formatCompactNumber(player[valueKey] ?? player.score ?? player.coin ?? 0) }}</div>
       </div>
     </div>
   </div>
@@ -50,6 +50,7 @@
 
 <script setup>
 import { inject } from 'vue'
+import { formatCompactNumber } from '../../utils/numberFormat'
 import TopWeekCardSkeleton from './TopWeekCardSkeleton.vue'
 import ErrorState from '../ui/ErrorState.vue'
 
@@ -80,13 +81,6 @@ const { valueKey } = props
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
-
-const formatScore = (score) => {
-  if (typeof score === 'number') {
-    return score.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).replace(/,/g, '.')
-  }
-  return String(score).replace(/,/g, '.')
-}
 
 defineEmits(['retry'])
 </script>

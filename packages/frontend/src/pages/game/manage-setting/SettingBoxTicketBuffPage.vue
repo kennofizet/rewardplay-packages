@@ -210,7 +210,7 @@ const defaultForm = () => ({
 })
 
 const formData = ref(defaultForm())
-const filters = ref({ currentPage: 1, perPage: 15 })
+const filters = ref({ currentPage: 1, perPage: 11 })
 
 async function loadZoneItems() {
   try {

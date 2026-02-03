@@ -33,15 +33,18 @@ class BagController extends Controller
 
         $categorized = $this->service->getUserBagCategorized($userId);
 
-        if ($request->expectsJson()) {            
+        if ($request->expectsJson()) {
             // Format categorized items
             $formattedCategorized = [];
             foreach ($categorized as $category => $items) {
                 $formattedCategorized[$category] = UserBagItemModelResponse::formatUserBagItems($items, $reponseMode);
             }
 
+            $bagMenu = $this->service->getBagMenuConfig();
+
             return $this->apiResponseWithContext([
                 'user_bag' => $formattedCategorized,
+                'bag_menu' => $bagMenu,
             ]);
         }
 

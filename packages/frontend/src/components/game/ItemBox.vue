@@ -66,6 +66,8 @@ const boxStyle = computed(() => {
 
 .item-box img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
   padding: 18px;
   display: flex;
 }

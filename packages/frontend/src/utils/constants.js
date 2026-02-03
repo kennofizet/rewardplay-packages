@@ -100,6 +100,20 @@ export function getGearTypes() {
 export const SHOP_CATEGORY_ALL = 'all'
 
 /**
+ * Default bag menu list (mirrors backend UserBagItemConstant::getBagMenuList).
+ * Used when API does not return bag_menu. Each entry: { key, item_types, show_when_properties_empty, image_key, label_key }.
+ */
+export function getBagMenuList() {
+  const c = getItemConstants()
+  return [
+    { key: 'bag', item_types: null, show_when_properties_empty: true, image_key: 'bag.bag', label_key: 'component.bag.menuAll' },
+    { key: 'sword', item_types: [c.ITEM_TYPE_SWORD], show_when_properties_empty: false, image_key: 'bag.sword', label_key: 'component.types.sword' },
+    { key: 'other', item_types: [c.ITEM_TYPE_HAT, c.ITEM_TYPE_SHIRT, c.ITEM_TYPE_TROUSER, c.ITEM_TYPE_SHOE, c.ITEM_TYPE_NECKLACE, c.ITEM_TYPE_BRACELET, c.ITEM_TYPE_RING, c.ITEM_TYPE_CLOTHES, c.ITEM_TYPE_WING], show_when_properties_empty: false, image_key: 'bag.bracelet', label_key: 'component.bag.menuOther' },
+    { key: 'shop', item_types: [c.ITEM_TYPE_TICKET, c.ITEM_TYPE_BOX_RANDOM, c.ITEM_TYPE_BUFF], show_when_properties_empty: false, image_key: 'bag.shop', label_key: 'component.bag.menuShop' },
+  ]
+}
+
+/**
  * Relative path to the RewardPlay constants script (published by backend).
  * Use with backend origin to build full URL, e.g. load in ResourceLoader before app uses constants.
  */

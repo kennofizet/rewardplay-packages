@@ -690,6 +690,15 @@ export default {
       openBoxRewards: 'You received',
       openBoxFailed: 'Failed to open',
       close: 'Close',
+      menuAll: 'All',
+      menuOther: 'Other',
+      menuShop: 'Shop',
+      menu: {
+        gear: 'Gear',
+        can_use_items: 'Can Use Items',
+        other_items: 'Other Items',
+        wait_appraisal: 'Wait Appraisal',
+      },
     },
     stats: {
       power: 'Power',

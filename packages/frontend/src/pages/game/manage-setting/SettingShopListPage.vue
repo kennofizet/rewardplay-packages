@@ -485,7 +485,7 @@ function handlePropertyChange(index) {
   }
 }
 
-const filters = ref({ currentPage: 1, perPage: 15, category: '' })
+const filters = ref({ currentPage: 1, perPage: 11, category: '' })
 
 async function loadZoneItems() {
   try {

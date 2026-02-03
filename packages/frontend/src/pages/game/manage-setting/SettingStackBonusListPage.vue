@@ -124,7 +124,7 @@ const rewardTypes = ref([])
 
 const filters = ref({
   currentPage: 1,
-  perPage: 15
+  perPage: 11
 })
 
 const loadRewardTypes = async () => {

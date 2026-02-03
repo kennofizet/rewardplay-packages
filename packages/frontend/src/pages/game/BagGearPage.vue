@@ -201,7 +201,7 @@
                     </div>
                   </template>
                   <!-- Box (box_random): possible drops (rate list) + open count + Open button -->
-                  <template v-else-if="selectedItem && selectedItem.actions?.is_box_random">
+                  <template v-else-if="selectedItem && selectedItem.actions?.is_box_random && boxRateList.length > 0">
                     <h4 class="item-detail-properties-title">{{ t('component.bag.itemDetail.possibleDrops') || 'Possible drops' }}</h4>
                     <div class="item-detail-properties">
                       <div 
@@ -256,7 +256,7 @@
             <div class="power-display-wrapper">
               <div class="power-display" :style="powerBackgroundStyle">
                 <div class="power-title">{{ t('component.bag.power') }}</div>
-                <div class="power-value">{{ formatPower(userPower) }}</div>
+                <div class="power-value">{{ formatCompactNumber(userPower) }}</div>
               </div>
             </div>
             <!-- Set Bonuses Card (position absolute, right of item-detail-panel) -->
@@ -321,33 +321,14 @@
             />
           </div>
           <div class="col-lg12-3 menu-item-bag-data">
-            <div 
-              class="menu-package-right menu-item-bag item" 
-              :class="{ active: currentFilter === 'bag' }"
-              @click="filterBag('bag')"
+            <div
+              v-for="entry in bagMenuConfig"
+              :key="entry.key"
+              class="menu-package-right menu-item-bag item"
+              :class="{ active: currentFilter === entry.key }"
+              @click="filterBag(entry.key)"
             >
-              <img :src="getImageUrl('bag.bag')" alt="Bag">
-            </div>
-            <div 
-              class="menu-package-right menu-item-bag item" 
-:class="{ active: currentFilter === itemC.ITEM_TYPE_SWORD }"
-                @click="filterBag(itemC.ITEM_TYPE_SWORD)"
-            >
-              <img :src="getImageUrl('bag.sword')" alt="Sword">
-            </div>
-            <div 
-              class="menu-package-right menu-item-bag item" 
-              :class="{ active: currentFilter === 'other' }"
-              @click="filterBag('other')"
-            >
-              <img :src="getImageUrl('bag.bracelet')" alt="Other">
-            </div>
-            <div 
-              class="menu-package-right menu-item-bag item" 
-              :class="{ active: currentFilter === 'shop' }"
-              @click="filterBag('shop')"
-            >
-              <img :src="getImageUrl('bag.shop')" alt="Shop">
+              <img :src="getImageUrl(entry.image_key || 'bag.bag')" :alt="t(entry.label_key) || entry.key">
             </div>
           </div>
           <div class="col-lg12-12 coin-and-orther">
@@ -401,7 +382,8 @@ import ExpBar from '../../components/game/ExpBar.vue'
 import LevelBadge from '../../components/game/LevelBadge.vue'
 import { getFileImageUrl } from '../../utils/imageResolverRuntime'
 import { getStatName } from '../../utils/globalData'
-import { getItemConstants } from '../../utils/constants'
+import { getItemConstants, getBagMenuList } from '../../utils/constants'
+import { formatCompactNumber } from '../../utils/numberFormat'
 const itemC = getItemConstants()
 const translator = inject('translator', null)
 const userData = inject('userData', null)
@@ -678,13 +660,11 @@ const bagItems = ref(
   Array.from({ length: MIN_BAG_ITEMS }, () => ({}))
 )
 
-// Store all item categories
-const allItems = ref({
-  bag: [],
-  sword: [],
-  other: [],
-  shop: []
-})
+// Bag menu from backend (key, item_types, image_key, label_key); fallback to constant
+const bagMenuConfig = ref(getBagMenuList())
+
+// Store all item categories (keys driven by bag_menu / user_bag)
+const allItems = ref({})
 
 // Merge user bag items with empty slots
 const initializeBagItems = () => {
@@ -752,10 +732,18 @@ const mapBagItems = (items) => {
 // Apply user_bag from API (getPlayerBag or saveGears response) to local allItems and refresh display
 const applyUserBagToAllItems = (bagData) => {
   if (!bagData) return
-  allItems.value.bag = mapBagItems(bagData.bag || [])
-  allItems.value.sword = mapBagItems(bagData.sword || [])
-  allItems.value.other = mapBagItems(bagData.other || [])
-  allItems.value.shop = mapBagItems(bagData.shop || [])
+  const menuKeys = bagMenuConfig.value.map((e) => e.key)
+  const next = {}
+  for (const k of menuKeys) {
+    next[k] = mapBagItems(bagData[k] || [])
+  }
+  for (const k of Object.keys(bagData)) {
+    if (!(k in next)) next[k] = mapBagItems(bagData[k] || [])
+  }
+  allItems.value = next
+  if (menuKeys.length && !menuKeys.includes(currentFilter.value)) {
+    currentFilter.value = menuKeys[0]
+  }
   updateDisplayedItems()
 }
 
@@ -763,16 +751,37 @@ const loadBagData = async () => {
   if (!gameApi) return
   try {
     const res = await gameApi.getPlayerBag()
-    if (res.data?.datas?.user_bag) {
-      applyUserBagToAllItems(res.data.datas.user_bag)
+    const datas = res.data?.datas
+    if (datas?.bag_menu && Array.isArray(datas.bag_menu) && datas.bag_menu.length) {
+      bagMenuConfig.value = datas.bag_menu
+    }
+    if (datas?.user_bag) {
+      applyUserBagToAllItems(datas.user_bag)
+    } else {
+      const menuKeys = bagMenuConfig.value.map((e) => e.key)
+      allItems.value = Object.fromEntries(menuKeys.map((k) => [k, []]))
+      if (menuKeys.length && !menuKeys.includes(currentFilter.value)) {
+        currentFilter.value = menuKeys[0]
+      }
+      updateDisplayedItems()
     }
   } catch (e) {
     console.error("Failed to load bag data", e)
+    const menuKeys = bagMenuConfig.value.map((e) => e.key)
+    allItems.value = Object.fromEntries(menuKeys.map((k) => [k, []]))
+    updateDisplayedItems()
   }
 }
 
 // Initialize bag items when component mounts
 onMounted(() => {
+  const menuKeys = bagMenuConfig.value.map((e) => e.key)
+  if (Object.keys(allItems.value).length === 0) {
+    allItems.value = Object.fromEntries(menuKeys.map((k) => [k, []]))
+  }
+  if (menuKeys.length && !menuKeys.includes(currentFilter.value)) {
+    currentFilter.value = menuKeys[0]
+  }
   initializeBagItems()
   loadBagData()
 })
@@ -821,12 +830,14 @@ const canShowItemDetail = (item) => {
   if (item.actions?.is_box_random) {
     const property = item.property || item.properties
     const rateList = property?.rate_list
-    return Array.isArray(rateList) && rateList.length > 0
+    // return Array.isArray(rateList) && rateList.length > 0
+
+    return true
   }
 
   // Gear: property with custom_options or stats
   const property = item.property || item.properties
-  if (!property) return false
+  // if (!property) return false
 
   const hasCustomOptions = property.custom_options &&
     (Array.isArray(property.custom_options) ? property.custom_options.length > 0 : true)
@@ -834,7 +845,8 @@ const canShowItemDetail = (item) => {
     typeof property.stats === 'object' &&
     Object.keys(property.stats).length > 0
 
-  return hasCustomOptions || hasStats
+  // return hasCustomOptions || hasStats
+  return true
 }
 
 const handleItemClick = (item) => {
@@ -868,16 +880,6 @@ const filterBag = (type) => {
 const formatPropertyKey = (key) => {
   // Use global getStatName function for default stats
   return getStatNameFunc(key)
-}
-
-const formatPower = (power) => {
-  // Format power number: 125000 -> 125K, 1250000 -> 1.25M
-  if (power >= 1000000) {
-    return (power / 1000000).toFixed(2) + 'M'
-  } else if (power >= 1000) {
-    return (power / 1000).toFixed(0) + 'K'
-  }
-  return power.toString()
 }
 
 // Get gear for a specific slot
@@ -1608,8 +1610,7 @@ const handleOpenBox = async (item) => {
 }
 
 .menu-item-bag-data .menu-item-bag img {
-  width: 70%;
-  margin-top: 14px;
+  width: 100%;
 }
 
 .show {

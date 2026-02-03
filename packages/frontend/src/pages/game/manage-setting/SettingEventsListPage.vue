@@ -485,7 +485,7 @@ const loadEvents = async () => {
   }
 }
 
-const filters = ref({ currentPage: 1, perPage: 15 })
+const filters = ref({ currentPage: 1, perPage: 11 })
 const changePage = (page) => {
   filters.value.currentPage = page
   loadEvents()

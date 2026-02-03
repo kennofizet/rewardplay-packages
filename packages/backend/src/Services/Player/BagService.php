@@ -10,6 +10,7 @@ use Kennofizet\RewardPlay\Models\UserProfile\UserProfileConstant;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemConstant;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Collection;
 
 class BagService
 {
@@ -23,26 +24,55 @@ class BagService
     public function getUserBagCategorized(?int $userId = null): array
     {
         $userBagItems = $this->getUserBag($userId);
+        $menuList = UserBagItemConstant::getBagMenuList();
+        \Log::info('menuList', $menuList);
 
-        $categorizedBagItems = [
-            'bag' => [],
-            'sword' => [],
-            'other' => [],
-            'shop' => [],
-        ];
+        $categorizedBagItems = [];
+        foreach ($menuList as $menu) {
+            $categorizedBagItems[$menu['key']] = [];
+        }
 
-        foreach ($userBagItems as $bagItem) {
-            $itemType = $bagItem->item_type;
-            $itemCategory = $this->mapTypeToCategory($itemType);
+        $items = $userBagItems instanceof Collection ? $userBagItems->all() : $userBagItems;
+        foreach ($items as $bagItem) {
+            $itemType = $bagItem->item_type ?? null;
+            $properties = $bagItem->properties ?? null;
+            $propertiesEmpty = UserBagItemConstant::isPropertiesEmpty($properties);
 
-            if (isset($categorizedBagItems[$itemCategory])) {
-                $categorizedBagItems[$itemCategory][] = $bagItem;
-            } else {
-                $categorizedBagItems['bag'][] = $bagItem;
+            $assigned = false;
+            foreach ($menuList as $menu) {
+                if (!$menu['show_when_properties_empty']) {
+                    if (!$propertiesEmpty) {
+                        if (is_array($menu['item_types']) && in_array($itemType, $menu['item_types'], true)) {
+                            $categorizedBagItems[$menu['key']][] = $bagItem;
+                            $assigned = true;
+                            break;
+                        }
+                    }
+                } else {
+                    if ($propertiesEmpty) {
+                        if (is_null($menu['item_types']) || (is_array($menu['item_types']) && in_array($itemType, $menu['item_types'], true))) {
+                            $categorizedBagItems[$menu['key']][] = $bagItem;
+                            $assigned = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!$assigned) {
+                $firstKey = $menuList[0]['key'] ?? 'bag';
+                $categorizedBagItems[$firstKey][] = $bagItem;
             }
         }
 
         return $categorizedBagItems;
+    }
+
+    /**
+     * Get bag menu config for frontend (list of menu keys with item_types, image_key, label_key).
+     */
+    public function getBagMenuConfig(): array
+    {
+        return UserBagItemConstant::getBagMenuList();
     }
 
     /**
@@ -313,14 +343,4 @@ class BagService
         ];
     }
 
-    protected function mapTypeToCategory($type)
-    {
-        if (in_array($type, []))
-            return 'sword';
-        if (in_array($type, ['shop']))
-            return 'shop';
-        if (in_array($type, ['other', 'material']))
-            return 'other';
-        return 'bag';
-    }
 }

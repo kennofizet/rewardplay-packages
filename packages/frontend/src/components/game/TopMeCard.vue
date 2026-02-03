@@ -12,15 +12,15 @@
       </div>
       <div class="metric">
         <div class="metric__label">{{ t('component.topMe.myCoin') }}</div>
-        <div class="metric__value">{{ formatNumber(coin) }}</div>
+        <div class="metric__value">{{ formatCompactNumber(coin) }}</div>
       </div>
       <div class="metric">
         <div class="metric__label">{{ t('component.topMe.myLevel') }}</div>
-        <div class="metric__value">{{ formatNumber(level) }}</div>
+        <div class="metric__value">{{ formatCompactNumber(level) }}</div>
       </div>
       <div class="metric">
         <div class="metric__label">{{ t('component.topMe.myPower') }}</div>
-        <div class="metric__value">{{ formatNumber(power) }}</div>
+        <div class="metric__value">{{ formatCompactNumber(power) }}</div>
       </div>
     </div>
   </div>
@@ -28,6 +28,7 @@
 
 <script setup>
 import { inject } from 'vue'
+import { formatCompactNumber } from '../../utils/numberFormat'
 import TopMeCardSkeleton from './TopMeCardSkeleton.vue'
 import ErrorState from '../ui/ErrorState.vue'
 
@@ -60,11 +61,6 @@ const props = defineProps({
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
-
-const formatNumber = (n) => {
-  if (typeof n !== 'number') return String(n ?? 0)
-  return n.toLocaleString('en-US', { maximumFractionDigits: 0 }).replace(/,/g, '.')
-}
 
 defineEmits(['retry'])
 </script>

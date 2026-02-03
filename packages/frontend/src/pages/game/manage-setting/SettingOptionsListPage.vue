@@ -172,7 +172,7 @@ const rateKeyOptions = computed(() => {
 const filters = ref({
   search: '',
   currentPage: 1,
-  perPage: 15
+  perPage: 11
 })
 
 const formData = ref({

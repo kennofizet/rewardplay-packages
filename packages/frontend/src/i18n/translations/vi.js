@@ -693,6 +693,15 @@ export default {
       openBoxRewards: 'Bạn nhận được',
       openBoxFailed: 'Mở thất bại',
       close: 'Đóng',
+      menuAll: 'Tất cả',
+      menuOther: 'Khác',
+      menuShop: 'Cửa hàng',
+      menu: {
+        gear: 'Trang Bị',
+        can_use_items: 'Vật Phẩm Dùng Được',
+        other_items: 'Vật Phẩm Khác',
+        wait_appraisal: 'Chờ Định Giá',
+      },
     },
     stats: {
       power: 'Sức Mạnh',
