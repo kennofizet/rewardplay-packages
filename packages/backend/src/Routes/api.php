@@ -26,6 +26,8 @@ Route::prefix($prefix)
         require_once __DIR__ . '/setting/setting-options.php';
         require_once __DIR__ . '/setting/setting-item-sets.php';
         require_once __DIR__ . '/setting/setting-stats-transforms.php';
+        require_once __DIR__ . '/setting/setting-events.php';
+        require_once __DIR__ . '/setting/setting-shop-items.php';
         require_once __DIR__ . '/setting/zones.php';
 
         // New Settings Routes - IMPORTANT: Specific routes MUST come before apiResource
@@ -68,6 +70,10 @@ Route::prefix($prefix)
         Route::post('/player/daily-rewards/collect', [\Kennofizet\RewardPlay\Controllers\Player\DailyRewardController::class, 'collect']);
         Route::get('/player/bag', [\Kennofizet\RewardPlay\Controllers\Player\BagController::class, 'index']);
         Route::post('/player/bag/gears', [\Kennofizet\RewardPlay\Controllers\Player\BagController::class, 'saveGears']);
+        Route::post('/player/bag/open-box', [\Kennofizet\RewardPlay\Controllers\Player\BagController::class, 'openBox']);
+        Route::get('/player/events', [\Kennofizet\RewardPlay\Controllers\Player\EventController::class, 'index']);
+        Route::get('/player/shop', [\Kennofizet\RewardPlay\Controllers\Player\ShopController::class, 'index']);
+        Route::post('/player/shop/purchase', [\Kennofizet\RewardPlay\Controllers\Player\ShopController::class, 'purchase']);
 
         Route::options('/manifest', function () {
             return response('', 200)

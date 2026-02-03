@@ -2,6 +2,8 @@
 
 namespace Kennofizet\RewardPlay\Models\UserProfile;
 
+use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
+
 class UserProfileConstant
 {
     const TABLE_NAME = 'user_profiles';
@@ -78,6 +80,6 @@ class UserProfileConstant
         }
         
         // Item must be gear type to be worn
-        return $itemType === 'gear';
+        return SettingItemConstant::isGear($itemType);
     }
 }

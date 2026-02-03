@@ -22,7 +22,7 @@
           <div class="day-content" @click="openDay(day)">
              <div v-if="getRewardForDay(day) && getRewardForDay(day).items && getRewardForDay(day).items.length">
                 <div v-for="(item, idx) in getRewardForDay(day).items" :key="idx" class="reward-tag">
-                   {{ item.type === 'gear' ? getItemName(item.item_id) : item.type }} x{{ item.quantity }}
+                   {{ item.actions?.is_gear ? getItemName(item.item_id) : item.type }} x{{ item.quantity }}
                 </div>
              </div>
              <span v-else class="empty">-</span>
@@ -45,7 +45,7 @@
                         </select>
                     </div>
 
-                    <div class="input-group" v-if="item.type === 'gear'">
+                    <div class="input-group" v-if="item.actions?.is_gear">
                         <label>{{ t('page.manageSetting.settingDailyRewards.form.item') }}</label>
                         <select v-model="item.item_id">
                             <option v-for="i in availableItems" :key="i.id" :value="i.id">{{ i.name }}</option>
@@ -75,7 +75,6 @@
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
 import { useTimezone } from '../../../composables/useTimezone'
-
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 

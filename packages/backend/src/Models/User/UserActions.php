@@ -139,6 +139,30 @@ trait UserActions
     }
 
     /**
+     * Deduct coin from the user. Throws if insufficient.
+     *
+     * @param int $coinAmount
+     * @return UserProfile
+     */
+    public function deductCoin(int $coinAmount): UserProfile
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->deductCoin($coinAmount);
+    }
+
+    /**
+     * Deduct ruby from the user. Throws if insufficient.
+     *
+     * @param int $rubyAmount
+     * @return UserProfile
+     */
+    public function deductRuby(int $rubyAmount): UserProfile
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->deductRuby($rubyAmount);
+    }
+
+    /**
      * Get user's level from profile
      * 
      * @return int

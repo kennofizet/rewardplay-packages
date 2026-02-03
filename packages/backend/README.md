@@ -9,6 +9,8 @@ composer require kennofizet/rewardplay-backend
 php artisan vendor:publish --tag=rewardplay-migrations
 php artisan vendor:publish --tag=rewardplay-config
 php artisan rewardplay:publish-images
+php artisan rewardplay:export-constants
+php artisan rewardplay:publish-constants
 php artisan migrate
 ```
 
@@ -23,7 +25,16 @@ REWARDPLAY_TABLE_PREFIX=
 REWARDPLAY_API_PREFIX=api/rewardplay
 REWARDPLAY_RATE_LIMIT=60
 REWARDPLAY_IMAGES_FOLDER=rewardplay-images
+REWARDPLAY_CONSTANTS_FOLDER=rewardplay-constants
 REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER=custom/global
+```
+
+**Constants (frontend):** Generate and publish constants JS file so the frontend can use the same values as the backend:
+```bash
+php artisan rewardplay:export-constants   # Generates Assets/constant/rewardplay-constants.js
+php artisan rewardplay:publish-constants  # Copies to public/rewardplay-constants/
+# Or force overwrite:
+php artisan rewardplay:publish-constants --force
 ```
 
 **Important:** After changing config, run:
@@ -107,7 +118,6 @@ Manage game items with zones, images, and properties:
 
 ### Setting Items
 - `GET /api/rewardplay/setting-items` - List items (with zone filter)
-- `GET /api/rewardplay/setting-items/types` - Get item types
 - `GET /api/rewardplay/setting-items/{id}` - Get single item
 - `POST /api/rewardplay/setting-items` - Create item (with image upload)
 - `PATCH /api/rewardplay/setting-items/{id}` - Update item

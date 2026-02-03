@@ -21,8 +21,11 @@ class SettingItemValidationService
      */
     public function validateSettingItem(array $data, ?\Illuminate\Http\UploadedFile $imageFile = null, ?int $id = null)
     {
-        // Get allowed types (item types)
-        $itemTypes = array_keys(SettingItemConstant::ITEM_TYPE_NAMES);
+        // Get allowed types: gear + other (box_random, ticket, buff, etc.)
+        $itemTypes = array_merge(
+            array_keys(SettingItemConstant::ITEM_TYPE_NAMES),
+            array_keys(SettingItemConstant::OTHER_ITEM_TYPE_NAMES)
+        );
         $allowedTypesString = implode(',', $itemTypes);
 
         $rules = [
@@ -37,24 +40,27 @@ class SettingItemValidationService
             $data['image'] = $imageFile;
         }
 
-        // \Log::info('data: ' . json_encode($data));
-
         $validator = Validator::make($data, $rules);
 
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
 
-        // Validate default_property
-        $defaultProperty = $data['default_property'] ?? [];
-        $validatorStats = $this->statsCustomCheck($defaultProperty, false); // false = don't allow custom_key_*
+        // Validate default_property: only run stats check for gear types (wearable)
+        $type = $data['type'] ?? null;
+        $isGearType = SettingItemConstant::isGearSlotType($type);
 
-        if(!$validatorStats['success']){
-            $validator->errors()->add('default_property', $validatorStats['message']);
+        if ($isGearType) {
+            $defaultProperty = $data['default_property'] ?? [];
+            $validatorStats = $this->statsCustomCheck($defaultProperty, false);
+            if (!$validatorStats['success']) {
+                $validator->errors()->add('default_property', $validatorStats['message']);
+            }
         }
+        // For box_random, ticket, buff, etc. default_property structure is type-specific and not stat keys
 
-        // Validate custom_stats format: array of {name: string, properties: object}
-        if (isset($data['custom_stats'])) {
+        // Validate custom_stats format only for gear types (other types don't use custom_stats)
+        if ($isGearType && isset($data['custom_stats'])) {
             $customStats = $data['custom_stats'];
             if (!is_array($customStats)) {
                 $validator->errors()->add('custom_stats', 'Custom stats must be an array');

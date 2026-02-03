@@ -205,6 +205,7 @@ import CustomSelect from '../../../components/CustomSelect.vue'
 import StatMapPreview from '../../../components/StatMapPreview.vue'
 import CustomOptionDisplay from '../../../components/CustomOptionDisplay.vue'
 import { getGlobalStats, getGlobalTypes, isStatsDataLoaded, isTypesDataLoaded } from '../../../utils/globalData'
+import { getGearTypes } from '../../../utils/constants'
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
@@ -227,17 +228,18 @@ const saveFailed = ref(false)
 const propertiesList = ref([])
 const selectedImageFile = ref(null)
 
+// Gear types only (this page lists gear items)
+const GEAR_TYPES_CSV = getGearTypes().join(',')
+
 const typeOptions = computed(() => {
-  const options = itemTypes.value.map(itemType => ({
-    value: itemType.type,
-    label: itemType.name
-  }))
+  const options = itemTypes.value
+    .map((itemType) => ({ value: itemType.type, label: itemType.name }))
   return options
 })
 
 const typeOptionsWithEmpty = computed(() => {
   return [
-    { value: '', label: t('page.manageSetting.settingItems.allTypes') },
+    { value: '', label: t('page.manageSetting.settingItems.allGear') || 'All gear' },
     ...typeOptions.value
   ]
 })
@@ -385,6 +387,9 @@ const loadSettingItems = async () => {
 
     if (filters.value.type) {
       params.type = filters.value.type
+    } else {
+      // Default: show only gear items
+      params.type = GEAR_TYPES_CSV
     }
 
     const response = await gameApi.getSettingItems(params)

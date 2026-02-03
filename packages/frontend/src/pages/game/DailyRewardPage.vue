@@ -172,15 +172,15 @@ const rewards = computed(() => {
         return {
             original_date: r.date,
             day: `${t('component.dailyReward.day')} ${dayOfMonth}`, // Show actual day of month
-            title: firstItem ? firstItem.type.toUpperCase() : t('component.dailyReward.reward'),
+            title: firstItem?.actions?.is_coin ? 'COIN' : (firstItem?.actions?.is_exp ? 'EXP' : (firstItem?.actions?.is_gear ? 'GEAR' : '')) || t('component.dailyReward.reward'),
             description: description,
             rarity: r.is_epic ? 'epic' : (dayNumInCycle % 3 === 0 ? 'rare' : 'common'),
             isCurrent: isCurrent,
             isCollected: isCollected,
             isEpic: r.isSpecific || false, // Use is_epic from database
             isFeature: r.is_epic || false,
-            imageType: type === 'coin' ? 'coins' : (type === 'exp' ? 'chest' : 'backpack'),
-            imageKey: type === 'coin' ? 'global.coin' : null
+            imageType: firstItem?.actions?.is_coin ? 'coins' : (firstItem?.actions?.is_exp ? 'chest' : 'backpack'),
+            imageKey: firstItem?.actions?.is_coin ? 'global.coin' : null
         }
     })
 })
@@ -212,14 +212,9 @@ const calculateTodayRewards = () => {
   const todayDailyReward = state.value.seven_days_rewards?.find(r => isToday(r.date))
   if (todayDailyReward && todayDailyReward.items) {
     todayDailyReward.items.forEach(item => {
-      const type = item.type || ''
       const quantity = item.quantity || 0
-      
-      if (type === 'exp') {
-        totalExp += quantity
-      } else if (type === 'coin') {
-        totalCoin += quantity
-      }
+      if (item.actions?.is_exp) totalExp += quantity
+      else if (item.actions?.is_coin) totalCoin += quantity
     })
   }
   
@@ -230,14 +225,9 @@ const calculateTodayRewards = () => {
   
   if (stackBonus && stackBonus.rewards) {
     stackBonus.rewards.forEach(item => {
-      const type = item.type || ''
       const quantity = item.quantity || 0
-      
-      if (type === 'exp') {
-        totalExp += quantity
-      } else if (type === 'coin') {
-        totalCoin += quantity
-      }
+      if (item.actions?.is_exp) totalExp += quantity
+      else if (item.actions?.is_coin) totalCoin += quantity
     })
   }
   

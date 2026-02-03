@@ -42,6 +42,10 @@ export function createGameApi(backendUrl, token) {
       // Silently fail if localStorage is not available or zone is invalid
       console.warn('Failed to get zone_id from localStorage:', e)
     }
+    // When sending FormData, remove Content-Type so the browser sets multipart/form-data with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
     return config
   })
 
@@ -70,28 +74,11 @@ export function createGameApi(backendUrl, token) {
 
     // Setting Items CRUD
     getSettingItems: (params) => api.get('/api/rewardplay/setting-items', { params }),
-    createSettingItem: (data) => {
-      // If data is FormData, use multipart/form-data, otherwise use JSON
-      if (data instanceof FormData) {
-        return api.post('/api/rewardplay/setting-items', data, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
-      }
-      return api.post('/api/rewardplay/setting-items', data)
-    },
+    createSettingItem: (data) => api.post('/api/rewardplay/setting-items', data),
     updateSettingItem: (id, data) => {
-      // Otherwise use PUT with JSON
       if (data instanceof FormData) {
-        if (!data.has('_method')) {
-          data.append('_method', 'PUT')
-        }
-        return api.post(`/api/rewardplay/setting-items/${id}`, data, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
+        if (!data.has('_method')) data.append('_method', 'PUT')
+        return api.post(`/api/rewardplay/setting-items/${id}`, data)
       }
       return api.put(`/api/rewardplay/setting-items/${id}`, data)
     },
@@ -114,7 +101,6 @@ export function createGameApi(backendUrl, token) {
 
     // Global data (accessible to both player and manage)
     getAllStats: () => api.get('/api/rewardplay/stats/all'),
-    getTypes: () => api.get('/api/rewardplay/types'),
     getRewardTypes: (mode) => api.get('/api/rewardplay/stats/reward-types', { params: { mode } }),
 
     // Setting Item Sets CRUD
@@ -145,11 +131,40 @@ export function createGameApi(backendUrl, token) {
     deleteLevelExp: (id) => api.delete(`/api/rewardplay/setting-level-exps/${id}`),
     suggestLevelExps: () => api.post('/api/rewardplay/setting-level-exps/suggest'),
 
+    // Setting Events (Manage)
+    getSettingEvents: (params) => api.get('/api/rewardplay/setting-events', { params }),
+    getSettingEvent: (id) => api.get(`/api/rewardplay/setting-events/${id}`),
+    createSettingEvent: (data) => api.post('/api/rewardplay/setting-events', data),
+    updateSettingEvent: (id, data) => {
+      if (data instanceof FormData) {
+        return api.post(`/api/rewardplay/setting-events/${id}`, data)
+      }
+      return api.put(`/api/rewardplay/setting-events/${id}`, data)
+    },
+    deleteSettingEvent: (id) => api.delete(`/api/rewardplay/setting-events/${id}`),
+
+    // Setting Shop Items (Manage)
+    getSettingShopItems: (params) => api.get('/api/rewardplay/setting-shop-items', { params }),
+    getSettingShopItem: (id) => api.get(`/api/rewardplay/setting-shop-items/${id}`),
+    createSettingShopItem: (data) => api.post('/api/rewardplay/setting-shop-items', data),
+    updateSettingShopItem: (id, data) => api.put(`/api/rewardplay/setting-shop-items/${id}`, data),
+    deleteSettingShopItem: (id) => api.delete(`/api/rewardplay/setting-shop-items/${id}`),
+
     // Player Daily Rewards & Bag
     getPlayerDailyRewardState: () => api.get('/api/rewardplay/player/daily-rewards'), // Includes stack info
     collectDailyReward: () => api.post('/api/rewardplay/player/daily-rewards/collect'),
     getPlayerBag: () => api.get('/api/rewardplay/player/bag'),
     saveGears: (gears) => api.post('/api/rewardplay/player/bag/gears', { gears }),
+    openBox: (userBagItemId, quantity = 1) =>
+      api.post('/api/rewardplay/player/bag/open-box', { user_bag_item_id: userBagItemId, quantity: Math.max(1, Math.min(parseInt(quantity, 10) || 1, 99)) }),
+
+    // Player Events (active events for popup)
+    getPlayerEvents: () => api.get('/api/rewardplay/player/events'),
+
+    // Player Shop (active shop items + purchase)
+    getPlayerShop: () => api.get('/api/rewardplay/player/shop'),
+    purchaseShopItem: (shopItemId, quantity = 1) =>
+      api.post('/api/rewardplay/player/shop/purchase', { shop_item_id: shopItemId, quantity }),
   }
 }
 

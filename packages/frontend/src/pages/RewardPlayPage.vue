@@ -50,6 +50,7 @@ import { ResourceLoader } from '../utils/resourceLoader'
 import MainGame from '../components/MainGame.vue'
 import { createTranslator } from '../i18n'
 import { loadGlobalStats, loadGlobalTypes, getStatName, getTypeName } from '../utils/globalData'
+import { resetConstantsCache, getConstantsScriptUrl } from '../utils/constants'
 
 const props = defineProps({
   // Resource URLs to load
@@ -238,7 +239,13 @@ const loadAllResources = async () => {
   if (props.imageUrls.length > 0) {
     loader.addImages(props.imageUrls)
   }
-  
+
+  // Load REWARDPLAY_CONSTANTS first so window.REWARDPLAY_CONSTANTS is set before other scripts/components use it
+  const constantsScriptUrl = getConstantsScriptUrl(backendUrl)
+  if (constantsScriptUrl) {
+    loader.addScript(constantsScriptUrl)
+  }
+
   if (props.scriptUrls.length > 0) {
     props.scriptUrls.forEach(url => loader.addScript(url))
   }
@@ -292,7 +299,8 @@ const loadAllResources = async () => {
   try {
     // Load base resources first
     await loader.load()
-    
+    resetConstantsCache()
+
     // Ensure loading reaches 100%
     if (loadingProgress.value < 100) {
       loadingProgress.value = 100

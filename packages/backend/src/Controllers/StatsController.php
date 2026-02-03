@@ -6,7 +6,6 @@ use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\ModelSubs\Emulator\Stats;
-use Kennofizet\RewardPlay\Models\SettingItem;
 
 class StatsController extends Controller
 {
@@ -23,23 +22,6 @@ class StatsController extends Controller
             return $this->apiResponseWithContext([
                 'stats' => $allStats['stats'] ?? [],
                 'custom_options' => $allStats['custom_options'] ?? [],
-            ]);
-        }
-
-        return $this->apiErrorResponse();
-    }
-
-    /**
-     * Get item types list (accessible to both player and manage)
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function getTypes(Request $request): JsonResponse
-    {
-        if ($request->expectsJson()) {
-            return $this->apiResponseWithContext([
-                'types' => SettingItem::getItemTypes(),
             ]);
         }
 

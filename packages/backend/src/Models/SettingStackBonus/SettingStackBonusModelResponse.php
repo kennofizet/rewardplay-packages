@@ -5,6 +5,7 @@ namespace Kennofizet\RewardPlay\Models\SettingStackBonus;
 use Kennofizet\RewardPlay\Core\Model\BaseModelResponse;
 use Kennofizet\RewardPlay\Models\SettingStackBonus\SettingStackBonusConstant;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
+use Kennofizet\RewardPlay\Helpers\RewardItemActionsHelper;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -27,6 +28,9 @@ class SettingStackBonusModelResponse extends BaseModelResponse
             return [];
         }
 
+        $rewardsRaw = $settingStackBonus->rewards ?? [];
+        $rewardsWithActions = RewardItemActionsHelper::enrichWithActions(is_array($rewardsRaw) ? $rewardsRaw : []);
+
         if(in_array($mode, [
             self::getAvailableModeDefault()
         ])){
@@ -34,7 +38,7 @@ class SettingStackBonusModelResponse extends BaseModelResponse
                 'id' => $settingStackBonus->id,
                 'name' => $settingStackBonus->name,
                 'day' => $settingStackBonus->day,
-                'rewards' => $settingStackBonus->rewards ?? []
+                'rewards' => $rewardsWithActions
             ];
 
             return $default_reponse;
@@ -50,7 +54,7 @@ class SettingStackBonusModelResponse extends BaseModelResponse
             SettingStackBonusConstant::PLAYER_API_RESPONSE_REWARD_PAGE,
         ])){
             return [
-                'rewards' => $settingStackBonus->rewards ?? [],
+                'rewards' => $rewardsWithActions,
                 'day' => $settingStackBonus->day,
                 'name' => $settingStackBonus->name,
             ];
@@ -60,7 +64,7 @@ class SettingStackBonusModelResponse extends BaseModelResponse
             'id' => $settingStackBonus->id,
             'name' => $settingStackBonus->name,
             'day' => $settingStackBonus->day,
-            'rewards' => $settingStackBonus->rewards ?? []
+            'rewards' => $rewardsWithActions
         ];
     }
 

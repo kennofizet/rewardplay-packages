@@ -3,16 +3,27 @@
  * Loaded once when Source is initialized and reused throughout the app
  */
 
+import { getItemConstants } from './constants'
+
 // Global state
 let globalStats = {
   stats: [], // Default stats (CONVERSION_KEYS)
   custom_options: [] // Custom options from SettingOption
 }
 
-let globalTypes = [] // Item types
-
 let isStatsLoaded = false
 let isTypesLoaded = false
+
+/** Build item types array from SettingItem.ITEM_TYPE_NAMES + OTHER_ITEM_TYPE_NAMES (same shape as former API). */
+function buildTypesFromConstants() {
+  const c = getItemConstants()
+  const names = c.ITEM_TYPE_NAMES || {}
+  const other = c.OTHER_ITEM_TYPE_NAMES || {}
+  const list = []
+  Object.keys(names).forEach((type) => list.push({ type, name: names[type] }))
+  Object.keys(other).forEach((type) => list.push({ type, name: other[type] }))
+  return list
+}
 
 /**
  * Load all stats from API
@@ -39,26 +50,13 @@ export async function loadGlobalStats(gameApi) {
 }
 
 /**
- * Load item types from API
- * @param {Object} gameApi - Game API instance
+ * Load item types from global constants (SettingItem.ITEM_TYPE_NAMES + OTHER_ITEM_TYPE_NAMES).
+ * No API call; kept for compatibility with callers that await loadGlobalTypes(gameApi).
+ * @param {Object} [_gameApi] - Unused; kept for API compatibility
  * @returns {Promise<void>}
  */
-export async function loadGlobalTypes(gameApi) {
-  if (!gameApi) {
-    console.warn('gameApi not available, cannot load global types')
-    return
-  }
-
-  try {
-    const response = await gameApi.getTypes()
-    if (response.data && response.data.datas) {
-      globalTypes = response.data.datas.types || []
-      isTypesLoaded = true
-    }
-  } catch (error) {
-    console.error('Error loading global types:', error)
-    isTypesLoaded = false
-  }
+export async function loadGlobalTypes(_gameApi) {
+  isTypesLoaded = true
 }
 
 /**
@@ -117,10 +115,11 @@ export function getTypeName(type, translator = null) {
     }
   }
 
-  // Find in global types
-  const typeObj = globalTypes.find(t => t.type === type)
-  if (typeObj) {
-    return typeObj.name
+  // Find in constants (SettingItem.ITEM_TYPE_NAMES + OTHER_ITEM_TYPE_NAMES)
+  const c = getItemConstants()
+  const name = (c.ITEM_TYPE_NAMES && c.ITEM_TYPE_NAMES[type]) || (c.OTHER_ITEM_TYPE_NAMES && c.OTHER_ITEM_TYPE_NAMES[type])
+  if (name) {
+    return name
   }
 
   // Fallback: format the type
@@ -142,11 +141,11 @@ export function getGlobalStats() {
 }
 
 /**
- * Get all global types
- * @returns {Array}
+ * Get all global types (from SettingItem.ITEM_TYPE_NAMES + OTHER_ITEM_TYPE_NAMES).
+ * @returns {Array<{type: string, name: string}>}
  */
 export function getGlobalTypes() {
-  return [...globalTypes]
+  return buildTypesFromConstants()
 }
 
 /**
@@ -158,11 +157,11 @@ export function isStatsDataLoaded() {
 }
 
 /**
- * Check if types are loaded
+ * Check if types are loaded (always true; types come from SettingItem constants).
  * @returns {boolean}
  */
 export function isTypesDataLoaded() {
-  return isTypesLoaded
+  return true
 }
 
 /**

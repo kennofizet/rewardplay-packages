@@ -53,6 +53,17 @@ export {
 // Export utilities
 export { ResourceLoader } from './utils/resourceLoader'
 export { useResourceLoader } from './composables/useResourceLoader'
+export {
+  getRewardPlayConstants,
+  getItemConstants,
+  getShopConstants,
+  getHelperConstants,
+  getGearTypes,
+  SHOP_CATEGORY_ALL,
+  REWARDPLAY_CONSTANTS_SCRIPT_PATH,
+  getConstantsScriptUrl,
+  resetConstantsCache,
+} from './utils/constants'
 
 // Export i18n
 export { t, createTranslator, translations } from './i18n'

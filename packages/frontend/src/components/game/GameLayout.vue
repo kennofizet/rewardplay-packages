@@ -17,6 +17,9 @@
           <slot></slot>
         </div>
       </div>
+      <div class="game-container__overlay">
+        <slot name="overlay"></slot>
+      </div>
     </div>
   </div>
 </template>
@@ -148,6 +151,16 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   background: linear-gradient(#101d2d 40px, #345579 50%, #395d84 85%, #101d2d 100%);
+}
+
+.game-container__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.game-container__overlay > * {
+  pointer-events: auto;
 }
 
 .wrapper {

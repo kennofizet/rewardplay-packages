@@ -139,67 +139,100 @@
                   </div>
                 </div>
                 <div class="item-detail-body">
-                  <h4 class="item-detail-properties-title">{{ t('component.bag.itemDetail.properties') }}</h4>
-                  <div class="item-detail-properties">
-                    <!-- Display stats from properties.stats -->
-                    <template v-if="selectedItemProperties && selectedItemProperties.stats">
-                      <div 
-                        v-for="(value, key) in selectedItemProperties.stats" 
-                        :key="'stat-' + key"
-                        class="item-detail-property"
-                      >
-                        <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
-                        <span class="item-detail-property-value">{{ value }}</span>
-                      </div>
-                    </template>
-                    <!-- Display custom options from properties.custom_options -->
-                    <template v-if="selectedItemProperties && selectedItemProperties.custom_options">
-                      <div 
-                        v-for="(customOption, index) in (Array.isArray(selectedItemProperties.custom_options) ? selectedItemProperties.custom_options : [selectedItemProperties.custom_options])" 
-                        :key="'custom-' + index"
-                        class="item-detail-property custom-option"
-                      >
-                        <span class="item-detail-property-key">{{ customOption.name || 'Custom Option' }}:</span>
-                        <div class="custom-option-properties">
-                          <div 
-                            v-for="(value, key) in customOption.properties" 
-                            :key="key"
-                            class="custom-option-stat"
-                          >
-                            <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
-                            <span class="item-detail-property-value">{{ value }}</span>
+                  <!-- Gear: properties (stats + custom options) -->
+                  <template v-if="selectedItem && selectedItem.actions?.is_gear">
+                    <h4 class="item-detail-properties-title">{{ t('component.bag.itemDetail.properties') }}</h4>
+                    <div class="item-detail-properties">
+                      <template v-if="selectedItemProperties && selectedItemProperties.stats">
+                        <div 
+                          v-for="(value, key) in selectedItemProperties.stats" 
+                          :key="'stat-' + key"
+                          class="item-detail-property"
+                        >
+                          <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
+                          <span class="item-detail-property-value">{{ value }}</span>
+                        </div>
+                      </template>
+                      <template v-if="selectedItemProperties && selectedItemProperties.custom_options">
+                        <div 
+                          v-for="(customOption, index) in (Array.isArray(selectedItemProperties.custom_options) ? selectedItemProperties.custom_options : [selectedItemProperties.custom_options])" 
+                          :key="'custom-' + index"
+                          class="item-detail-property custom-option"
+                        >
+                          <span class="item-detail-property-key">{{ customOption.name || 'Custom Option' }}:</span>
+                          <div class="custom-option-properties">
+                            <div 
+                              v-for="(value, key) in customOption.properties" 
+                              :key="key"
+                              class="custom-option-stat"
+                            >
+                              <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
+                              <span class="item-detail-property-value">{{ value }}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </template>
-                    <!-- Fallback: display flat properties (for old format) -->
-                    <template v-if="selectedItemProperties && !selectedItemProperties.stats && !selectedItemProperties.custom_options">
+                      </template>
+                      <template v-if="selectedItemProperties && !selectedItemProperties.stats && !selectedItemProperties.custom_options">
+                        <div 
+                          v-for="(value, key) in selectedItemProperties" 
+                          :key="key"
+                          class="item-detail-property"
+                        >
+                          <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
+                          <span class="item-detail-property-value">{{ typeof value === 'object' ? JSON.stringify(value) : value }}</span>
+                        </div>
+                      </template>
+                    </div>
+                    <div class="item-detail-actions">
+                      <button 
+                        v-if="!isSelectedItemWorn" 
+                        class="btn-wear" 
+                        @click="handleWearItem(selectedItem)"
+                      >
+                        {{ t('component.bag.wear') }}
+                      </button>
+                      <button 
+                        v-else 
+                        class="btn-exit" 
+                        @click="handleUnwearItem(getWornSlotKey)"
+                      >
+                        {{ t('component.bag.exit') }}
+                      </button>
+                    </div>
+                  </template>
+                  <!-- Box (box_random): possible drops (rate list) + open count + Open button -->
+                  <template v-else-if="selectedItem && selectedItem.actions?.is_box_random">
+                    <h4 class="item-detail-properties-title">{{ t('component.bag.itemDetail.possibleDrops') || 'Possible drops' }}</h4>
+                    <div class="item-detail-properties">
                       <div 
-                        v-for="(value, key) in selectedItemProperties" 
-                        :key="key"
+                        v-for="(entry, idx) in boxRateList" 
+                        :key="'rate-' + idx"
                         class="item-detail-property"
                       >
-                        <span class="item-detail-property-key">{{ formatPropertyKey(key) }}:</span>
-                        <span class="item-detail-property-value">{{ typeof value === 'object' ? JSON.stringify(value) : value }}</span>
+                        <span class="item-detail-property-key">{{ entry.label }}</span>
+                        <span class="item-detail-property-value">{{ entry.rate }}% × {{ entry.count }}</span>
                       </div>
-                    </template>
-                  </div>
-                  <div v-if="selectedItem && selectedItem.item_type === 'gear'" class="item-detail-actions">
-                    <button 
-                      v-if="!isSelectedItemWorn" 
-                      class="btn-wear" 
-                      @click="handleWearItem(selectedItem)"
-                    >
-                      {{ t('component.bag.wear') }}
-                    </button>
-                    <button 
-                      v-else 
-                      class="btn-exit" 
-                      @click="handleUnwearItem(getWornSlotKey)"
-                    >
-                      {{ t('component.bag.exit') }}
-                    </button>
-                  </div>
+                    </div>
+                    <div class="item-detail-open-count">
+                      <label class="item-detail-open-count-label">{{ t('component.bag.itemDetail.openCount') || 'Open count' }}:</label>
+                      <input 
+                        v-model.number="openBoxCount" 
+                        type="number" 
+                        min="1" 
+                        :max="selectedItem.quantity || 1"
+                        class="item-detail-open-count-input"
+                      >
+                    </div>
+                    <div class="item-detail-actions">
+                      <button 
+                        class="btn-wear" 
+                        :disabled="openingBox || !openBoxCount || openBoxCount < 1 || openBoxCount > (selectedItem.quantity || 0)"
+                        @click="handleOpenBox(selectedItem)"
+                      >
+                        {{ openingBox ? (t('component.bag.openBoxOpening') || 'Opening...') : (t('component.bag.openBox') || 'Open') }}
+                      </button>
+                    </div>
+                  </template>
                 </div>
               </div>
             </div>
@@ -223,7 +256,7 @@
             <div class="power-display-wrapper">
               <div class="power-display" :style="powerBackgroundStyle">
                 <div class="power-title">{{ t('component.bag.power') }}</div>
-                <div class="power-value">{{ formatPower(userPower) }}                </div>
+                <div class="power-value">{{ formatPower(userPower) }}</div>
               </div>
             </div>
             <!-- Set Bonuses Card (position absolute, right of item-detail-panel) -->
@@ -281,7 +314,7 @@
               :image="item && item.key_image ? getImageUrl(item.key_image) : null"
               :is-empty="!item || !item.key_image"
               :quantity="item && item.quantity ? item.quantity : null"
-              :draggable="item && item.item_type === 'gear'"
+              :draggable="item && item.actions?.is_gear"
               @click="handleItemClick(item)"
               @dblclick="handleItemDoubleClick(item)"
               @dragstart="handleDragStart($event, item)"
@@ -297,8 +330,8 @@
             </div>
             <div 
               class="menu-package-right menu-item-bag item" 
-              :class="{ active: currentFilter === 'sword' }"
-              @click="filterBag('sword')"
+:class="{ active: currentFilter === itemC.ITEM_TYPE_SWORD }"
+                @click="filterBag(itemC.ITEM_TYPE_SWORD)"
             >
               <img :src="getImageUrl('bag.sword')" alt="Sword">
             </div>
@@ -334,6 +367,29 @@
         </div>
       </div>
     </div>
+    <!-- Rewards popup (center screen) after opening box -->
+    <div 
+      v-if="rewardsPopupVisible" 
+      class="rewards-popup-overlay"
+      @click="closeRewardsPopup"
+    >
+      <div class="rewards-popup" @click.stop>
+        <h3 class="rewards-popup-title">{{ t('component.bag.openBoxRewards') || 'You received' }}</h3>
+        <div class="rewards-popup-list">
+          <div 
+            v-for="(r, i) in rewardsPopupRewards" 
+            :key="i"
+            class="rewards-popup-item"
+          >
+            <span class="rewards-popup-item-name">{{ r.name || ('Item #' + r.setting_item_id) }}</span>
+            <span class="rewards-popup-item-qty">× {{ r.quantity }}</span>
+          </div>
+        </div>
+        <button class="rewards-popup-close" @click="closeRewardsPopup">
+          {{ t('component.bag.close') || 'Close' }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -345,6 +401,8 @@ import ExpBar from '../../components/game/ExpBar.vue'
 import LevelBadge from '../../components/game/LevelBadge.vue'
 import { getFileImageUrl } from '../../utils/imageResolverRuntime'
 import { getStatName } from '../../utils/globalData'
+import { getItemConstants } from '../../utils/constants'
+const itemC = getItemConstants()
 const translator = inject('translator', null)
 const userData = inject('userData', null)
 const gearWearConfig = inject('gearWearConfig', null)
@@ -375,14 +433,32 @@ const wornGears = ref({})
 const draggingItem = ref(null)
 const dragOverSlot = ref(null)
 
+// Open box (box_random) state
+const openingBox = ref(false)
+const openBoxCount = ref(1)
+const rewardsPopupVisible = ref(false)
+const rewardsPopupRewards = ref([])
+
 // Debounce timer for reloading userData
 let reloadUserDataTimer = null
 
 // Computed property to normalize property/properties for template compatibility
 const selectedItemProperties = computed(() => {
   if (!selectedItem.value) return null
-  // Support both property (singular) and properties (plural) for compatibility
   return selectedItem.value.property || selectedItem.value.properties || null
+})
+
+// Box (box_random) rate list for detail: { label, rate (%), count }
+const boxRateList = computed(() => {
+  const prop = selectedItemProperties.value
+  const list = prop?.rate_list
+  if (!Array.isArray(list) || list.length === 0) return []
+  const totalWeight = list.reduce((sum, e) => sum + (parseFloat(e.rate) || 0), 0) || 1
+  return list.map((e) => ({
+    label: e.item_name || e.name || ((t('component.bag.itemDetail.item') || 'Item') + ' #' + (e.setting_item_id ?? '?')),
+    rate: totalWeight > 0 ? ((parseFloat(e.rate) || 0) / totalWeight * 100).toFixed(1) : '0',
+    count: Math.max(1, parseInt(e.count, 10) || 1)
+  }))
 })
 
 // Get current_sets and gears_sets from userData
@@ -562,12 +638,12 @@ const mainWeapons = computed(() => {
   }
   // Fallback to default structure
   return [
-    { key: 'main-weapon-1', item_image_manifest: 'sword', item_type: 'sword' },
-    { key: 'main-weapon-2', item_image_manifest: 'sword', item_type: 'sword' },
-    { key: 'main-weapon-3', item_image_manifest: 'hat', item_type: 'hat' },
-    { key: 'main-weapon-4', item_image_manifest: 'shirt', item_type: 'shirt' },
-    { key: 'main-weapon-5', item_image_manifest: 'trouser', item_type: 'trouser' },
-    { key: 'main-weapon-6', item_image_manifest: 'shoe', item_type: 'shoe' }
+    { key: 'main-weapon-1', item_image_manifest: itemC.ITEM_TYPE_SWORD, item_type: itemC.ITEM_TYPE_SWORD },
+    { key: 'main-weapon-2', item_image_manifest: itemC.ITEM_TYPE_SWORD, item_type: itemC.ITEM_TYPE_SWORD },
+    { key: 'main-weapon-3', item_image_manifest: itemC.ITEM_TYPE_HAT, item_type: itemC.ITEM_TYPE_HAT },
+    { key: 'main-weapon-4', item_image_manifest: itemC.ITEM_TYPE_SHIRT, item_type: itemC.ITEM_TYPE_SHIRT },
+    { key: 'main-weapon-5', item_image_manifest: itemC.ITEM_TYPE_TROUSER, item_type: itemC.ITEM_TYPE_TROUSER },
+    { key: 'main-weapon-6', item_image_manifest: itemC.ITEM_TYPE_SHOE, item_type: itemC.ITEM_TYPE_SHOE }
   ].map(convertSlotToDisplay)
 })
 
@@ -577,10 +653,10 @@ const specialWeapons = computed(() => {
   }
   // Fallback to default structure
   return [
-    { key: 'special-weapon-1', item_image_manifest: 'necklace', item_type: 'necklace' },
-    { key: 'special-weapon-2', item_image_manifest: 'bracelet', item_type: 'bracelet' },
-    { key: 'special-weapon-3', item_image_manifest: 'ring', item_type: 'ring' },
-    { key: 'special-weapon-4', item_image_manifest: 'ring', item_type: 'ring' }
+    { key: 'special-weapon-1', item_image_manifest: itemC.ITEM_TYPE_NECKLACE, item_type: itemC.ITEM_TYPE_NECKLACE },
+    { key: 'special-weapon-2', item_image_manifest: itemC.ITEM_TYPE_BRACELET, item_type: itemC.ITEM_TYPE_BRACELET },
+    { key: 'special-weapon-3', item_image_manifest: itemC.ITEM_TYPE_RING, item_type: itemC.ITEM_TYPE_RING },
+    { key: 'special-weapon-4', item_image_manifest: itemC.ITEM_TYPE_RING, item_type: itemC.ITEM_TYPE_RING }
   ].map(convertSlotToDisplay)
 })
 
@@ -668,6 +744,7 @@ const mapBagItems = (items) => {
     property: bi.properties || {},
     key_image: bi.item?.image || 'bag.other',
     name: bi.item?.name || 'Gear',
+    actions: bi.actions || {},
   }))
 }
 
@@ -732,36 +809,47 @@ const powerBackgroundStyle = computed(() => ({
 
 /**
  * Check if an item can show details
- * Item can show details if it has property with custom_options or stats
+ * Gear: property with custom_options or stats. Box: property with rate_list.
  * @param {Object} item - Item object to check
  * @returns {boolean} True if item can show details
  */
 const canShowItemDetail = (item) => {
   if (!item) return false
-  
-  // Check if item has property (singular) or properties (plural) for compatibility
+
+  // Box (box_random): show detail when has rate_list (use response actions)
+  if (item.actions?.is_box_random) {
+    const property = item.property || item.properties
+    const rateList = property?.rate_list
+    return Array.isArray(rateList) && rateList.length > 0
+  }
+
+  // Gear: property with custom_options or stats
   const property = item.property || item.properties
-  
   if (!property) return false
-  
-  // Check if property has custom_options (array with at least one element) or stats (object with keys)
-  const hasCustomOptions = property.custom_options && 
+
+  const hasCustomOptions = property.custom_options &&
     (Array.isArray(property.custom_options) ? property.custom_options.length > 0 : true)
-  
-  const hasStats = property.stats && 
-    typeof property.stats === 'object' && 
+  const hasStats = property.stats &&
+    typeof property.stats === 'object' &&
     Object.keys(property.stats).length > 0
-  
+
   return hasCustomOptions || hasStats
 }
 
 const handleItemClick = (item) => {
-  // Only show detail panel if item can show details
   if (canShowItemDetail(item)) {
     selectedItem.value = item
+    if (item.actions?.is_box_random) {
+      openBoxCount.value = Math.max(1, Math.min(parseInt(item.quantity, 10) || 1, 99))
+    }
   } else {
     selectedItem.value = null
   }
+}
+
+const closeRewardsPopup = () => {
+  rewardsPopupVisible.value = false
+  rewardsPopupRewards.value = []
 }
 
 const closeItemDetail = () => {
@@ -809,8 +897,8 @@ const getGearImage = (slotKey) => {
 const canAcceptItemSlotKey = (slotKey, itemCheck) => {
   if (!itemCheck) return false
   
-  // Case 1: Check if itemCheck.item_type is 'gear' (for items in bag)
-  if (itemCheck.item_type !== 'gear') {
+  // Case 1: Check if item is gear (use response actions)
+  if (!itemCheck.actions?.is_gear) {
     return false
   }
   
@@ -885,7 +973,7 @@ const scheduleUserDataReload = () => {
 
 // Wear item to slot
 const wearItemToSlot = async (item, slotKey) => {
-  if (!item || item.item_type !== 'gear') {
+  if (!item || !item.actions?.is_gear) {
     return false
   }
 
@@ -941,7 +1029,7 @@ const wearItemToSlot = async (item, slotKey) => {
 
 // Find appropriate slot for item based on config
 const findSlotForItem = (item) => {
-  if (!item || item.item_type !== 'gear') return null
+  if (!item || !item.actions?.is_gear) return null
   
   // Get item's actual type (sword, hat, etc.) from item.type
   const itemActualType = item.item?.type || null
@@ -970,7 +1058,7 @@ const findSlotForItem = (item) => {
 
 // Handle wear button click
 const handleWearItem = async (item) => {
-  if (!item || item.item_type !== 'gear') return
+  if (!item || !item.actions?.is_gear) return
 
   // Find appropriate slot based on item type and config
   const slotKey = findSlotForItem(item)
@@ -988,14 +1076,14 @@ const handleWearItem = async (item) => {
 
 // Handle double-click to wear
 const handleItemDoubleClick = async (item) => {
-  if (item && item.item_type === 'gear') {
+  if (item && item.actions?.is_gear) {
     await handleWearItem(item)
   }
 }
 
 // Handle drag start
 const handleDragStart = (event, item) => {
-  if (item && item.item_type === 'gear') {
+  if (item && item.actions?.is_gear) {
     draggingItem.value = item
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('text/plain', '')
@@ -1059,7 +1147,7 @@ const handleGearSlotDragStart = (event, slotKey) => {
     draggingItem.value = {
       ...gear,
       _wornSlotKey: slotKey,
-      item_type: 'gear'
+      item_type: itemC.ITEM_TYPE_GEAR
     }
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('text/plain', '')
@@ -1130,6 +1218,27 @@ const handleUnwearItem = async (slotKey) => {
     scheduleUserDataReload()
   } catch (error) {
     console.error('Error removing gear:', error)
+  }
+}
+
+// Open box_random item (consume openBoxCount from bag, grant random rewards; show center popup)
+const handleOpenBox = async (item) => {
+  if (!item || !item.actions?.is_box_random || !gameApi?.openBox || openingBox.value) return
+  const count = Math.max(1, Math.min(openBoxCount.value || 1, item.quantity || 1, 99))
+  openingBox.value = true
+  try {
+    const res = await gameApi.openBox(item.id, count)
+    const datas = res.data?.datas
+    if (datas?.user_bag) {
+      applyUserBagToAllItems(datas.user_bag)
+    }
+    selectedItem.value = null
+    rewardsPopupRewards.value = datas?.rewards ?? []
+    rewardsPopupVisible.value = true
+  } catch (e) {
+    alert(e.response?.data?.message || e.message || (t('component.bag.openBoxFailed') || 'Failed to open'))
+  } finally {
+    openingBox.value = false
   }
 }
 </script>
@@ -1668,6 +1777,113 @@ const handleUnwearItem = async (slotKey) => {
   margin-top: 10px;
 }
 
+.item-detail-open-count {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-detail-open-count-label {
+  color: dimgray;
+  font-family: Nanami, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.item-detail-open-count-input {
+  width: 70px;
+  padding: 6px 10px;
+  border: 1px solid rgba(105, 105, 105, 0.4);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: Nanami, sans-serif;
+}
+
+/* Rewards popup (center screen, same style as game get-item) */
+.rewards-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: rewards-fade-in 0.2s ease;
+}
+
+@keyframes rewards-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rewards-popup {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 280px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  font-family: Nanami, sans-serif;
+}
+
+.rewards-popup-title {
+  margin: 0 0 16px 0;
+  color: dimgray;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rewards-popup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.rewards-popup-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(240, 240, 240, 0.9);
+  border-radius: 8px;
+  border: 1px solid rgba(105, 105, 105, 0.2);
+}
+
+.rewards-popup-item-name {
+  font-weight: 600;
+  color: dimgray;
+}
+
+.rewards-popup-item-qty {
+  color: rgba(105, 105, 105, 0.9);
+  font-weight: 500;
+}
+
+.rewards-popup-close {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #f6a901 0%, #ff8c00 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: Nanami, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rewards-popup-close:hover {
+  background: linear-gradient(135deg, #ff8c00 0%, #f6a901 100%);
+}
+
 .set-bonus-card-header {
   padding: 12px 16px;
   border-bottom: 1px solid rgba(105, 105, 105, 0.3);
@@ -1824,6 +2040,12 @@ const handleUnwearItem = async (slotKey) => {
 .btn-wear:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(246, 169, 1, 0.3);
+}
+
+.btn-wear:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-exit {

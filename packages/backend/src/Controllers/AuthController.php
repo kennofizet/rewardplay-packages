@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Kennofizet\RewardPlay\Services\ImageManifestService;
 use Kennofizet\RewardPlay\Models\User;
 use Kennofizet\RewardPlay\Models\UserProfile\UserProfileConstant;
+use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
 
 class AuthController extends Controller
 {
@@ -89,7 +90,7 @@ class AuthController extends Controller
             'exp' => $user->getExp(),
             'exp_needed' => $user->getExpNeed(),
             'stats' => $user->getStats(),
-            'gears' => $user->getGears(),
+            'gears' => UserBagItemModelResponse::formatGearsWithActions($user->getGears()),
             'current_sets' => $user->getCurrentSets(),
             'gears_sets' => $user->getGearsSets(),
             'gear_wear_config' => UserProfileConstant::GEAR_WEAR_CONFIG

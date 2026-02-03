@@ -76,7 +76,7 @@ trait UserProfileActions
     /**
      * Give coin to the profile
      * Adds to coin amount
-     * 
+     *
      * @param int $coinAmount - Amount of coin to give
      * @return UserProfile
      */
@@ -84,7 +84,49 @@ trait UserProfileActions
     {
         $this->coin = ($this->coin ?? 0) + $coinAmount;
         $this->save();
-        
+
+        return $this->fresh();
+    }
+
+    /**
+     * Deduct coin from the profile. Throws if insufficient.
+     *
+     * @param int $coinAmount - Amount to deduct
+     * @return UserProfile
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function deductCoin(int $coinAmount): UserProfile
+    {
+        $current = (int) ($this->coin ?? 0);
+        if ($current < $coinAmount) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'coin' => ['Insufficient coin'],
+            ]);
+        }
+        $this->coin = $current - $coinAmount;
+        $this->save();
+
+        return $this->fresh();
+    }
+
+    /**
+     * Deduct ruby from the profile. Throws if insufficient.
+     *
+     * @param int $rubyAmount - Amount to deduct
+     * @return UserProfile
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function deductRuby(int $rubyAmount): UserProfile
+    {
+        $current = (int) ($this->ruby ?? 0);
+        if ($current < $rubyAmount) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'ruby' => ['Insufficient ruby'],
+            ]);
+        }
+        $this->ruby = $current - $rubyAmount;
+        $this->save();
+
         return $this->fresh();
     }
 

@@ -6,6 +6,7 @@ use Kennofizet\RewardPlay\Controllers\Controller;
 use Kennofizet\RewardPlay\Services\Player\BagService;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
 use Kennofizet\RewardPlay\Requests\SaveGearsRequest;
+use Kennofizet\RewardPlay\Requests\OpenBoxRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemConstant;
@@ -57,10 +58,6 @@ class BagController extends Controller
     {
         $userId = $request->attributes->get('rewardplay_user_id');
         
-        if (empty($userId)) {
-            return $this->apiErrorResponse('User not authenticated', 401);
-        }
-
         $validated = $request->validated();
         $gearMapping = $validated['gears'];
 
@@ -72,6 +69,30 @@ class BagController extends Controller
             return $this->apiErrorResponse($e->getMessage(), 400, $e->errors());
         } catch (\Exception $e) {
             return $this->apiErrorResponse($e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Open box_random item(s) from bag (consume quantity, grant random rewards by rate_list).
+     *
+     * @param OpenBoxRequest $request - body: user_bag_item_id (int), quantity (int, optional, default 1)
+     * @return JsonResponse - user_bag, rewards
+     */
+    public function openBox(OpenBoxRequest $request): JsonResponse
+    {
+        $userId = $request->attributes->get('rewardplay_user_id');
+
+        $validated = $request->validated();
+        $userBagItemId = (int) $validated['user_bag_item_id'];
+        $quantity = max(1, min(99, (int) ($validated['quantity'] ?? 1)));
+
+        try {
+            $result = $this->service->openBox((int) $userId, $userBagItemId, $quantity);
+            return $this->apiResponseWithContext($result);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->apiErrorResponse($e->getMessage(), 400, $e->errors());
+        } catch (\Exception $e) {
+            return $this->apiErrorResponse($e->getMessage(), 400);
         }
     }
 }

@@ -44,7 +44,7 @@ class StoreSettingDailyRewardRequest extends FormRequest
         $validator->after(function ($validator) {
             $items = $this->input('items', []);
             foreach ($items as $index => $item) {
-                if (isset($item['type']) && $item['type'] === Constant::TYPE_GEAR) {
+                if (isset($item['type']) && Constant::isRewardGear($item['type'])) {
                     if (empty($item['item_id'])) {
                         $validator->errors()->add("items.{$index}.item_id", 'The item_id field is required when type is item.');
                     }

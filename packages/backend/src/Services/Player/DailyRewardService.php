@@ -146,13 +146,13 @@ class DailyRewardService
             $rewardType = $rewardItem['type'] ?? HelperConstant::TYPE_GEAR;
             $quantity = $rewardItem['quantity'] ?? 1;
 
-            if ($rewardType == HelperConstant::TYPE_COIN) {
+            if (HelperConstant::isRewardCoin($rewardType)) {
                 // Give coin to user profile
                 $user->giveCoin($quantity);
-            } elseif ($rewardType == HelperConstant::TYPE_EXP) {
+            } elseif (HelperConstant::isRewardExp($rewardType)) {
                 // Give exp to user profile
                 $user->giveExp($quantity);
-            } elseif ($rewardType == HelperConstant::TYPE_GEAR || isset($rewardItem['item_id'])) {
+            } elseif (HelperConstant::isRewardGear($rewardType) || isset($rewardItem['item_id'])) {
                 // Use new structure: properties.stats and custom_options
                 $bagProperties = [];
                 

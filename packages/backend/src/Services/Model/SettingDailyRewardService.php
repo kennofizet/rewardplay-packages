@@ -113,7 +113,7 @@ class SettingDailyRewardService
         $processedItems = [];
         foreach ($items as $item) {
             if (isset($item['type']) && 
-                $item['type'] === HelperConstant::TYPE_GEAR && 
+                HelperConstant::isRewardGear($item['type'] ?? null) && 
                 !empty($item['item_id'])) {
                 
                 // Fetch the SettingItem to get its default_property and custom_stats

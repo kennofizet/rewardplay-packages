@@ -4,6 +4,8 @@ namespace Kennofizet\RewardPlay\Services\Player;
 
 use Kennofizet\RewardPlay\Models\UserBagItem;
 use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\RewardPlay\Models\SettingItem;
+use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
 use Kennofizet\RewardPlay\Models\UserProfile\UserProfileConstant;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemConstant;
@@ -82,7 +84,7 @@ class BagService
                     // Add 1 item back to bag (giveItem: if found same item+properties will +=, else create new)
                     $user->giveItem([
                         'item_id' => $currentGear['item_id'],
-                        'item_type' => $currentGear['item_type'] ?? 'gear',
+                        'item_type' => $currentGear['item_type'] ?? SettingItemConstant::ITEM_TYPE_GEAR,
                         'properties' => $currentGear['properties'] ?? [],
                         'quantity' => 1,
                     ]);
@@ -96,7 +98,7 @@ class BagService
             if ($currentGear && !empty($currentGear['item_id'])) {
                 $user->giveItem([
                     'item_id' => $currentGear['item_id'],
-                    'item_type' => $currentGear['item_type'] ?? 'gear',
+                    'item_type' => $currentGear['item_type'] ?? SettingItemConstant::ITEM_TYPE_GEAR,
                     'properties' => $currentGear['properties'] ?? [],
                     'quantity' => 1,
                 ]);
@@ -121,10 +123,10 @@ class BagService
                 ]);
             }
             
-            // Verify item_type is 'gear'
-            if ($userBagItem->item_type !== 'gear') {
+            // Verify item_type is gear (wearable)
+            if (!SettingItemConstant::isGear($userBagItem->item_type)) {
                 throw ValidationException::withMessages([
-                    "gears.{$slotKey}" => ["Item type must be 'gear' for slot: {$slotKey}"]
+                    "gears.{$slotKey}" => ["Item type must be gear for slot: {$slotKey}"]
                 ]);
             }
             
@@ -185,10 +187,129 @@ class BagService
         }
 
         return [
-            'gears' => $user->getGears(),
+            'gears' => UserBagItemModelResponse::formatGearsWithActions($user->getGears()),
             'power' => $user->getPower(),
             'stats' => $user->getStats(),
             'user_bag' => $formattedCategorized,
+        ];
+    }
+
+    /**
+     * Open box_random item(s): consume quantity from bag, grant random items by rate_list.
+     *
+     * @param int $userId
+     * @param int $userBagItemId
+     * @param int $quantity Number of boxes to open (1–99)
+     * @return array { user_bag, rewards } - updated bag and aggregated list of granted items
+     * @throws ValidationException
+     */
+    public function openBox(int $userId, int $userBagItemId, int $quantity = 1): array
+    {
+        $quantity = max(1, min(99, $quantity));
+        $user = User::findById($userId);
+        if (!$user) {
+            throw ValidationException::withMessages(['user' => ['User not found']]);
+        }
+
+        $userBagItem = UserBagItem::with('item')->byId($userBagItemId)->byUser($userId)->first();
+        if (!$userBagItem || !$userBagItem->item) {
+            throw ValidationException::withMessages(['user_bag_item_id' => ['Item not found or not in your bag']]);
+        }
+
+        $item = $userBagItem->item;
+        if (!SettingItemConstant::isBoxRandom($item->type ?? null)) {
+            throw ValidationException::withMessages(['user_bag_item_id' => ['This item cannot be opened']]);
+        }
+
+        if ($userBagItem->quantity < $quantity) {
+            throw ValidationException::withMessages(['user_bag_item_id' => ['Not enough quantity to open']]);
+        }
+
+        $bagProperties = $userBagItem->properties ?? [];
+        $defaultProperty = $item->default_property ?? [];
+        $rateList = (is_array($bagProperties) && !empty($bagProperties[SettingItemConstant::BOX_RANDOM_RATE_LIST]))
+            ? $bagProperties[SettingItemConstant::BOX_RANDOM_RATE_LIST]
+            : ($defaultProperty[SettingItemConstant::BOX_RANDOM_RATE_LIST] ?? []);
+
+        if (empty($rateList) || !is_array($rateList)) {
+            throw ValidationException::withMessages(['user_bag_item_id' => ['Box has no reward configuration']]);
+        }
+
+        $totalWeight = (float) array_sum(array_column($rateList, 'rate'));
+        if ($totalWeight <= 0) {
+            $totalWeight = 1.0;
+        }
+
+        // Preload reward items once to avoid N+1 queries in the loop
+        $settingItemIds = array_unique(array_filter(array_column($rateList, 'setting_item_id')));
+        $rewardItemsMap = [];
+        if (!empty($settingItemIds)) {
+            $rewardItemsMap = SettingItem::whereIn('id', $settingItemIds)->get()->keyBy('id');
+        }
+
+        $allRewards = [];
+        $openCount = 0;
+        while ($openCount < $quantity) {
+            $userBagItem = $userBagItem->fresh();
+            if (!$userBagItem || $userBagItem->quantity < 1) {
+                break;
+            }
+            $userBagItem->decrement('quantity', 1);
+            $userBagItem = $userBagItem->fresh();
+            if ($userBagItem && $userBagItem->quantity <= 0) {
+                $userBagItem->delete();
+            }
+            $openCount++;
+
+            $r = (float) mt_rand(1, (int) 1e6) / 1e6 * $totalWeight;
+            $acc = 0.0;
+            $chosen = null;
+            foreach ($rateList as $entry) {
+                $acc += (float) ($entry['rate'] ?? 0);
+                if ($r <= $acc) {
+                    $chosen = $entry;
+                    break;
+                }
+            }
+            if (!$chosen) {
+                $chosen = $rateList[array_key_last($rateList)];
+            }
+            $settingItemId = (int) ($chosen['setting_item_id'] ?? 0);
+            $rewardQty = max(1, min(99, (int) ($chosen['count'] ?? 1)));
+            if ($settingItemId >= 1) {
+                $rewardItem = $rewardItemsMap[$settingItemId] ?? null;
+                if ($rewardItem) {
+                    $rewardType = SettingItemConstant::isGearSlotType($rewardItem->type ?? null)
+                        ? SettingItemConstant::ITEM_TYPE_GEAR
+                        : ($rewardItem->type ?? 'other');
+                    $user->giveItem([
+                        'item_id' => $rewardItem->id,
+                        'item_type' => $rewardType,
+                        'quantity' => $rewardQty,
+                        'properties' => [],
+                    ]);
+                    $allRewards[] = [
+                        'setting_item_id' => $rewardItem->id,
+                        'name' => $rewardItem->name ?? '',
+                        'type' => $rewardItem->type ?? '',
+                        'quantity' => $rewardQty,
+                    ];
+                }
+            }
+        }
+
+        $categorized = $this->getUserBagCategorized($userId);
+        $formattedCategorized = [];
+        foreach ($categorized as $category => $items) {
+            $formattedCategorized[$category] = UserBagItemModelResponse::formatUserBagItems(
+                $items,
+                UserBagItemConstant::PLAYER_API_RESPONSE_BAG_PAGE
+            );
+        }
+
+        return [
+            'user_bag' => $formattedCategorized,
+            'rewards' => $allRewards,
         ];
     }
 

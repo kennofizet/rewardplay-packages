@@ -70,6 +70,24 @@ class Constant
         self::TYPE_TICKET => 'Ticket',
     ];
 
+    /** Check if reward type is coin (use for logic checks). */
+    public static function isRewardCoin(?string $type): bool
+    {
+        return $type === self::TYPE_COIN;
+    }
+
+    /** Check if reward type is exp (use for logic checks). */
+    public static function isRewardExp(?string $type): bool
+    {
+        return $type === self::TYPE_EXP;
+    }
+
+    /** Check if reward type is gear (use for logic checks). */
+    public static function isRewardGear(?string $type): bool
+    {
+        return $type === self::TYPE_GEAR;
+    }
+
     // Level Exp Defaults
     const DEFAULT_EXP_NEEDED = 100; // Default exp needed to level up if no setting found
 }

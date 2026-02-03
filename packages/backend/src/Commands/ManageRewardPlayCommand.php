@@ -716,7 +716,7 @@ class ManageRewardPlayCommand extends Command
 
                 // Add custom options to wing and clothes items (using custom_stats format)
                 $customStats = [];
-                if (($type === SettingItemConstant::ITEM_TYPE_WING || $type === SettingItemConstant::ITEM_TYPE_CLOTHES) && !empty($customOptions)) {
+                if ((SettingItemConstant::isWing($type) || SettingItemConstant::isClothes($type)) && !empty($customOptions)) {
                     // Add 1-2 custom options to these item types
                     $numCustom = min(rand(1, 2), count($customOptions));
                     if ($numCustom == 1) {

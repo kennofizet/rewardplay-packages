@@ -5,6 +5,7 @@ namespace Kennofizet\RewardPlay\Models\SettingDailyReward;
 use Kennofizet\RewardPlay\Core\Model\BaseModelResponse;
 use Kennofizet\RewardPlay\Models\SettingDailyReward\SettingDailyRewardConstant;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
+use Kennofizet\RewardPlay\Helpers\RewardItemActionsHelper;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -30,10 +31,12 @@ class SettingDailyRewardModelResponse extends BaseModelResponse
         if(in_array($mode, [
             self::getAvailableModeDefault()
         ])){
+            $items = $settingDailyReward->items ?? [];
+            $itemsWithActions = RewardItemActionsHelper::enrichWithActions(is_array($items) ? $items : []);
             $default_reponse = [
                 'id' => $settingDailyReward->id,
                 'date' => $settingDailyReward->date,
-                'items' => $settingDailyReward->items ?? [],
+                'items' => $itemsWithActions,
                 'stack_bonuses' => $settingDailyReward->stack_bonuses ?? [],
                 'is_epic' => $settingDailyReward->is_epic ?? false
             ];
@@ -50,19 +53,23 @@ class SettingDailyRewardModelResponse extends BaseModelResponse
         }elseif(in_array($mode, [
             SettingDailyRewardConstant::PLAYER_API_RESPONSE_REWARD_PAGE,
         ])){
+            $items = $settingDailyReward->items ?? [];
+            $itemsWithActions = RewardItemActionsHelper::enrichWithActions(is_array($items) ? $items : []);
             return [
                 'is_epic' => $settingDailyReward->is_epic,
-                'items' => $settingDailyReward->items,
+                'items' => $itemsWithActions,
                 'stack_bonuses' => $settingDailyReward->stack_bonuses,
                 'date' => $settingDailyReward->date,
                 'claimed' => $settingDailyReward->claimed
             ];
         }
 
+        $items = $settingDailyReward->items ?? [];
+        $itemsWithActions = RewardItemActionsHelper::enrichWithActions(is_array($items) ? $items : []);
         return [
             'id' => $settingDailyReward->id,
             'date' => $settingDailyReward->date,
-            'items' => $settingDailyReward->items ?? [],
+            'items' => $itemsWithActions,
             'stack_bonuses' => $settingDailyReward->stack_bonuses ?? [],
             'is_epic' => $settingDailyReward->is_epic ?? false,
         ];

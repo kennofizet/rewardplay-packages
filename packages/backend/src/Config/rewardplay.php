@@ -73,6 +73,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Constants Folder (Frontend)
+    |--------------------------------------------------------------------------
+    |
+    | The folder in the public directory where the constants JS file is published.
+    | Run: php artisan rewardplay:export-constants && php artisan rewardplay:publish-constants
+    |
+    */
+    'constants_folder' => env('REWARDPLAY_CONSTANTS_FOLDER', 'rewardplay-constants'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Custom Global Images Folder
     |--------------------------------------------------------------------------
     |

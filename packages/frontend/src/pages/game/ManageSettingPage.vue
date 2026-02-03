@@ -32,6 +32,9 @@ import SettingStatsTransformListPage from './manage-setting/SettingStatsTransfor
 import SettingStackBonusListPage from './manage-setting/SettingStackBonusListPage.vue'
 import SettingDailyRewardConfigPage from './manage-setting/SettingDailyRewardConfigPage.vue'
 import SettingLevelExpListPage from './manage-setting/SettingLevelExpListPage.vue'
+import SettingEventsListPage from './manage-setting/SettingEventsListPage.vue'
+import SettingShopListPage from './manage-setting/SettingShopListPage.vue'
+import SettingBoxTicketBuffPage from './manage-setting/SettingBoxTicketBuffPage.vue'
 import ManageZonesPage from './manage-setting/ManageZonesPage.vue'
 
 const translator = inject('translator', null)
@@ -67,7 +70,10 @@ const allMenuItems = [
   { key: 'manage-zones', label: t('page.manageSetting.menu.manageZones'), requiresZone: false },
   { key: 'setting-stack-bonuses', label: t('page.manageSetting.settingStackBonuses.title'), requiresZone: true },
   { key: 'setting-daily-rewards', label: t('page.manageSetting.settingDailyRewards.title'), requiresZone: true },
-  { key: 'setting-level-exps', label: t('page.manageSetting.settingLevelExps.title'), requiresZone: true }
+  { key: 'setting-level-exps', label: t('page.manageSetting.settingLevelExps.title'), requiresZone: true },
+  { key: 'setting-events', label: t('page.manageSetting.settingEvents.title'), requiresZone: true },
+  { key: 'setting-shop', label: t('page.manageSetting.settingShop.title'), requiresZone: true },
+  { key: 'setting-box-ticket-buff', label: t('page.manageSetting.settingBoxTicketBuff.title'), requiresZone: true }
 ]
 
 const menuItems = computed(() => {
@@ -89,7 +95,10 @@ const currentPageComponent = computed(() => {
     'manage-zones': ManageZonesPage,
     'setting-stack-bonuses': SettingStackBonusListPage,
     'setting-daily-rewards': SettingDailyRewardConfigPage,
-    'setting-level-exps': SettingLevelExpListPage
+    'setting-level-exps': SettingLevelExpListPage,
+    'setting-events': SettingEventsListPage,
+    'setting-shop': SettingShopListPage,
+    'setting-box-ticket-buff': SettingBoxTicketBuffPage
   }
   return pageMap[currentPage.value] || SettingItemsListPage
 })

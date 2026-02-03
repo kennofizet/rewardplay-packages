@@ -3,6 +3,7 @@
 namespace Kennofizet\RewardPlay\Services\Model;
 
 use Kennofizet\RewardPlay\Models\SettingItem;
+use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemRelationshipSetting;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Kennofizet\RewardPlay\Repositories\Model\SettingItemRepository;
@@ -57,9 +58,15 @@ class SettingItemService
             $query->search($key_search);
         }
 
-        // Apply type filter
+        // Apply type filter (single type or comma-separated for multiple, e.g. box_random,ticket,buff)
         if (!empty($filters['type'])) {
-            $query->byType($filters['type']);
+            $typeVal = $filters['type'];
+            if (is_string($typeVal) && strpos($typeVal, ',') !== false) {
+                $types = array_map('trim', explode(',', $typeVal));
+                $query->whereIn('type', $types);
+            } else {
+                $query->byType($typeVal);
+            }
         }
 
         $query->orderBy('id', 'DESC');
@@ -150,14 +157,22 @@ class SettingItemService
     {
         $items = SettingItem::get();
 
-        // Format items for response
-        $formattedItems = $items->map(function($item) {
+        // Format items for response (include default_property and actions for frontend filters/display)
+        $formattedItems = $items->map(function ($item) {
+            $type = $item->type ?? '';
             return [
                 'id' => $item->id,
                 'name' => $item->name,
                 'slug' => $item->slug,
-                'type' => $item->type,
+                'type' => $type,
                 'image' => \Kennofizet\RewardPlay\Core\Model\BaseModelResponse::getImageFullUrl($item->image),
+                'default_property' => $item->default_property,
+                'actions' => [
+                    'is_box_random' => SettingItemConstant::isBoxRandom($type),
+                    'is_gear' => SettingItemConstant::isGearSlotType($type),
+                    'is_buff' => SettingItemConstant::isBuff($type),
+                    'is_ticket' => SettingItemConstant::isTicket($type),
+                ],
             ];
         })->toArray();
 

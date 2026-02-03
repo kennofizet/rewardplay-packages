@@ -27,6 +27,14 @@ class SettingItemModelResponse extends BaseModelResponse
             return [];
         }
 
+        $type = $settingItem->type ?? '';
+        $actions = [
+            'is_box_random' => SettingItemConstant::isBoxRandom($type),
+            'is_gear' => SettingItemConstant::isGearSlotType($type),
+            'is_buff' => SettingItemConstant::isBuff($type),
+            'is_ticket' => SettingItemConstant::isTicket($type),
+        ];
+
         if(in_array($mode, [
             self::getAvailableModeDefault()
         ])){
@@ -38,7 +46,8 @@ class SettingItemModelResponse extends BaseModelResponse
                 'type' => $settingItem->type,
                 'default_property' => $settingItem->default_property,
                 'custom_stats' => $settingItem->custom_stats ?? [],
-                'image' => self::getImageFullUrl($settingItem->image)
+                'image' => self::getImageFullUrl($settingItem->image),
+                'actions' => $actions,
             ];
 
             return $default_reponse;
@@ -49,6 +58,7 @@ class SettingItemModelResponse extends BaseModelResponse
                 'id' => $settingItem->id,
                 'name' => $settingItem->name,
                 'slug' => $settingItem->slug,
+                'actions' => $actions,
             ];
         }
 
@@ -60,7 +70,8 @@ class SettingItemModelResponse extends BaseModelResponse
             'type' => $settingItem->type,
             'default_property' => $settingItem->default_property,
             'custom_stats' => $settingItem->custom_stats ?? [],
-            'image' => self::getImageFullUrl($settingItem->image)
+            'image' => self::getImageFullUrl($settingItem->image),
+            'actions' => $actions,
         ];
     }
 
