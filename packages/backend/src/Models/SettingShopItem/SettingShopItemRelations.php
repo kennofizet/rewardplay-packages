@@ -16,7 +16,7 @@ trait SettingShopItemRelations
 
     public function settingItem(): BelongsTo
     {
-        return $this->belongsTo(SettingItem::class, 'setting_item_id');
+        return $this->belongsTo(SettingItem::class, 'setting_item_id')->withTrashed();
     }
 
     public function event(): BelongsTo

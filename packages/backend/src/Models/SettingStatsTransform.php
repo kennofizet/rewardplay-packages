@@ -6,14 +6,13 @@ use Kennofizet\RewardPlay\Models\SettingStatsTransform\SettingStatsTransformRela
 use Kennofizet\RewardPlay\Models\SettingStatsTransform\SettingStatsTransformScopes;
 use Kennofizet\RewardPlay\Models\SettingStatsTransform\SettingStatsTransformActions;
 use Kennofizet\RewardPlay\Core\Model\BaseModel;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * SettingStatsTransform Model
  */
 class SettingStatsTransform extends BaseModel
 {
-    use SettingStatsTransformRelations, SettingStatsTransformActions, SettingStatsTransformScopes, SoftDeletes;
+    use SettingStatsTransformRelations, SettingStatsTransformActions, SettingStatsTransformScopes;
 
     /**
      * Get the table name with prefix

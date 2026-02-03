@@ -9,6 +9,6 @@ trait UserBagItemRelations
 {
     public function item(): BelongsTo
     {
-        return $this->belongsTo(SettingItem::class, 'item_id');
+        return $this->belongsTo(SettingItem::class, 'item_id')->withTrashed();
     }
 }

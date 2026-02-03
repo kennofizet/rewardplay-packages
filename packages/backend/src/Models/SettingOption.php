@@ -6,14 +6,13 @@ use Kennofizet\RewardPlay\Models\SettingOption\SettingOptionRelations;
 use Kennofizet\RewardPlay\Models\SettingOption\SettingOptionScopes;
 use Kennofizet\RewardPlay\Models\SettingOption\SettingOptionActions;
 use Kennofizet\RewardPlay\Core\Model\BaseModel;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * SettingOption Model
  */
 class SettingOption extends BaseModel
 {
-    use SettingOptionRelations, SettingOptionActions, SettingOptionScopes, SoftDeletes;
+    use SettingOptionRelations, SettingOptionActions, SettingOptionScopes;
 
     /**
      * Get the table name with prefix

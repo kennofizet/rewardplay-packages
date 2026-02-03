@@ -2,8 +2,8 @@
 
 namespace Kennofizet\RewardPlay\Core\Model;
 
-
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 use Kennofizet\RewardPlay\Core\Model\BaseModelManage;
 use Kennofizet\RewardPlay\Core\Model\BaseModelRelations;
@@ -17,6 +17,7 @@ class BaseModel extends Model
     use BaseModelManage;
     use BaseModelRelations;
     use BaseModelScopes;
+    use SoftDeletes;
     /**
      * Boot the model and apply global scopes
      */

@@ -168,10 +168,6 @@ class SettingDailyRewardService
                 ['type' => 'exp', 'quantity' => 50, 'item_id' => null],
             ];
 
-            if ($day % 5 === 0) {
-                $rewardItems[] = ['type' => 'ticket', 'quantity' => 1, 'item_id' => null];
-            }
-
             $settingDailyReward = SettingDailyReward::updateOrCreate(
                 ['date' => $rewardDate],
                 [
