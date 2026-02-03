@@ -153,12 +153,20 @@ class SettingItemService
      * @return array
      * @throws \Exception
      */
-    public function getItemsForZone(): array
+    public function getItemsForZone(array $filters = []): array
     {
+        $mode = $filters['mode'] ?? null;
+
         $items = SettingItem::get();
 
         // Format items for response (include default_property and actions for frontend filters/display)
-        $formattedItems = $items->map(function ($item) {
+        $formattedItems = $items->map(function ($item) use ($mode) {
+            $default_property = [];
+            if(!empty($mode) && in_array($mode, [
+                'with-default-options'
+            ])){
+                $default_property = $item->default_property ?? [];
+            }
             $type = $item->type ?? '';
             return [
                 'id' => $item->id,
@@ -170,6 +178,7 @@ class SettingItemService
                     'is_gear' => SettingItemConstant::isGearSlotType($type),
                     'is_ticket' => SettingItemConstant::isTicket($type),
                 ],
+                'default_property' => $default_property,
             ];
         })->toArray();
 

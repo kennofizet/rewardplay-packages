@@ -140,7 +140,7 @@
             <h4 class="form-section-title">{{ t('page.manageSetting.settingShop.form.basicInfo') }}</h4>
             <div class="form-group">
               <label>{{ t('page.manageSetting.settingShop.form.category') }}</label>
-              <select v-model="formData.category" class="form-select" @change="onCategoryChange">
+              <select v-model="formData.category" class="form-select" :disabled="!!editingItem" @change="onCategoryChange">
                 <option v-for="(label, key) in categoryLabels" :key="key" :value="key">{{ label }}</option>
               </select>
             </div>
@@ -484,7 +484,7 @@ const filters = ref({ currentPage: 1, perPage: 15, category: '' })
 
 async function loadZoneItems() {
   try {
-    const res = await gameApi.getItemsForZone()
+    const res = await gameApi.getItemsForZone({ mode: 'with-default-options' })
     if (res.data?.datas?.items) {
       zoneItems.value = res.data.datas.items
     }

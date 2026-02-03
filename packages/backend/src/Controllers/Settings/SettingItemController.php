@@ -137,8 +137,12 @@ class SettingItemController extends Controller
      */
     public function getItemsForZone(Request $request): JsonResponse
     {
+        $filters = $request->only([
+            'mode'
+        ]);
+
         try {
-            $items = $this->settingItemService->getItemsForZone();
+            $items = $this->settingItemService->getItemsForZone($filters);
 
             if ($request->expectsJson()) {
                 return $this->apiResponseWithContext([

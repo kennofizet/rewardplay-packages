@@ -105,7 +105,7 @@ export function createGameApi(backendUrl, token) {
 
     // Setting Item Sets CRUD
     getSettingItemSets: (params) => api.get('/api/rewardplay/setting-item-sets', { params }),
-    getItemsForZone: () => api.get('/api/rewardplay/setting-items/items-for-zone'),
+    getItemsForZone: (params) => api.get('/api/rewardplay/setting-items/items-for-zone', { params }),
     createSettingItemSet: (data) => api.post('/api/rewardplay/setting-item-sets', data),
     updateSettingItemSet: (id, data) => api.put(`/api/rewardplay/setting-item-sets/${id}`, data),
     deleteSettingItemSet: (id) => api.delete(`/api/rewardplay/setting-item-sets/${id}`),

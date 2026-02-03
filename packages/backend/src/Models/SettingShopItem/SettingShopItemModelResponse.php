@@ -60,8 +60,7 @@ class SettingShopItemModelResponse
                 'slug' => $item->slug,
                 'type' => $item->type,
                 'image' => BaseModelResponse::getImageFullUrl($item->image),
-                'description' => $item->description,
-                'default_property' => $item->default_property ?? null,
+                'description' => $item->description
             ]
             : [];
 

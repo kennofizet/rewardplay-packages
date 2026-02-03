@@ -67,7 +67,7 @@ class Constant
         self::TYPE_COIN => 'Coin',
         self::TYPE_EXP => 'Exp',
         self::TYPE_GEAR => 'Gear',
-        self::TYPE_TICKET => 'Ticket',
+        // self::TYPE_TICKET => 'Ticket',
     ];
 
     /** Check if reward type is coin (use for logic checks). */

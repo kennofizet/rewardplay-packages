@@ -341,7 +341,10 @@ async function handleSave() {
         description: formData.value.description || null,
         type: formData.value.type,
         default_property: Object.keys(default_property).length ? default_property : null,
-        image: formData.value.image || null,
+      }
+      // Only send image when it's a new file; when updating with no new file, omit image so backend keeps existing (backend expects file or omit, not URL string)
+      if (!editingItem.value) {
+        payload.image = null
       }
       if (editingItem.value) {
         await gameApi.updateSettingItem(editingItem.value.id, payload)

@@ -22,7 +22,7 @@
           <div class="day-content" @click="openDay(day)">
              <div v-if="getRewardForDay(day) && getRewardForDay(day).items && getRewardForDay(day).items.length">
                 <div v-for="(item, idx) in getRewardForDay(day).items" :key="idx" class="reward-tag">
-                   {{ item.actions?.is_gear ? getItemName(item.item_id) : item.type }} x{{ item.quantity }}
+                   {{ isGearType(item) ? getItemName(item.item_id) : item.type }} x{{ item.quantity }}
                 </div>
              </div>
              <span v-else class="empty">-</span>
@@ -45,7 +45,7 @@
                         </select>
                     </div>
 
-                    <div class="input-group" v-if="item.actions?.is_gear">
+                    <div class="input-group" v-if="isGearType(item)">
                         <label>{{ t('page.manageSetting.settingDailyRewards.form.item') }}</label>
                         <select v-model="item.item_id">
                             <option v-for="i in availableItems" :key="i.id" :value="i.id">{{ i.name }}</option>
@@ -75,8 +75,9 @@
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
 import { useTimezone } from '../../../composables/useTimezone'
-import { getHelperConstants } from '../../../utils/constants'
+import { getHelperConstants, getItemConstants } from '../../../utils/constants'
 const helperC = getHelperConstants()
+const itemC = getItemConstants()
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
@@ -99,6 +100,11 @@ const daysInMonth = computed(() => {
 const getItemName = (id) => {
     const item = availableItems.value.find(i => i.id === id)
     return item ? item.name : t('page.manageSetting.settingDailyRewards.messages.unknownItem')
+}
+
+/** Check if reward item is gear type (by constant). */
+function isGearType(item) {
+    return item?.type === itemC.ITEM_TYPE_GEAR
 }
 
 const loadItems = async () => {
