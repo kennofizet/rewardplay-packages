@@ -39,7 +39,6 @@ class SettingShopItemModelResponse
 
         $base = [
             'id' => $shopItem->id,
-            'zone_id' => $shopItem->zone_id,
             'setting_item_id' => $shopItem->setting_item_id,
             'event_id' => $shopItem->event_id,
             'category' => $category,
@@ -50,10 +49,7 @@ class SettingShopItemModelResponse
             'options' => $options,
             'is_active' => (bool) ($shopItem->is_active ?? true),
             'actions' => [
-                'is_category_gear' => SettingShopItemConstant::isCategoryGear($category),
                 'is_category_event' => SettingShopItemConstant::isCategoryEvent($category),
-                'is_category_ticket' => SettingShopItemConstant::isCategoryTicket($category),
-                'is_category_box_random' => SettingShopItemConstant::isCategoryBoxRandom($category),
                 'is_gear' => SettingItemConstant::isGearSlotType($settingItemType),
             ],
         ];

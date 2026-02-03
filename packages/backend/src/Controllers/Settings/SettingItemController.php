@@ -36,7 +36,7 @@ class SettingItemController extends Controller
             'type'
         ]);
         
-        $reponseMode = SettingItemConstant::API_SETTING_ITEM_LIST_PAGE;
+        $reponseMode = $request->get('reponseMode') ?? SettingItemConstant::API_SETTING_ITEM_LIST_PAGE;
 
         $settingItems = $this->settingItemService->getSettingItems($filters, $reponseMode);
 

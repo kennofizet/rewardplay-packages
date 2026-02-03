@@ -108,7 +108,6 @@ class RankingService
         $user = $snapshot->user;
 
         return [
-            'id' => $snapshot->user_id,
             'name' => $user ? ($user->name ?? 'Player ' . $snapshot->user_id) : 'Player ' . $snapshot->user_id,
             'avatar' => $user ? ($user->avatar ?? null) : null,
             'coin' => $snapshot->coin,

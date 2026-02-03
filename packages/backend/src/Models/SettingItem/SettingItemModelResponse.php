@@ -56,9 +56,7 @@ class SettingItemModelResponse extends BaseModelResponse
         ])){
             return [
                 'id' => $settingItem->id,
-                'name' => $settingItem->name,
-                'slug' => $settingItem->slug,
-                'actions' => $actions,
+                'name' => $settingItem->name
             ];
         }
 

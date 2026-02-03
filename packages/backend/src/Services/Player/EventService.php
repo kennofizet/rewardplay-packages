@@ -23,13 +23,11 @@ class EventService
 
         $list = $events->map(function ($event) {
             $items = $event->items->map(fn ($item) => [
-                'id' => $item->id,
                 'name' => $item->name,
                 'image' => BaseModelResponse::getImageFullUrl($item->image),
             ])->values()->all();
 
             return [
-                'id' => $event->id,
                 'name' => $event->name,
                 'description' => $event->description,
                 'image' => BaseModelResponse::getImageFullUrl($event->image),

@@ -4,6 +4,8 @@ namespace Kennofizet\RewardPlay\Controllers\Settings;
 
 use Kennofizet\RewardPlay\Controllers\Controller;
 use Kennofizet\RewardPlay\Services\Model\SettingLevelExpService;
+use Kennofizet\RewardPlay\Models\SettingLevelExp\SettingLevelExpModelResponse;
+use Kennofizet\RewardPlay\Models\SettingLevelExp\SettingLevelExpConstant;
 use Kennofizet\RewardPlay\Requests\StoreSettingLevelExpRequest;
 use Kennofizet\RewardPlay\Requests\UpdateSettingLevelExpRequest;
 use Illuminate\Http\Request;
@@ -33,11 +35,13 @@ class SettingLevelExpController extends Controller
             'q',
         ]);
 
-        $settingLevelExps = $this->settingLevelExpService->getSettingLevelExps($filters);
+        $responseMode = SettingLevelExpConstant::API_SETTING_LEVEL_EXP_LIST_PAGE;
+        $settingLevelExps = $this->settingLevelExpService->getSettingLevelExps($filters, $responseMode);
 
         if ($request->expectsJson()) {
+            $formattedLevelExps = SettingLevelExpModelResponse::formatSettingLevelExps($settingLevelExps, $responseMode);
             return $this->apiResponseWithContext([
-                'level_exps' => $settingLevelExps,
+                'level_exps' => $formattedLevelExps,
             ]);
         }
 
@@ -60,8 +64,10 @@ class SettingLevelExpController extends Controller
         }
 
         if ($request->expectsJson()) {
+            $responseMode = SettingLevelExpConstant::API_SETTING_LEVEL_EXP_LIST_PAGE;
+            $formattedLevelExp = SettingLevelExpModelResponse::formatSettingLevelExp($levelExp, $responseMode);
             return $this->apiResponseWithContext([
-                'level_exp' => $levelExp,
+                'level_exp' => $formattedLevelExp,
             ]);
         }
 
@@ -82,8 +88,10 @@ class SettingLevelExpController extends Controller
             $levelExp = $this->settingLevelExpService->createSettingLevelExp($data);
 
             if ($request->expectsJson()) {
+                $responseMode = SettingLevelExpConstant::API_SETTING_LEVEL_EXP_LIST_PAGE;
+                $formattedLevelExp = SettingLevelExpModelResponse::formatSettingLevelExp($levelExp, $responseMode);
                 return $this->apiResponseWithContext([
-                    'level_exp' => $levelExp,
+                    'level_exp' => $formattedLevelExp,
                 ], 201);
             }
 
@@ -108,8 +116,10 @@ class SettingLevelExpController extends Controller
             $levelExp = $this->settingLevelExpService->updateSettingLevelExp($id, $data);
 
             if ($request->expectsJson()) {
+                $responseMode = SettingLevelExpConstant::API_SETTING_LEVEL_EXP_LIST_PAGE;
+                $formattedLevelExp = SettingLevelExpModelResponse::formatSettingLevelExp($levelExp, $responseMode);
                 return $this->apiResponseWithContext([
-                    'level_exp' => $levelExp,
+                    'level_exp' => $formattedLevelExp,
                 ]);
             }
 

@@ -35,14 +35,7 @@ class ShopService
 
         $list = $items->map(function ($row) {
             $item = $row->settingItem;
-            $options = $row->options ?? [];
-            $rateList = $options['rate_list'] ?? null;
-            if (is_array($rateList) && !empty($rateList)) {
-                $options['rate_list'] = RateListHelper::enrichWithItemNames($rateList);
-            }
             $settingItemType = $item->type ?? '';
-            $pricesRaw = $row->prices ?? [];
-            $pricesWithActions = PriceActionsHelper::enrichWithActions(is_array($pricesRaw) ? $pricesRaw : []);
             return [
                 'id' => $row->id,
                 'name' => $item->name ?? '',
@@ -50,8 +43,8 @@ class ShopService
                 'image' => BaseModelResponse::getImageFullUrl($item->image ?? null),
                 'type' => $settingItemType ?: SettingItemConstant::ITEM_TYPE_GEAR,
                 'category' => $row->category ?? SettingShopItemConstant::CATEGORY_GEAR,
-                'prices' => $pricesWithActions,
-                'options' => $options,
+                'prices' => self::formatPrices($row->prices),
+                'options' => self::formatOptions($row->options),
                 'isEvent' => !empty($row->event_id),
                 'actions' => [
                     'is_box_random' => SettingItemConstant::isBoxRandom($settingItemType),
@@ -155,5 +148,28 @@ class ShopService
             'coin' => $user->getCoin(),
             'ruby' => $user->getRuby(),
         ];
+    }
+
+    private static function formatOptions(array $options): array
+    {
+        $rateList = $options['rate_list'] ?? null;
+        if (is_array($rateList) && !empty($rateList)) {
+            $dataEnrich = RateListHelper::enrichWithItemNames($rateList);
+            $options['rate_list'] = array_map(function (array $item): array {
+                return [
+                    'count' => $item['count'] ?? 0,
+                    'item_name' => $item['item_name'] ?? '',
+                    'rate' => $item['rate'] ?? 0,
+                ];
+            }, $dataEnrich);
+        }
+
+        return $options;
+    }
+
+    private static function formatPrices(array $prices): array
+    {
+        // need pass check count current can buy for case buy with item
+        return $prices;
     }
 }

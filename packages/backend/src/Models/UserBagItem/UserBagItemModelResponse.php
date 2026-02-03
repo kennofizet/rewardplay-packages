@@ -46,7 +46,6 @@ class UserBagItemModelResponse extends BaseModelResponse
                 'id' => $userBagItem->id,
                 'quantity' => $userBagItem->quantity,
                 'properties' => $properties,
-                'acquired_at' => $userBagItem->acquired_at,
                 'item_type' => $userBagItem->item_type,
                 'actions' => [
                     'is_box_random' => SettingItemConstant::isBoxRandom($itemType),
@@ -140,7 +139,7 @@ class UserBagItemModelResponse extends BaseModelResponse
      * @param array<string, array> $gears - Gears keyed by slot (e.g. sword => [ item_id, item_type, item, ... ])
      * @return array<string, array> - Same structure with actions added to each row
      */
-    public static function formatGearsWithActions(array $gears): array
+    public static function formatGearWearWithActions(array $gears): array
     {
         $out = [];
         foreach ($gears as $slot => $row) {
@@ -153,6 +152,23 @@ class UserBagItemModelResponse extends BaseModelResponse
                 'actions' => [
                     'is_gear' => SettingItemConstant::isGear($itemType) || SettingItemConstant::isGearSlotType($itemType),
                 ],
+            ];
+
+            $attr_keep = ['actions', 'item', 'properties'];
+            $out[$slot] = array_intersect_key($out[$slot], array_flip($attr_keep));
+        }
+        return $out;
+    }
+
+    public static function formatCurrentSets(array $currentSets): array
+    {
+        $out = [];
+        foreach ($currentSets as $set) {
+            $out[] = [
+                'current_bonus' => $set['current_bonus'] ?? [],
+                'item_count' => $set['item_count'],
+                'set_name' => $set['set_name'],
+                'total_items' => $set['total_items']
             ];
         }
         return $out;

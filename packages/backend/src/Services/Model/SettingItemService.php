@@ -163,16 +163,8 @@ class SettingItemService
             return [
                 'id' => $item->id,
                 'name' => $item->name,
-                'slug' => $item->slug,
                 'type' => $type,
                 'image' => \Kennofizet\RewardPlay\Core\Model\BaseModelResponse::getImageFullUrl($item->image),
-                'default_property' => $item->default_property,
-                'actions' => [
-                    'is_box_random' => SettingItemConstant::isBoxRandom($type),
-                    'is_gear' => SettingItemConstant::isGearSlotType($type),
-                    'is_buff' => SettingItemConstant::isBuff($type),
-                    'is_ticket' => SettingItemConstant::isTicket($type),
-                ],
             ];
         })->toArray();
 

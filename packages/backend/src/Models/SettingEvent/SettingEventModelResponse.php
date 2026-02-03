@@ -27,7 +27,6 @@ class SettingEventModelResponse extends BaseModelResponse
 
         $base = [
             'id' => $event->id,
-            'zone_id' => $event->zone_id,
             'name' => $event->name,
             'slug' => $event->slug,
             'description' => $event->description,

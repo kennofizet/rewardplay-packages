@@ -28,9 +28,6 @@ class SettingStackBonusModelResponse extends BaseModelResponse
             return [];
         }
 
-        $rewardsRaw = $settingStackBonus->rewards ?? [];
-        $rewardsWithActions = RewardItemActionsHelper::enrichWithActions(is_array($rewardsRaw) ? $rewardsRaw : []);
-
         if(in_array($mode, [
             self::getAvailableModeDefault()
         ])){
@@ -38,7 +35,7 @@ class SettingStackBonusModelResponse extends BaseModelResponse
                 'id' => $settingStackBonus->id,
                 'name' => $settingStackBonus->name,
                 'day' => $settingStackBonus->day,
-                'rewards' => $rewardsWithActions
+                'rewards' => $settingStackBonus->rewards
             ];
 
             return $default_reponse;
@@ -54,7 +51,7 @@ class SettingStackBonusModelResponse extends BaseModelResponse
             SettingStackBonusConstant::PLAYER_API_RESPONSE_REWARD_PAGE,
         ])){
             return [
-                'rewards' => $rewardsWithActions,
+                'rewards' => $settingStackBonus->rewards,
                 'day' => $settingStackBonus->day,
                 'name' => $settingStackBonus->name,
             ];
@@ -64,7 +61,7 @@ class SettingStackBonusModelResponse extends BaseModelResponse
             'id' => $settingStackBonus->id,
             'name' => $settingStackBonus->name,
             'day' => $settingStackBonus->day,
-            'rewards' => $rewardsWithActions
+            'rewards' => $settingStackBonus->rewards
         ];
     }
 

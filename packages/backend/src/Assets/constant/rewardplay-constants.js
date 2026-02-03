@@ -51,6 +51,7 @@
         "PRICE_TYPE_ITEM": "item"
     },
     "Helper": {
+        "REPONSE_MODE_SELECTER_API": "api.selecter",
         "TYPE_COIN": "coin",
         "TYPE_EXP": "exp",
         "TYPE_GEAR": "gear",

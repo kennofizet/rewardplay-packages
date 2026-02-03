@@ -75,6 +75,8 @@
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
 import { useTimezone } from '../../../composables/useTimezone'
+import { getHelperConstants } from '../../../utils/constants'
+const helperC = getHelperConstants()
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
@@ -101,7 +103,7 @@ const getItemName = (id) => {
 
 const loadItems = async () => {
     try {
-        const res = await gameApi.getSettingItems({ limit: 1000 })
+        const res = await gameApi.getSettingItems({ perPage: 50, reponseMode: helperC.REPONSE_MODE_SELECTER_API })
         // Adapt based on actual response structure
         if (res.data?.datas?.setting_items?.data) {
             availableItems.value = res.data.datas.setting_items.data

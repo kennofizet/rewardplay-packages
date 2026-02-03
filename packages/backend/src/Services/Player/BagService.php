@@ -187,7 +187,7 @@ class BagService
         }
 
         return [
-            'gears' => UserBagItemModelResponse::formatGearsWithActions($user->getGears()),
+            'gears' => UserBagItemModelResponse::formatGearWearWithActions($user->getGears()),
             'power' => $user->getPower(),
             'stats' => $user->getStats(),
             'user_bag' => $formattedCategorized,
