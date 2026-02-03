@@ -408,6 +408,7 @@ export default {
       },
       settingEvents: {
         title: 'Sự Kiện',
+        suggest: 'Gợi ý',
         create: 'Tạo Sự Kiện',
         edit: 'Sửa Sự Kiện',
         delete: 'Xóa',
@@ -456,6 +457,9 @@ export default {
         confirmDelete: 'Bạn có chắc muốn xóa sự kiện này?',
         messages: {
           loadFailed: 'Không thể tải sự kiện',
+          suggestSuccess: 'Đã tạo sự kiện gợi ý.',
+          suggestFailed: 'Không thể gợi ý sự kiện',
+          loadFailed: 'Không thể tải sự kiện',
           saveFailed: 'Không thể lưu',
           deleteFailed: 'Không thể xóa',
           nameRequired: 'Vui lòng nhập tên'
@@ -463,6 +467,7 @@ export default {
       },
       settingShop: {
         title: 'Cửa Hàng',
+        suggest: 'Gợi ý',
         create: 'Thêm Vật Phẩm Shop',
         edit: 'Sửa Vật Phẩm Shop',
         delete: 'Xóa',
@@ -512,6 +517,8 @@ export default {
         priceCount: 'giá',
         confirmDelete: 'Bạn có chắc muốn xóa vật phẩm này khỏi shop?',
         messages: {
+          suggestSuccess: 'Đã tạo vật phẩm shop gợi ý.',
+          suggestFailed: 'Không thể gợi ý shop',
           loadFailed: 'Không thể tải shop',
           saveFailed: 'Không thể lưu',
           deleteFailed: 'Không thể xóa',
@@ -521,6 +528,9 @@ export default {
       },
       settingBoxTicketBuff: {
         title: 'Hộp / Vé / Buff',
+        suggest: 'Gợi ý',
+        suggestSuccess: 'Đã tạo vật phẩm gợi ý (hộp/vé/buff).',
+        suggestFailed: 'Không thể gợi ý',
         create: 'Thêm',
         edit: 'Sửa',
         delete: 'Xóa',

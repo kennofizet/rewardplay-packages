@@ -7,6 +7,9 @@
           <option value="">{{ t('page.manageSetting.settingShop.allCategories') }}</option>
           <option v-for="(label, key) in categoryLabels" :key="key" :value="key">{{ label }}</option>
         </select>
+        <button class="btn-primary" @click="handleSuggest" :disabled="suggesting" style="margin-right: 10px;">
+          {{ t('page.manageSetting.settingShop.suggest') || 'Suggest' }}
+        </button>
         <button class="btn-primary" @click="handleCreate">
           {{ t('page.manageSetting.settingShop.create') }}
         </button>
@@ -293,6 +296,7 @@ const previewItem = ref(null)
 const editingItem = ref(null)
 const isLoadingEdit = ref(false)
 const saving = ref(false)
+const suggesting = ref(false)
 const zoneItems = ref([])
 const events = ref([])
 const stats = ref([])
@@ -519,6 +523,20 @@ async function loadEvents() {
     events.value = list
   } catch (e) {
     console.error('Failed to load events', e)
+  }
+}
+
+const handleSuggest = async () => {
+  if (!gameApi || suggesting.value) return
+  suggesting.value = true
+  try {
+    await gameApi.suggestSettingShopItems()
+    showAlert(t('page.manageSetting.settingShop.messages.suggestSuccess') || 'Suggested shop items created.')
+    loadShopItems()
+  } catch (e) {
+    showAlert(t('page.manageSetting.settingShop.messages.suggestFailed') || 'Failed to suggest shop items: ' + (e.response?.data?.message || e.message))
+  } finally {
+    suggesting.value = false
   }
 }
 

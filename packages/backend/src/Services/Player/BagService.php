@@ -244,7 +244,7 @@ class BagService
         $settingItemIds = array_unique(array_filter(array_column($rateList, 'setting_item_id')));
         $rewardItemsMap = [];
         if (!empty($settingItemIds)) {
-            $rewardItemsMap = SettingItem::whereIn('id', $settingItemIds)->get()->keyBy('id');
+            $rewardItemsMap = SettingItem::whereIn('id', $settingItemIds)->withTrashed()->get()->keyBy('id');
         }
 
         $allRewards = [];

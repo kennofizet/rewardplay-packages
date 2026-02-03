@@ -2,9 +2,14 @@
   <div class="setting-events-page">
     <div class="page-header">
       <h2>{{ t('page.manageSetting.settingEvents.title') }}</h2>
-      <button class="btn-primary" @click="handleCreate">
-        {{ t('page.manageSetting.settingEvents.create') }}
-      </button>
+      <div class="header-actions">
+        <button class="btn-primary" @click="handleSuggest" :disabled="suggesting" style="margin-right: 10px;">
+          {{ t('page.manageSetting.settingEvents.suggest') || 'Suggest' }}
+        </button>
+        <button class="btn-primary" @click="handleCreate">
+          {{ t('page.manageSetting.settingEvents.create') }}
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">{{ t('page.manageSetting.settingEvents.loading') }}</div>
@@ -331,6 +336,7 @@ const showPreviewModal = ref(false)
 const previewEvent = ref(null)
 const editingItem = ref(null)
 const saving = ref(false)
+const suggesting = ref(false)
 
 const previewEventBackgroundStyle = computed(() => {
   const evt = previewEvent.value
@@ -445,6 +451,20 @@ const loadZoneItems = async () => {
     }
   } catch (e) {
     console.error('Failed to load items', e)
+  }
+}
+
+const handleSuggest = async () => {
+  if (!gameApi || suggesting.value) return
+  suggesting.value = true
+  try {
+    await gameApi.suggestSettingEvents()
+    showAlert(t('page.manageSetting.settingEvents.messages.suggestSuccess') || 'Suggested events created.')
+    loadEvents()
+  } catch (e) {
+    showAlert(t('page.manageSetting.settingEvents.messages.suggestFailed') || 'Failed to suggest events: ' + (e.response?.data?.message || e.message))
+  } finally {
+    suggesting.value = false
   }
 }
 
@@ -727,6 +747,7 @@ onMounted(() => {
 .setting-events-page { width: 100%; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
 .page-header h2 { color: #d0d4d6; margin: 0; }
+.header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .loading, .error { padding: 20px; text-align: center; color: #d0d4d6; }
 .table-container { overflow-x: auto; }
 .settings-table { width: 100%; border-collapse: collapse; background: #253344; }

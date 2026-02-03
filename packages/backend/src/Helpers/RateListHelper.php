@@ -27,7 +27,7 @@ class RateListHelper
             $ids = array_unique(array_filter(array_column($rateList, 'setting_item_id')));
             $namesMap = [];
             if (!empty($ids)) {
-                $items = SettingItem::whereIn('id', $ids)->get(['id', 'name']);
+                $items = SettingItem::whereIn('id', $ids)->withTrashed()->get(['id', 'name']);
                 foreach ($items as $item) {
                     $namesMap[(int) $item->id] = $item->name ?? '';
                 }

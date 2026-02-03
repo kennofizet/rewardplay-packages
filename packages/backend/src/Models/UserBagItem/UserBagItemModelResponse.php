@@ -101,7 +101,7 @@ class UserBagItemModelResponse extends BaseModelResponse
         if (is_array($itemsForMap)) {
             $ids = RateListHelper::collectRateListItemIds($itemsForMap, 'properties');
             if (!empty($ids)) {
-                $names = SettingItem::whereIn('id', $ids)->get(['id', 'name']);
+                $names = SettingItem::whereIn('id', $ids)->withTrashed()->get(['id', 'name']);
                 foreach ($names as $n) {
                     $rateListNamesMap[(int) $n->id] = $n->name ?? '';
                 }

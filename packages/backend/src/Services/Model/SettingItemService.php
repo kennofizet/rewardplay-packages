@@ -148,6 +148,49 @@ class SettingItemService
     }
 
     /**
+     * Generate suggested box/ticket/buff setting items and persist them.
+     *
+     * @return array<int, SettingItem>
+     */
+    public function generateSuggestedBoxTicketBuffItems(): array
+    {
+        $suggested = [
+            [
+                'name' => 'Mystery Box',
+                'description' => 'Open to get random rewards.',
+                'type' => SettingItemConstant::ITEM_TYPE_BOX_RANDOM,
+                'default_property' => [
+                    'rate_list' => [],
+                ],
+            ],
+            [
+                'name' => 'Event Ticket',
+                'description' => 'Ticket for special events.',
+                'type' => SettingItemConstant::ITEM_TYPE_TICKET,
+                'default_property' => null,
+            ],
+            [
+                'name' => 'EXP Buff',
+                'description' => 'Increases EXP gain for a period.',
+                'type' => SettingItemConstant::ITEM_TYPE_BUFF,
+                'default_property' => [
+                    'buff_type' => 'exp',
+                    'buff_value' => 50,
+                    'buff_duration_minutes' => 60,
+                ],
+            ],
+        ];
+
+        $created = [];
+        foreach ($suggested as $data) {
+            $item = $this->settingItemRepository->create($data, null);
+            $created[] = $item;
+        }
+
+        return $created;
+    }
+
+    /**
      * Get items for a current user zone (for selecting items in set)
      * 
      * @return array

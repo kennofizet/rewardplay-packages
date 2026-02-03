@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Kennofizet\RewardPlay\Controllers\Settings\SettingItemController;
 
 // Setting Items CRUD
+Route::post('/setting-items/suggest', [SettingItemController::class, 'suggest']);
 Route::get('/setting-items', [SettingItemController::class, 'index']);
 Route::get('/setting-items/items-for-zone', [SettingItemController::class, 'getItemsForZone']);
 Route::post('/setting-items', [SettingItemController::class, 'store']);

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Kennofizet\RewardPlay\Controllers\Settings\SettingEventController;
 
+Route::post('/setting-events/suggest', [SettingEventController::class, 'suggest']);
 Route::get('/setting-events', [SettingEventController::class, 'index']);
 Route::get('/setting-events/{id}', [SettingEventController::class, 'show']);
 Route::post('/setting-events', [SettingEventController::class, 'store']);

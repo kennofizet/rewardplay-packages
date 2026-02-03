@@ -130,6 +130,25 @@ class SettingItemController extends Controller
     }
 
     /**
+     * Generate suggested box/ticket/buff setting items and save them.
+     *
+     * @return JsonResponse
+     */
+    public function suggest(): JsonResponse
+    {
+        try {
+            $created = $this->settingItemService->generateSuggestedBoxTicketBuffItems();
+            $formatted = collect($created)->map(fn ($item) => SettingItemModelResponse::formatSettingItem($item, ''))->values()->all();
+            return $this->apiResponseWithContext([
+                'setting_items' => $formatted,
+                'message' => 'Suggested box/ticket/buff items created.',
+            ], 201);
+        } catch (\Exception $e) {
+            return $this->handleException($e, 400);
+        }
+    }
+
+    /**
      * Get items for a current user zone (for selecting items in set)
      * 
      * @param Request $request

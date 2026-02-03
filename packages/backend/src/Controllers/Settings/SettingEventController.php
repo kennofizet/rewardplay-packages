@@ -101,6 +101,24 @@ class SettingEventController extends Controller
     }
 
     /**
+     * Generate suggested events and save them.
+     *
+     * @return JsonResponse
+     */
+    public function suggest(): JsonResponse
+    {
+        try {
+            $created = $this->settingEventService->generateSuggestedEvents();
+            return $this->apiResponseWithContext([
+                'events' => SettingEventModelResponse::formatSettingEvents(collect($created), SettingEventModelResponse::getAvailableModeDefault()),
+                'message' => 'Suggested events created.',
+            ], 201);
+        } catch (\Exception $e) {
+            return $this->handleException($e, 400);
+        }
+    }
+
+    /**
      * Delete a setting event.
      *
      * @param int $id

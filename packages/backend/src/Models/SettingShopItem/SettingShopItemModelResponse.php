@@ -78,7 +78,7 @@ class SettingShopItemModelResponse
         if (!empty($itemsForMap)) {
             $ids = RateListHelper::collectRateListItemIds($itemsForMap, 'options');
             if (!empty($ids)) {
-                $names = SettingItem::whereIn('id', $ids)->get(['id', 'name']);
+                $names = SettingItem::whereIn('id', $ids)->withTrashed()->get(['id', 'name']);
                 foreach ($names as $n) {
                     $rateListNamesMap[(int) $n->id] = $n->name ?? '';
                 }

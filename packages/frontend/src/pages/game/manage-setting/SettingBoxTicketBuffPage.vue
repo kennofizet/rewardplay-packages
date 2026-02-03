@@ -2,9 +2,14 @@
   <div class="setting-box-ticket-buff-page">
     <div class="page-header">
       <h2>{{ t('page.manageSetting.settingBoxTicketBuff.title') }}</h2>
-      <button class="btn-primary" @click="handleCreate">
-        {{ t('page.manageSetting.settingBoxTicketBuff.create') }}
-      </button>
+      <div class="header-actions">
+        <button class="btn-primary" @click="handleSuggest" :disabled="suggesting" style="margin-right: 10px;">
+          {{ t('page.manageSetting.settingBoxTicketBuff.suggest') || 'Suggest' }}
+        </button>
+        <button class="btn-primary" @click="handleCreate">
+          {{ t('page.manageSetting.settingBoxTicketBuff.create') }}
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">{{ t('page.manageSetting.settingBoxTicketBuff.loading') }}</div>
@@ -162,6 +167,7 @@ const pagination = ref(null)
 const showModal = ref(false)
 const editingItem = ref(null)
 const saving = ref(false)
+const suggesting = ref(false)
 const zoneItems = ref([])
 const selectedImageFile = ref(null)
 
@@ -214,6 +220,20 @@ async function loadZoneItems() {
     }
   } catch (e) {
     console.error('Failed to load items', e)
+  }
+}
+
+async function handleSuggest() {
+  if (!gameApi || suggesting.value) return
+  suggesting.value = true
+  try {
+    await gameApi.suggestSettingItems()
+    showAlert(t('page.manageSetting.settingBoxTicketBuff.suggestSuccess') || 'Suggested box/ticket/buff items created.')
+    loadItems()
+  } catch (e) {
+    showAlert(t('page.manageSetting.settingBoxTicketBuff.suggestFailed') || 'Failed to suggest: ' + (e.response?.data?.message || e.message))
+  } finally {
+    suggesting.value = false
   }
 }
 
@@ -374,6 +394,7 @@ onMounted(() => {
 .setting-box-ticket-buff-page { width: 100%; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
 .page-header h2 { color: #d0d4d6; margin: 0; }
+.header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .loading, .error { padding: 20px; text-align: center; color: #d0d4d6; }
 .table-container { overflow-x: auto; }
 .settings-table { width: 100%; border-collapse: collapse; background: #253344; }

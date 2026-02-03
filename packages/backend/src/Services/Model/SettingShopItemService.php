@@ -2,6 +2,7 @@
 
 namespace Kennofizet\RewardPlay\Services\Model;
 
+use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Models\SettingShopItem;
 use Kennofizet\RewardPlay\Models\SettingShopItem\SettingShopItemConstant;
 use Kennofizet\RewardPlay\Models\SettingShopItem\SettingShopItemRelationshipSetting;
@@ -103,5 +104,52 @@ class SettingShopItemService
         $shopItem = SettingShopItem::find($id);
 
         return $shopItem ? $shopItem->delete() : false;
+    }
+
+    /**
+     * Generate suggested shop items from existing setting items (box_random, ticket, buff, gear).
+     * Creates one shop entry per suggested item with default coin price.
+     *
+     * @return array<int, SettingShopItem>
+     */
+    public function generateSuggestedShopItems(): array
+    {
+        $items = SettingItem::query()
+            ->whereIn('type', [
+                \Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant::ITEM_TYPE_BOX_RANDOM,
+                \Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant::ITEM_TYPE_TICKET,
+                \Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant::ITEM_TYPE_BUFF,
+            ])
+            ->orderBy('id')
+            ->limit(5)
+            ->get();
+
+        if ($items->isEmpty()) {
+            return [];
+        }
+
+        $created = [];
+        $sortOrder = 0;
+        foreach ($items as $item) {
+            $category = $item->type === \Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant::ITEM_TYPE_BOX_RANDOM
+                ? SettingShopItemConstant::CATEGORY_BOX_RANDOM
+                : ($item->type === \Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant::ITEM_TYPE_TICKET
+                    ? SettingShopItemConstant::CATEGORY_TICKET
+                    : SettingShopItemConstant::CATEGORY_GEAR);
+            $shopItem = SettingShopItem::create([
+                'setting_item_id' => $item->id,
+                'event_id' => null,
+                'category' => $category,
+                'prices' => [['type' => SettingShopItemConstant::PRICE_TYPE_COIN, 'value' => 100, 'item_id' => null, 'quantity' => null]],
+                'sort_order' => $sortOrder++,
+                'time_start' => null,
+                'time_end' => null,
+                'options' => [],
+                'is_active' => true,
+            ]);
+            $created[] = $shopItem->load('settingItem');
+        }
+
+        return $created;
     }
 }

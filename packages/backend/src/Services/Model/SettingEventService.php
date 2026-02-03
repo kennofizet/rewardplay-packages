@@ -101,6 +101,50 @@ class SettingEventService
     }
 
     /**
+     * Generate suggested default events and persist them.
+     *
+     * @return array<int, SettingEvent>
+     */
+    public function generateSuggestedEvents(): array
+    {
+        $suggested = [
+            [
+                'name' => 'Weekend Bonus',
+                'description' => 'Double rewards during the weekend.',
+                'time_start' => null,
+                'time_end' => null,
+                'bonus' => [
+                    ['label' => 'Coin', 'value' => '+50%'],
+                    ['label' => 'EXP', 'value' => '+50%'],
+                ],
+                'daily_reward_bonus' => [],
+                'is_active' => true,
+                'item_ids' => [],
+            ],
+            [
+                'name' => 'Login Event',
+                'description' => 'Login daily to claim rewards.',
+                'time_start' => null,
+                'time_end' => null,
+                'bonus' => [
+                    ['label' => 'Daily Check-in', 'value' => 'Bonus rewards'],
+                ],
+                'daily_reward_bonus' => [],
+                'is_active' => true,
+                'item_ids' => [],
+            ],
+        ];
+
+        $created = [];
+        foreach ($suggested as $data) {
+            $event = $this->createSettingEvent($data);
+            $created[] = $event;
+        }
+
+        return $created;
+    }
+
+    /**
      * Delete a setting event and detach all items.
      */
     public function deleteSettingEvent(int $id): bool

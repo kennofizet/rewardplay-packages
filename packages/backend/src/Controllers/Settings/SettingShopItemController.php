@@ -96,6 +96,25 @@ class SettingShopItemController extends Controller
     }
 
     /**
+     * Generate suggested shop items from existing box/ticket/buff setting items.
+     *
+     * @return JsonResponse
+     */
+    public function suggest(): JsonResponse
+    {
+        try {
+            $created = $this->settingShopItemService->generateSuggestedShopItems();
+            $formatted = SettingShopItemModelResponse::formatSettingShopItems(collect($created), SettingShopItemConstant::API_LIST_PAGE);
+            return $this->apiResponseWithContext([
+                'shop_items' => $formatted,
+                'message' => 'Suggested shop items created.',
+            ], 201);
+        } catch (\Exception $e) {
+            return $this->handleException($e, 400);
+        }
+    }
+
+    /**
      * Delete a setting shop item.
      *
      * @param int $id

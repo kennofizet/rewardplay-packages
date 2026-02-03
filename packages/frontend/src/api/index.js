@@ -74,6 +74,7 @@ export function createGameApi(backendUrl, token) {
 
     // Setting Items CRUD
     getSettingItems: (params) => api.get('/api/rewardplay/setting-items', { params }),
+    suggestSettingItems: () => api.post('/api/rewardplay/setting-items/suggest'),
     createSettingItem: (data) => api.post('/api/rewardplay/setting-items', data),
     updateSettingItem: (id, data) => {
       if (data instanceof FormData) {
@@ -134,6 +135,7 @@ export function createGameApi(backendUrl, token) {
     // Setting Events (Manage)
     getSettingEvents: (params) => api.get('/api/rewardplay/setting-events', { params }),
     getSettingEvent: (id) => api.get(`/api/rewardplay/setting-events/${id}`),
+    suggestSettingEvents: () => api.post('/api/rewardplay/setting-events/suggest'),
     createSettingEvent: (data) => api.post('/api/rewardplay/setting-events', data),
     updateSettingEvent: (id, data) => {
       if (data instanceof FormData) {
@@ -146,6 +148,7 @@ export function createGameApi(backendUrl, token) {
     // Setting Shop Items (Manage)
     getSettingShopItems: (params) => api.get('/api/rewardplay/setting-shop-items', { params }),
     getSettingShopItem: (id) => api.get(`/api/rewardplay/setting-shop-items/${id}`),
+    suggestSettingShopItems: () => api.post('/api/rewardplay/setting-shop-items/suggest'),
     createSettingShopItem: (data) => api.post('/api/rewardplay/setting-shop-items', data),
     updateSettingShopItem: (id, data) => api.put(`/api/rewardplay/setting-shop-items/${id}`, data),
     deleteSettingShopItem: (id) => api.delete(`/api/rewardplay/setting-shop-items/${id}`),

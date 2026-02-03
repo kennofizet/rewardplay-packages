@@ -452,7 +452,10 @@ export default {
         holdInShop: 'Always (hold)',
         bonusCount: 'bonus(es)',
         confirmDelete: 'Are you sure you want to delete this event?',
+        suggest: 'Suggest',
         messages: {
+          suggestSuccess: 'Suggested events created.',
+          suggestFailed: 'Failed to suggest events',
           loadFailed: 'Failed to load events',
           saveFailed: 'Failed to save',
           deleteFailed: 'Failed to delete',
@@ -461,6 +464,7 @@ export default {
       },
       settingShop: {
         title: 'Shop',
+        suggest: 'Suggest',
         create: 'Add Shop Item',
         edit: 'Edit Shop Item',
         delete: 'Delete',
@@ -510,6 +514,8 @@ export default {
         priceCount: 'price(s)',
         confirmDelete: 'Are you sure you want to remove this item from shop?',
         messages: {
+          suggestSuccess: 'Suggested shop items created.',
+          suggestFailed: 'Failed to suggest shop items',
           loadFailed: 'Failed to load shop items',
           saveFailed: 'Failed to save',
           deleteFailed: 'Failed to delete',
@@ -519,6 +525,9 @@ export default {
       },
       settingBoxTicketBuff: {
         title: 'Box / Ticket / Buff',
+        suggest: 'Suggest',
+        suggestSuccess: 'Suggested box/ticket/buff items created.',
+        suggestFailed: 'Failed to suggest items',
         create: 'Add Item',
         edit: 'Edit',
         delete: 'Delete',
