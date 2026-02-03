@@ -274,6 +274,7 @@ import CustomOptionDisplay from '../../../components/CustomOptionDisplay.vue'
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 const gameApi = inject('gameApi')
+const showAlert = inject('showAlert', (msg) => alert(msg))
 const statHelpers = inject('statHelpers', null)
 const shopC = getShopConstants()
 
@@ -648,7 +649,7 @@ const handleDelete = async (row) => {
     }
     loadShopItems()
   } catch (e) {
-    alert(t('page.manageSetting.settingShop.messages.deleteFailed'))
+    showAlert(t('page.manageSetting.settingShop.messages.deleteFailed'))
   }
 }
 
@@ -658,7 +659,7 @@ const closeModal = () => {
 
 const handleSave = async () => {
   if (!formData.value.setting_item_id) {
-    alert(t('page.manageSetting.settingShop.messages.itemRequired'))
+    showAlert(t('page.manageSetting.settingShop.messages.itemRequired'))
     return
   }
   let options = {}
@@ -729,7 +730,7 @@ const handleSave = async () => {
     closeModal()
     loadShopItems()
   } catch (e) {
-    alert(t('page.manageSetting.settingShop.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
+    showAlert(t('page.manageSetting.settingShop.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
   } finally {
     saving.value = false
   }

@@ -82,6 +82,7 @@ const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
 const gameApi = inject('gameApi')
+const showAlert = inject('showAlert', (msg) => alert(msg))
 const { formatDate } = useTimezone()
 const currentYear = ref(2026)
 const currentMonth = ref(1)
@@ -200,7 +201,7 @@ const toggleEpic = async (day) => {
         })
         await loadRewards()
     } catch (e) {
-        alert('Failed to toggle epic status')
+        showAlert('Failed to toggle epic status')
         console.error(e)
     }
 }
@@ -226,7 +227,7 @@ const saveDay = async () => {
         closeModal()
         loadRewards()
     } catch (e) {
-        alert(t('page.manageSetting.settingDailyRewards.messages.saveFailed'))
+        showAlert(t('page.manageSetting.settingDailyRewards.messages.saveFailed'))
         console.error(e)
     }
 }
@@ -237,9 +238,9 @@ const suggestData = async () => {
     try {
         await gameApi.suggestDailyRewards({ year: currentYear.value, month: currentMonth.value })
         await loadRewards()
-        alert(t('page.manageSetting.settingDailyRewards.messages.suggestSuccess'))
+        showAlert(t('page.manageSetting.settingDailyRewards.messages.suggestSuccess'))
     } catch(e) {
-        alert(t('page.manageSetting.settingDailyRewards.messages.suggestFailed') + ': ' + (e.response?.data?.message || e.message))
+        showAlert(t('page.manageSetting.settingDailyRewards.messages.suggestFailed') + ': ' + (e.response?.data?.message || e.message))
     } finally {
         loading.value = false
     }

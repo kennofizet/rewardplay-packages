@@ -196,6 +196,7 @@ const translator = inject('translator', null)
 const t = translator || ((key) => key)
 const gameApi = inject('gameApi', null)
 const userData = inject('userData', null)
+const showAlert = inject('showAlert', (msg) => alert(msg))
 
 const getImageUrl = (key) => getFileImageUrl(key)
 
@@ -355,10 +356,10 @@ async function handleBuy() {
       if (d.user_bag) userData.value.user_bag = d.user_bag
     }
     // optional: emit or refresh bag elsewhere if needed
-    alert(t('component.shop.detail.purchaseSuccess') || 'Purchase successful!')
+    showAlert(t('component.shop.detail.purchaseSuccess') || 'Purchase successful!')
   } catch (e) {
     const msg = e.response?.data?.message ?? e.message ?? (t('component.shop.detail.purchaseFailed') || 'Purchase failed')
-    alert(msg)
+    showAlert(msg)
   }
 }
 

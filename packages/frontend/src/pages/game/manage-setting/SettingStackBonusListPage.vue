@@ -111,6 +111,7 @@ const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
 const gameApi = inject('gameApi')
+const showAlert = inject('showAlert', (msg) => alert(msg))
 const loading = ref(false)
 const error = ref(null)
 const bonuses = ref([])
@@ -180,10 +181,10 @@ const handleSuggest = async () => {
         const response = await gameApi.suggestStackBonuses()
         filters.value.currentPage = 1
         await loadBonuses()
-        alert('Stack bonuses created successfully!')
+        showAlert('Stack bonuses created successfully!')
     } catch (e) {
         console.error('Error suggesting data:', e)
-        alert('Failed to suggest data: ' + (e.response?.data?.message || e.message))
+        showAlert('Failed to suggest data: ' + (e.response?.data?.message || e.message))
     } finally {
         loading.value = false
     }
@@ -213,7 +214,7 @@ const handleDelete = async (item) => {
         }
         loadBonuses()
     } catch (e) {
-        alert(t('page.manageSetting.settingStackBonuses.messages.deleteFailed'))
+        showAlert(t('page.manageSetting.settingStackBonuses.messages.deleteFailed'))
     }
 }
 
@@ -230,7 +231,7 @@ const handleSave = async () => {
         closeModal()
         loadBonuses()
     } catch (e) {
-        alert(t('page.manageSetting.settingStackBonuses.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
+        showAlert(t('page.manageSetting.settingStackBonuses.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
     } finally {
         saving.value = false
     }

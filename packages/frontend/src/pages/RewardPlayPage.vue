@@ -37,6 +37,12 @@
       >
         <MainGame :rotate="rotate" :is-manager="isManager" />
       </div>
+
+      <AlertMessage
+        v-if="alertMessage"
+        :message="alertMessage"
+        @close="alertMessage = ''"
+      />
     </div>
   </div>
 </template>
@@ -46,6 +52,7 @@ import { ref, provide, computed, inject } from 'vue'
 import LoadingSource from '../components/LoadingSource.vue'
 import LoginScreen from '../components/LoginScreen.vue'
 import ZoneSelectPage from '../components/game/ZoneSelectPage.vue'
+import AlertMessage from '../components/game/AlertMessage.vue'
 import { ResourceLoader } from '../utils/resourceLoader'
 import MainGame from '../components/MainGame.vue'
 import { createTranslator } from '../i18n'
@@ -456,6 +463,13 @@ provide('updateUserData', updateUserData)
 
 // Provide timezone (scoped to RewardPlay package only - won't affect parent project)
 provide('zoneTimezone', zoneTimezone)
+
+// Global alert message (game-style popup) – use instead of alert()
+const alertMessage = ref('')
+const showAlert = (message) => {
+  alertMessage.value = message != null ? String(message) : ''
+}
+provide('showAlert', showAlert)
 
 // Login screen will auto check user on mount
 // After successful login, loading will start

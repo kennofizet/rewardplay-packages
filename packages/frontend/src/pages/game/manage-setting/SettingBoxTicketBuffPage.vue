@@ -153,6 +153,7 @@ const itemC = getItemConstants()
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 const gameApi = inject('gameApi')
+const showAlert = inject('showAlert', (msg) => alert(msg))
 
 const loading = ref(false)
 const error = ref(null)
@@ -286,7 +287,7 @@ async function handleDelete(row) {
     }
     loadItems()
   } catch (e) {
-    alert(t('page.manageSetting.settingBoxTicketBuff.deleteFailed'))
+    showAlert(t('page.manageSetting.settingBoxTicketBuff.deleteFailed'))
   }
 }
 
@@ -297,7 +298,7 @@ function closeModal() {
 
 async function handleSave() {
   if (!formData.value.name?.trim()) {
-    alert(t('page.manageSetting.settingBoxTicketBuff.nameRequired'))
+    showAlert(t('page.manageSetting.settingBoxTicketBuff.nameRequired'))
     return
   }
   saving.value = true
@@ -356,7 +357,7 @@ async function handleSave() {
     selectedImageFile.value = null
     loadItems()
   } catch (e) {
-    alert(t('page.manageSetting.settingBoxTicketBuff.saveFailed') + ': ' + (e.response?.data?.message || e.message))
+    showAlert(t('page.manageSetting.settingBoxTicketBuff.saveFailed') + ': ' + (e.response?.data?.message || e.message))
   } finally {
     saving.value = false
   }

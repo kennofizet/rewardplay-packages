@@ -90,6 +90,7 @@ const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
 const gameApi = inject('gameApi')
+const showAlert = inject('showAlert', (msg) => alert(msg))
 const loading = ref(false)
 const error = ref(null)
 const levelExps = ref([])
@@ -147,10 +148,10 @@ const handleSuggest = async () => {
     const response = await gameApi.suggestLevelExps()
     filters.value.currentPage = 1
     await loadLevelExps()
-    alert('Level exp data created successfully!')
+    showAlert('Level exp data created successfully!')
   } catch (e) {
     console.error('Error suggesting data:', e)
-    alert('Failed to suggest data: ' + (e.response?.data?.message || e.message))
+    showAlert('Failed to suggest data: ' + (e.response?.data?.message || e.message))
   } finally {
     loading.value = false
   }
@@ -174,7 +175,7 @@ const handleDelete = async (item) => {
     }
     loadLevelExps()
   } catch (e) {
-    alert(t('page.manageSetting.settingLevelExps.messages.deleteFailed'))
+    showAlert(t('page.manageSetting.settingLevelExps.messages.deleteFailed'))
   }
 }
 
@@ -182,7 +183,7 @@ const closeModal = () => showModal.value = false
 
 const handleSave = async () => {
   if (!formData.value.lv || formData.value.exp_needed < 0) {
-    alert(t('page.manageSetting.settingLevelExps.messages.invalidData'))
+    showAlert(t('page.manageSetting.settingLevelExps.messages.invalidData'))
     return
   }
   
@@ -196,7 +197,7 @@ const handleSave = async () => {
     closeModal()
     loadLevelExps()
   } catch (e) {
-    alert(t('page.manageSetting.settingLevelExps.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
+    showAlert(t('page.manageSetting.settingLevelExps.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
   } finally {
     saving.value = false
   }

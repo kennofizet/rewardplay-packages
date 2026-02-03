@@ -165,6 +165,7 @@ import { getGlobalStats, isStatsDataLoaded, getStatName } from '../../../utils/g
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
+const showAlert = inject('showAlert', (msg) => alert(msg))
 const t = translator || ((key) => key)
 
 const loading = ref(false)
@@ -408,11 +409,11 @@ const handleSuggest = async () => {
 
   try {
     const response = await gameApi.suggestSettingStatsTransforms()
-    alert(t('page.manageSetting.settingStatsTransform.messages.suggestSuccess'))
+    showAlert(t('page.manageSetting.settingStatsTransform.messages.suggestSuccess'))
     loadSettingStatsTransforms()
   } catch (e) {
     console.error('Error suggesting data:', e)
-    alert('Failed to suggest data: ' + (e.response?.data?.message || e.message))
+    showAlert('Failed to suggest data: ' + (e.response?.data?.message || e.message))
   } finally {
     loading.value = false
   }

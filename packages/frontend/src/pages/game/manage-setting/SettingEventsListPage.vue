@@ -315,6 +315,7 @@ import CustomOptionDisplay from '../../../components/CustomOptionDisplay.vue'
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 const gameApi = inject('gameApi')
+const showAlert = inject('showAlert', (msg) => alert(msg))
 
 function truncateText(text, maxLen = 40) {
   if (!text) return '—'
@@ -586,7 +587,7 @@ async function handleCreateNewItem() {
     }
     closeCreateItemModal()
   } catch (e) {
-    alert(t('page.manageSetting.settingEvents.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
+    showAlert(t('page.manageSetting.settingEvents.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
   } finally {
     creatingItem.value = false
   }
@@ -624,7 +625,7 @@ const handleDelete = async (evt) => {
     }
     loadEvents()
   } catch (e) {
-    alert(t('page.manageSetting.settingEvents.messages.deleteFailed'))
+    showAlert(t('page.manageSetting.settingEvents.messages.deleteFailed'))
   }
 }
 
@@ -635,7 +636,7 @@ const closeModal = () => {
 
 const handleSave = async () => {
   if (!formData.value.name?.trim()) {
-    alert(t('page.manageSetting.settingEvents.messages.nameRequired'))
+    showAlert(t('page.manageSetting.settingEvents.messages.nameRequired'))
     return
   }
   saving.value = true
@@ -688,7 +689,7 @@ const handleSave = async () => {
     closeModal()
     loadEvents()
   } catch (e) {
-    alert(t('page.manageSetting.settingEvents.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
+    showAlert(t('page.manageSetting.settingEvents.messages.saveFailed') + ': ' + (e.response?.data?.message || e.message))
   } finally {
     saving.value = false
   }

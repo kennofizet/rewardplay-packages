@@ -562,6 +562,10 @@ export default {
     },
   },
   component: {
+    alert: {
+      title: 'Message',
+      close: 'Close',
+    },
     topMe: {
       title: 'My Rank',
       position: 'Position',
@@ -733,6 +737,8 @@ export default {
         priceTitle: 'Price',
         notEnoughToBuy: 'Not enough to buy',
         buy: 'Buy',
+        purchaseSuccess: 'Purchase successful!',
+        purchaseFailed: 'Purchase failed',
       },
       badge: {
         event: 'Event',

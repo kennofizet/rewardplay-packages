@@ -408,6 +408,7 @@ const userData = inject('userData', null)
 const gearWearConfig = inject('gearWearConfig', null)
 const updateUserData = inject('updateUserData', null)
 const getStatNameFunc = inject('getStatName', getStatName)
+const showAlert = inject('showAlert', (msg) => alert(msg))
 const t = translator || ((key) => key)
 
 // Fake data for game items
@@ -1236,7 +1237,7 @@ const handleOpenBox = async (item) => {
     rewardsPopupRewards.value = datas?.rewards ?? []
     rewardsPopupVisible.value = true
   } catch (e) {
-    alert(e.response?.data?.message || e.message || (t('component.bag.openBoxFailed') || 'Failed to open'))
+    showAlert(e.response?.data?.message || e.message || (t('component.bag.openBoxFailed') || 'Failed to open'))
   } finally {
     openingBox.value = false
   }

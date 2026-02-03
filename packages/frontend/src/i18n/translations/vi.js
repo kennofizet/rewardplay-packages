@@ -564,6 +564,10 @@ export default {
     },
   },
   component: {
+    alert: {
+      title: 'Thông báo',
+      close: 'Đóng',
+    },
     topMe: {
       title: 'Xếp Hạng Của Tôi',
       position: 'Vị Trí',
@@ -735,6 +739,8 @@ export default {
         priceTitle: 'Giá',
         notEnoughToBuy: 'Không đủ để mua',
         buy: 'Mua',
+        purchaseSuccess: 'Mua thành công!',
+        purchaseFailed: 'Mua thất bại',
       },
       badge: {
         event: 'Sự Kiện',
