@@ -19,12 +19,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Get image manifest file with CORS headers
+     * Get image manifest file with CORS headers (cached 1 day).
      * Includes custom global images in the 'custom' key
      */
     public function getImageManifest()
     {
-        $manifest = $this->imageManifestService->buildManifest();
+        $manifest = $this->imageManifestService->getManifest();
 
         if (empty($manifest)) {
             return $this->apiErrorResponse('Manifest file not found or invalid', 404);

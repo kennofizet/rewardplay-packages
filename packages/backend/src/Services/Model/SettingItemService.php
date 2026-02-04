@@ -199,8 +199,18 @@ class SettingItemService
     public function getItemsForZone(array $filters = []): array
     {
         $mode = $filters['mode'] ?? null;
+        $type = $filters['type'] ?? null;
 
-        $items = SettingItem::get();
+        $types = [];
+        if(!empty($type)) {
+            if(SettingItemConstant::isGear($type)){
+                $types = array_keys(SettingItemConstant::ITEM_TYPE_NAMES);
+            }
+        }
+
+        $items = SettingItem::when(!empty($type), function ($query) use ($types) {
+            $query->whereIn('type', $types);
+        })->get();
 
         // Format items for response (include default_property and actions for frontend filters/display)
         $formattedItems = $items->map(function ($item) use ($mode) {

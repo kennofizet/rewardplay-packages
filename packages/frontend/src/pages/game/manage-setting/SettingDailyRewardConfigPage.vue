@@ -75,8 +75,7 @@
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
 import { useTimezone } from '../../../composables/useTimezone'
-import { getHelperConstants, getItemConstants } from '../../../utils/constants'
-const helperC = getHelperConstants()
+import { getItemConstants } from '../../../utils/constants'
 const itemC = getItemConstants()
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
@@ -110,15 +109,11 @@ function isGearType(item) {
 
 const loadItems = async () => {
     try {
-        const res = await gameApi.getSettingItems({ perPage: 50, reponseMode: helperC.REPONSE_MODE_SELECTER_API })
-        // Adapt based on actual response structure
-        if (res.data?.datas?.setting_items?.data) {
-            availableItems.value = res.data.datas.setting_items.data
-        } else if (res.data?.datas?.setting_items) {
-            availableItems.value = res.data.datas.setting_items
-        }
+        const res = await gameApi.getItemsForZone({ type: itemC.ITEM_TYPE_GEAR })
+        const items = res.data?.datas?.items
+        availableItems.value = Array.isArray(items) ? items : []
     } catch (e) {
-        console.error("Failed to load items", e)
+        console.error('Failed to load items', e)
     }
 }
 

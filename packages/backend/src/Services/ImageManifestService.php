@@ -4,9 +4,28 @@ namespace Kennofizet\RewardPlay\Services;
 
 use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
+use Kennofizet\RewardPlay\Helpers\CacheHelper;
 
 class ImageManifestService
 {
+    public const CACHE_KEY_MANIFEST = 'rewardplay_manifest';
+    public const CACHE_TTL_SECONDS = 86400; // 1 day
+
+    /**
+     * Get manifest (cached 1 day). Uses Laravel cache when configured; falls back to file cache otherwise.
+     *
+     * @return array
+     */
+    public function getManifest(): array
+    {
+        $result = CacheHelper::rememberWithFileFallback(
+            self::CACHE_KEY_MANIFEST,
+            self::CACHE_TTL_SECONDS,
+            fn () => $this->buildManifest()
+        );
+        return is_array($result) ? $result : [];
+    }
+
     /**
      * Build image manifest merged with any custom global images and return full URLs.
      *

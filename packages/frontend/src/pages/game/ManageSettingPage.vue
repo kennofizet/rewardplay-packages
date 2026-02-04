@@ -118,7 +118,7 @@ watch(hasSelectedZone, (hasZone) => {
 <style scoped>
 .manage-setting-page {
   width: 100%;
-  height: calc(100% - 60px);
+  height: calc(100% - 0px);
   padding: 20px;
 }
 

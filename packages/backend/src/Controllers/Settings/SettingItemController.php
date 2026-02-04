@@ -157,7 +157,8 @@ class SettingItemController extends Controller
     public function getItemsForZone(Request $request): JsonResponse
     {
         $filters = $request->only([
-            'mode'
+            'mode',
+            'type',
         ]);
 
         try {
