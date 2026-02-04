@@ -5,6 +5,7 @@ namespace Kennofizet\RewardPlay\Services\Player;
 use Kennofizet\RewardPlay\Models\SettingShopItem;
 use Kennofizet\RewardPlay\Models\SettingShopItem\SettingShopItemConstant;
 use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
 use Kennofizet\RewardPlay\Core\Model\BaseModelResponse;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
@@ -21,10 +22,12 @@ class ShopService
 
     /**
      * Get active shop items for the current zone (for shop page).
+     * When $userId is provided, also returns spendable_items for item-type price checks.
      *
-     * @return array{shop_items: array}
+     * @param int|null $userId
+     * @return array{shop_items: array, spendable_items?: array}
      */
-    public function getActiveShopItems(): array
+    public function getActiveShopItems(?int $userId = null): array
     {
         $items = SettingShopItem::query()
             ->activeNow()
@@ -43,7 +46,7 @@ class ShopService
                 'image' => BaseModelResponse::getImageFullUrl($item->image ?? null),
                 'type' => $settingItemType ?: SettingItemConstant::ITEM_TYPE_GEAR,
                 'category' => $row->category ?? SettingShopItemConstant::CATEGORY_GEAR,
-                'prices' => self::formatPrices($row->prices),
+                'prices' => self::formatPricesWithItemNames($row->prices),
                 'options' => self::formatOptions($row->options),
                 'isEvent' => !empty($row->event_id),
                 'actions' => [
@@ -53,7 +56,11 @@ class ShopService
             ];
         })->values()->all();
 
-        return ['shop_items' => $list];
+        $result = ['shop_items' => $list];
+        if ($userId !== null) {
+            $result['spendable_items'] = $this->bagService->getSpendableItems($userId);
+        }
+        return $result;
     }
 
     /**
@@ -90,6 +97,7 @@ class ShopService
 
         $totalCoin = 0;
         $totalRuby = 0;
+        $itemRequirements = [];
         foreach ($prices as $p) {
             $type = $p['type'] ?? '';
             $val = (int) ($p['value'] ?? 0);
@@ -97,10 +105,19 @@ class ShopService
                 $totalCoin += $val;
             } elseif (SettingShopItemConstant::isPriceRuby($type)) {
                 $totalRuby += $val;
+            } elseif (SettingShopItemConstant::isPriceItem($type)) {
+                $itemId = (int) ($p['item_id'] ?? 0);
+                $qty = max(1, (int) ($p['quantity'] ?? 1));
+                if ($itemId >= 1) {
+                    $itemRequirements[$itemId] = ($itemRequirements[$itemId] ?? 0) + $qty;
+                }
             }
         }
         $totalCoin *= $quantity;
         $totalRuby *= $quantity;
+        foreach ($itemRequirements as $itemId => $qty) {
+            $itemRequirements[$itemId] = $qty * $quantity;
+        }
 
         if ($totalCoin > 0 && $user->getCoin() < $totalCoin) {
             return ['success' => false, 'message' => 'Insufficient coin', 'status' => 400];
@@ -109,8 +126,17 @@ class ShopService
             return ['success' => false, 'message' => 'Insufficient ruby', 'status' => 400];
         }
 
+        $spendable = $this->bagService->getSpendableItems($userId);
+        foreach ($itemRequirements as $itemId => $needQty) {
+            $have = $spendable[$itemId] ?? 0;
+            if ($have < $needQty) {
+                return ['success' => false, 'message' => 'Insufficient item for price', 'status' => 400];
+            }
+        }
+
         $user->deductCoin($totalCoin);
         $user->deductRuby($totalRuby);
+        $this->bagService->consumeItemsFromBag($userId, $itemRequirements);
 
         $item = $shopItem->settingItem;
         $itemType = SettingItemConstant::isGearSlotType($item->type ?? null)
@@ -169,7 +195,42 @@ class ShopService
 
     private static function formatPrices(array $prices): array
     {
-        // need pass check count current can buy for case buy with item
         return $prices;
+    }
+
+    /**
+     * Format prices and add item_name for item-type prices.
+     */
+    private static function formatPricesWithItemNames(array $prices): array
+    {
+        if (empty($prices)) {
+            return [];
+        }
+        $itemIds = [];
+        foreach ($prices as $p) {
+            if (SettingShopItemConstant::isPriceItem($p['type'] ?? '')) {
+                $id = (int) ($p['item_id'] ?? 0);
+                if ($id >= 1) {
+                    $itemIds[$id] = true;
+                }
+            }
+        }
+        $namesMap = [];
+        if (!empty($itemIds)) {
+            $items = SettingItem::whereIn('id', array_keys($itemIds))->get(['id', 'name']);
+            foreach ($items as $item) {
+                $namesMap[(int) $item->id] = $item->name ?? '';
+            }
+        }
+        $result = [];
+        foreach ($prices as $p) {
+            $row = $p;
+            if (SettingShopItemConstant::isPriceItem($p['type'] ?? '')) {
+                $id = (int) ($p['item_id'] ?? 0);
+                $row['item_name'] = $namesMap[$id] ?? '';
+            }
+            $result[] = PriceActionsHelper::enrichWithActions([$row])[0] ?? $row;
+        }
+        return $result;
     }
 }

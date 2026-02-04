@@ -74,7 +74,7 @@
                 <img v-if="getPriceIconKey(p)" :src="getImageUrl(getPriceIconKey(p))" :alt="getPriceLabel(p)" class="shop-detail__price-icon">
                 <span class="shop-detail__price-label">{{ getPriceLabel(p) }}</span>
                 <span class="shop-detail__price-value">{{ totalForPrice(p) }}</span>
-                <span v-if="detailQuantity > 1" class="shop-detail__price-unit">({{ p.value }} × {{ detailQuantity }})</span>
+                <span v-if="detailQuantity > 1" class="shop-detail__price-unit">({{ (p.actions?.is_item ? p.quantity : p.value) }} × {{ detailQuantity }})</span>
               </div>
             </template>
             <span v-else class="shop-detail__price-free">{{ t('component.shop.detail.free') }}</span>
@@ -205,7 +205,7 @@ const selectedItem = ref(null)
 const detailQuantity = ref(1)
 const loading = ref(true)
 const shopItems = ref([])
-const userBalance = ref({ coin: 0, ruby: 0 })
+const userBalance = ref({ coin: 0, ruby: 0, spendable_items: {} })
 
 watch(selectedItem, (item) => {
   detailQuantity.value = item ? 1 : 0
@@ -238,10 +238,17 @@ async function loadShop() {
   if (!gameApi?.getPlayerShop) return
   try {
     const res = await gameApi.getPlayerShop()
-    const raw = res?.data?.datas?.shop_items ?? []
+    const datas = res?.data?.datas ?? {}
+    const raw = datas.shop_items ?? []
     shopItems.value = Array.isArray(raw) ? raw : []
+    if (datas.spendable_items != null && typeof datas.spendable_items === 'object') {
+      userBalance.value.spendable_items = datas.spendable_items
+    } else {
+      userBalance.value.spendable_items = {}
+    }
   } catch (e) {
     shopItems.value = []
+    userBalance.value.spendable_items = {}
   } finally {
     loading.value = false
   }
@@ -252,10 +259,8 @@ async function loadBalance() {
   try {
     const res = await gameApi.getUserData()
     const d = res?.data?.datas ?? {}
-    userBalance.value = {
-      coin: Number(d.coin) || 0,
-      ruby: Number(d.ruby) || 0,
-    }
+    userBalance.value.coin = Number(d.coin) || 0
+    userBalance.value.ruby = Number(d.ruby) || 0
   } catch (_) {
     // keep current balance
   }
@@ -263,11 +268,10 @@ async function loadBalance() {
 
 onMounted(async () => {
   loading.value = true
+  userBalance.value.spendable_items = {}
   if (userData?.value && typeof userData.value.coin === 'number') {
-    userBalance.value = {
-      coin: userData.value.coin ?? 0,
-      ruby: userData.value.ruby ?? 0,
-    }
+    userBalance.value.coin = userData.value.coin ?? 0
+    userBalance.value.ruby = userData.value.ruby ?? 0
   }
   await loadBalance()
   await loadShop()
@@ -290,7 +294,8 @@ const hasShopItemOptions = computed(() => {
 
 function totalForPrice(p) {
   if (!p || !selectedItem.value) return 0
-  return p.value * detailQuantity.value
+  if (p.actions?.is_item) return (Number(p.quantity) || 1) * detailQuantity.value
+  return (Number(p.value) || 0) * detailQuantity.value
 }
 
 function getBalanceKey(p) {
@@ -300,6 +305,10 @@ function getBalanceKey(p) {
 }
 
 function getUserBalance(p) {
+  if (p.actions?.is_item && p.item_id != null) {
+    const items = userBalance.value.spendable_items || {}
+    return Number(items[p.item_id]) || 0
+  }
   const key = getBalanceKey(p)
   return Number(userBalance.value[key]) || 0
 }
@@ -309,7 +318,9 @@ const canAfford = computed(() => {
   const prices = getItemPrices(selectedItem.value)
   if (prices.length === 0) return true
   return prices.every((p) => {
-    const need = p.value * detailQuantity.value
+    const need = p.actions?.is_item
+      ? (Number(p.quantity) || 1) * detailQuantity.value
+      : (Number(p.value) || 0) * detailQuantity.value
     return getUserBalance(p) >= need
   })
 })
@@ -332,6 +343,10 @@ function getPriceLabel(p) {
   if (!p) return ''
   if (p.actions?.is_coin) return t('component.shop.priceType.coin')
   if (p.actions?.is_ruby) return t('component.shop.priceType.ruby')
+  if (p.actions?.is_item && (p.item_id != null || p.item_name)) {
+    const name = p.item_name || (t('component.shop.priceType.item') || 'Item') + ' #' + (p.item_id ?? '?')
+    return name + ' × ' + (p.quantity ?? 1)
+  }
   if (p.actions?.is_voucher && p.key) return t('component.shop.priceType.voucher') + ' (' + p.key + ')'
   return p.type || ''
 }
@@ -350,6 +365,9 @@ async function handleBuy() {
     const d = res?.data?.datas ?? {}
     if (d.coin !== undefined) userBalance.value.coin = Number(d.coin)
     if (d.ruby !== undefined) userBalance.value.ruby = Number(d.ruby)
+    if (d.spendable_items != null && typeof d.spendable_items === 'object') {
+      userBalance.value.spendable_items = d.spendable_items
+    }
     if (userData?.value) {
       userData.value.coin = userBalance.value.coin
       userData.value.ruby = userBalance.value.ruby

@@ -93,7 +93,7 @@ class AuthController extends Controller
             'gears' => UserBagItemModelResponse::formatGearWearWithActions($user->getGears()),
             'current_sets' => UserBagItemModelResponse::formatCurrentSets($user->getCurrentSets()),
             'gears_sets' => $user->getGearsSets(),
-            'gear_wear_config' => UserProfileConstant::GEAR_WEAR_CONFIG
+            'gear_wear_config' => UserProfileConstant::GEAR_WEAR_CONFIG,
         ]);
     }
 }

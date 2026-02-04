@@ -362,4 +362,72 @@ class BagService
         ];
     }
 
+    /**
+     * Get spendable items: item_id => total quantity (bag items with properties empty).
+     *
+     * @return array<int, int> item_id => quantity
+     */
+    public function getSpendableItems(?int $userId): array
+    {
+        if (!$userId) {
+            return [];
+        }
+        $spendable = [];
+        $bagItems = $this->getUserBag($userId);
+        $items = $bagItems instanceof Collection ? $bagItems->all() : $bagItems;
+        foreach ($items as $bagItem) {
+            if (!UserBagItemConstant::isPropertiesEmpty($bagItem->properties ?? null)) {
+                continue;
+            }
+            $itemId = (int) ($bagItem->item_id ?? 0);
+            if ($itemId < 1) {
+                continue;
+            }
+            $qty = (int) ($bagItem->quantity ?? 0);
+            if ($qty > 0) {
+                $spendable[$itemId] = ($spendable[$itemId] ?? 0) + $qty;
+            }
+        }
+        return $spendable;
+    }
+
+    /**
+     * Consume items from user bag (only rows with properties empty).
+     *
+     * @param int $userId
+     * @param array<int, int> $itemQuantities item_id => quantity to consume
+     */
+    public function consumeItemsFromBag(int $userId, array $itemQuantities): void
+    {
+        foreach ($itemQuantities as $itemId => $needQty) {
+            $needQty = max(0, (int) $needQty);
+            if ($needQty <= 0 || $itemId < 1) {
+                continue;
+            }
+            $rows = UserBagItem::with('item')
+                ->byUser($userId)
+                ->byItemId($itemId)
+                ->get();
+            $remaining = $needQty;
+            foreach ($rows as $row) {
+                if ($remaining <= 0) {
+                    break;
+                }
+                if (!UserBagItemConstant::isPropertiesEmpty($row->properties ?? null)) {
+                    continue;
+                }
+                $have = (int) $row->quantity;
+                if ($have <= 0) {
+                    continue;
+                }
+                $take = min($remaining, $have);
+                $remaining -= $take;
+                if ($take >= $have) {
+                    $row->delete();
+                } else {
+                    $row->decrement('quantity', $take);
+                }
+            }
+        }
+    }
 }

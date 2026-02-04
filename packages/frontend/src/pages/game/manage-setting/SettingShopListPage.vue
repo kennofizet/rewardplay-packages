@@ -123,7 +123,7 @@
             <template v-if="previewItem.prices?.length">
               <div v-for="(p, i) in previewItem.prices" :key="i" class="shop-preview-price-row">
                 <span>{{ getPriceLabel(p) }}</span>
-                <span>{{ p.value ?? p.quantity ?? '—' }}</span>
+                <span>{{ (p.actions?.is_item || p.type === shopC.PRICE_TYPE_ITEM) ? (p.quantity ?? '—') : (p.value ?? '—') }}</span>
               </div>
             </template>
             <span v-else>{{ t('component.shop.detail.free') }}</span>
@@ -588,7 +588,13 @@ function formatPreviewRateList(rateList) {
   }))
 }
 function getPriceLabel(p) {
-  const type = (p && p.type) || 'coin'
+  if (!p) return ''
+  const type = p.type || 'coin'
+  const isItemPrice = p.actions?.is_item || type === shopC.PRICE_TYPE_ITEM
+  if (isItemPrice && (p.item_id != null || p.item_name)) {
+    const name = p.item_name || (zoneItems.value?.find((i) => i.id === p.item_id)?.name) || (t('page.manageSetting.settingShop.form.rewardItem') || 'Item') + ' #' + (p.item_id ?? '?')
+    return name + ' × ' + (p.quantity ?? 1)
+  }
   return PRICE_LABELS[type] ?? type
 }
 

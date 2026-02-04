@@ -40,7 +40,7 @@ export function getItemPrices(item) {
   if (!item) return []
   if (Array.isArray(item.prices) && item.prices.length > 0) {
     return item.prices
-      .filter((p) => p && (p.value > 0 || p.actions?.is_voucher))
+      .filter((p) => p && (p.value > 0 || p.actions?.is_voucher || (p.actions?.is_item && p.item_id)))
       .map((p) => (p.actions ? p : addPriceActions(p)))
   }
   const list = []

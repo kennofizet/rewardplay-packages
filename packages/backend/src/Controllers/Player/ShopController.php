@@ -2,10 +2,11 @@
 
 namespace Kennofizet\RewardPlay\Controllers\Player;
 
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Kennofizet\RewardPlay\Controllers\Controller;
 use Kennofizet\RewardPlay\Services\Player\ShopService;
 use Kennofizet\RewardPlay\Requests\PurchaseShopItemRequest;
-use Illuminate\Http\JsonResponse;
 
 class ShopController extends Controller
 {
@@ -16,12 +17,14 @@ class ShopController extends Controller
 
     /**
      * Get active shop items for the current zone (for shop page).
+     * Includes spendable_items when user is authenticated (for item-type price checks).
      *
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $result = $this->service->getActiveShopItems();
+        $userId = $request->attributes->get('rewardplay_user_id');
+        $result = $this->service->getActiveShopItems($userId ? (int) $userId : null);
         return $this->apiResponseWithContext($result);
     }
 
@@ -53,6 +56,7 @@ class ShopController extends Controller
             'user_bag' => $result['user_bag'],
             'coin' => $result['coin'],
             'ruby' => $result['ruby'],
+            'spendable_items' => $result['spendable_items'] ?? [],
         ]);
     }
 }
