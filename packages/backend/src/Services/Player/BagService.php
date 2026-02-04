@@ -7,6 +7,7 @@ use Kennofizet\RewardPlay\Models\User;
 use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
 use Kennofizet\RewardPlay\Models\UserProfile\UserProfileConstant;
+use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemConstant;
 use Illuminate\Validation\ValidationException;
@@ -269,7 +270,7 @@ class BagService
             $totalWeight = 1.0;
         }
 
-        // Preload reward items once to avoid N+1 queries in the loop
+        // Preload reward items once (only for entries with setting_item_id)
         $settingItemIds = array_unique(array_filter(array_column($rateList, 'setting_item_id')));
         $rewardItemsMap = [];
         if (!empty($settingItemIds)) {
@@ -303,26 +304,45 @@ class BagService
             if (!$chosen) {
                 $chosen = $rateList[array_key_last($rateList)];
             }
-            $settingItemId = (int) ($chosen['setting_item_id'] ?? 0);
-            $rewardQty = max(1, min(99, (int) ($chosen['count'] ?? 1)));
-            if ($settingItemId >= 1) {
-                $rewardItem = $rewardItemsMap[$settingItemId] ?? null;
-                if ($rewardItem) {
-                    $rewardType = SettingItemConstant::isGearSlotType($rewardItem->type ?? null)
-                        ? SettingItemConstant::ITEM_TYPE_GEAR
-                        : ($rewardItem->type ?? 'other');
-                    $user->giveItem([
-                        'item_id' => $rewardItem->id,
-                        'item_type' => $rewardType,
-                        'quantity' => $rewardQty,
-                        'properties' => [],
-                    ]);
-                    $allRewards[] = [
-                        'setting_item_id' => $rewardItem->id,
-                        'name' => $rewardItem->name ?? '',
-                        'type' => $rewardItem->type ?? '',
-                        'quantity' => $rewardQty,
-                    ];
+
+            $rewardTypeKey = $chosen[SettingItemConstant::BOX_RANDOM_REWARD_TYPE] ?? null;
+            $minVal = isset($chosen[SettingItemConstant::BOX_RANDOM_MIN]) ? (int) $chosen[SettingItemConstant::BOX_RANDOM_MIN] : null;
+            $maxVal = isset($chosen[SettingItemConstant::BOX_RANDOM_MAX]) ? (int) $chosen[SettingItemConstant::BOX_RANDOM_MAX] : null;
+
+            if ($rewardTypeKey && $minVal !== null && $maxVal !== null && HelperConstant::isRewardExp($rewardTypeKey)) {
+                $rewardQty = max(0, min(999999, mt_rand(min($minVal, $maxVal), max($minVal, $maxVal))));
+                $user->giveExp($rewardQty);
+                $allRewards[] = ['reward_type' => HelperConstant::TYPE_EXP, 'name' => 'Exp', 'type' => 'exp', 'quantity' => $rewardQty];
+            } elseif ($rewardTypeKey && $minVal !== null && $maxVal !== null && HelperConstant::isRewardCoin($rewardTypeKey)) {
+                $rewardQty = max(0, min(999999, mt_rand(min($minVal, $maxVal), max($minVal, $maxVal))));
+                $user->giveCoin($rewardQty);
+                $allRewards[] = ['reward_type' => HelperConstant::TYPE_COIN, 'name' => 'Coin', 'type' => 'coin', 'quantity' => $rewardQty];
+            } elseif ($rewardTypeKey && $minVal !== null && $maxVal !== null && HelperConstant::isRewardRuby($rewardTypeKey)) {
+                $rewardQtyRuby = max(0, min(999999, mt_rand(min($minVal, $maxVal), max($minVal, $maxVal))));
+                $user->giveRuby($rewardQtyRuby);
+                $allRewards[] = ['reward_type' => HelperConstant::TYPE_RUBY, 'name' => 'Ruby', 'type' => 'ruby', 'quantity' => $rewardQtyRuby];
+            } else {
+                $settingItemId = (int) ($chosen['setting_item_id'] ?? 0);
+                $rewardQty = max(1, min(99, (int) ($chosen['count'] ?? 1)));
+                if ($settingItemId >= 1) {
+                    $rewardItem = $rewardItemsMap[$settingItemId] ?? null;
+                    if ($rewardItem) {
+                        $itemTypeForGive = SettingItemConstant::isGearSlotType($rewardItem->type ?? null)
+                            ? SettingItemConstant::ITEM_TYPE_GEAR
+                            : ($rewardItem->type ?? 'other');
+                        $user->giveItem([
+                            'item_id' => $rewardItem->id,
+                            'item_type' => $itemTypeForGive,
+                            'quantity' => $rewardQty,
+                            'properties' => [],
+                        ]);
+                        $allRewards[] = [
+                            'setting_item_id' => $rewardItem->id,
+                            'name' => $rewardItem->name ?? '',
+                            'type' => $rewardItem->type ?? '',
+                            'quantity' => $rewardQty,
+                        ];
+                    }
                 }
             }
         }

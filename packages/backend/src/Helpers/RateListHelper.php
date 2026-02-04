@@ -3,6 +3,7 @@
 namespace Kennofizet\RewardPlay\Helpers;
 
 use Kennofizet\RewardPlay\Models\SettingItem;
+use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
 
 /**
  * Enrich rate_list entries with item names for display (bag, shop, setting shop).
@@ -38,6 +39,16 @@ class RateListHelper
             $entry = is_array($e) ? $e : (array) $e;
             $id = isset($entry['setting_item_id']) ? (int) $entry['setting_item_id'] : null;
             $entry['item_name'] = $id !== null && isset($namesMap[$id]) ? $namesMap[$id] : null;
+
+            $rewardType = SettingItemConstant::BOX_RANDOM_REWARD_TYPE;
+            if(isset($entry['reward_type'])) {
+                if(Constant::isRewardExp($entry[$rewardType])
+                || Constant::isRewardCoin($entry[$rewardType])
+                || Constant::isRewardRuby($entry[$rewardType])
+                ) {
+                    $entry['item_name'] = Constant::REWARD_TYPES[$entry[$rewardType]];
+                }
+            }
             return $entry;
         }, $rateList);
     }

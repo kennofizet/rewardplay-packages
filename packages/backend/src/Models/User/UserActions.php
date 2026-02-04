@@ -139,6 +139,18 @@ trait UserActions
     }
 
     /**
+     * Give ruby to the user
+     *
+     * @param int $rubyAmount - Amount of ruby to give
+     * @return UserProfile
+     */
+    public function giveRuby(int $rubyAmount): UserProfile
+    {
+        $profile = UserProfile::getOrCreateProfile($this->id);
+        return $profile->giveRuby($rubyAmount);
+    }
+
+    /**
      * Deduct coin from the user. Throws if insufficient.
      *
      * @param int $coinAmount

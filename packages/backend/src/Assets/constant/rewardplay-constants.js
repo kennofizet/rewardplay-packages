@@ -37,13 +37,17 @@
             "box_random": "Box Random",
             "ticket": "Ticket",
             "buff": "Buff Card"
-        }
+        },
+        "BOX_RANDOM_REWARD_TYPE": "reward_type",
+        "BOX_RANDOM_MIN": "min",
+        "BOX_RANDOM_MAX": "max"
     },
     "SettingShopItem": {
         "CATEGORY_GEAR": "gear",
         "CATEGORY_TICKET": "ticket",
         "CATEGORY_BOX_RANDOM": "box_random",
         "CATEGORY_EVENT": "event",
+        "CATEGORY_CUSTOM": "custom",
         "PRICE_TYPE_COIN": "coin",
         "PRICE_TYPE_GEM": "gem",
         "PRICE_TYPE_RUBY": "ruby",
@@ -54,6 +58,7 @@
         "REPONSE_MODE_SELECTER_API": "api.selecter",
         "TYPE_COIN": "coin",
         "TYPE_EXP": "exp",
+        "TYPE_RUBY": "ruby",
         "TYPE_GEAR": "gear",
         "TYPE_TICKET": "ticket"
     }

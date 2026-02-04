@@ -60,12 +60,14 @@ class Constant
     // Reward Types
     const TYPE_COIN = 'coin';
     const TYPE_EXP = 'exp';
+    const TYPE_RUBY = 'ruby';
     const TYPE_GEAR = 'gear'; // gear is a setting item
     const TYPE_TICKET = 'ticket'; // potentially mentioned later or good practice
 
     const REWARD_TYPES = [
         self::TYPE_COIN => 'Coin',
         self::TYPE_EXP => 'Exp',
+        self::TYPE_RUBY => 'Ruby',
         self::TYPE_GEAR => 'Gear',
         // self::TYPE_TICKET => 'Ticket',
     ];
@@ -80,6 +82,12 @@ class Constant
     public static function isRewardExp(?string $type): bool
     {
         return $type === self::TYPE_EXP;
+    }
+
+    /** Check if reward type is ruby (use for logic checks). */
+    public static function isRewardRuby(?string $type): bool
+    {
+        return $type === self::TYPE_RUBY;
     }
 
     /** Check if reward type is gear (use for logic checks). */

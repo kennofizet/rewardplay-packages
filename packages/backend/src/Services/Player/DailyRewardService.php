@@ -152,6 +152,9 @@ class DailyRewardService
             } elseif (HelperConstant::isRewardExp($rewardType)) {
                 // Give exp to user profile
                 $user->giveExp($quantity);
+            } elseif (HelperConstant::isRewardRuby($rewardType)) {
+                // Give ruby to user profile
+                $user->giveRuby($quantity);
             } elseif (HelperConstant::isRewardGear($rewardType) || isset($rewardItem['item_id'])) {
                 // Use new structure: properties.stats and custom_options
                 $bagProperties = [];

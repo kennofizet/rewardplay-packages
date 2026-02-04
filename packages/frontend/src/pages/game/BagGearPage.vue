@@ -382,9 +382,10 @@ import ExpBar from '../../components/game/ExpBar.vue'
 import LevelBadge from '../../components/game/LevelBadge.vue'
 import { getFileImageUrl } from '../../utils/imageResolverRuntime'
 import { getStatName } from '../../utils/globalData'
-import { getItemConstants, getBagMenuList } from '../../utils/constants'
+import { getItemConstants, getHelperConstants, getBagMenuList } from '../../utils/constants'
 import { formatCompactNumber } from '../../utils/numberFormat'
 const itemC = getItemConstants()
+const helperC = getHelperConstants()
 const translator = inject('translator', null)
 const userData = inject('userData', null)
 const gearWearConfig = inject('gearWearConfig', null)
@@ -1236,8 +1237,30 @@ const handleOpenBox = async (item) => {
       applyUserBagToAllItems(datas.user_bag)
     }
     selectedItem.value = null
-    rewardsPopupRewards.value = datas?.rewards ?? []
+    const rewards = datas?.rewards ?? []
+    rewardsPopupRewards.value = rewards
     rewardsPopupVisible.value = true
+    // Update userData with exp/coin/ruby from rewards (same as daily reward collect)
+    if (updateUserData && rewards.length > 0) {
+      let expDelta = 0
+      let coinDelta = 0
+      let rubyDelta = 0
+      rewards.forEach((r) => {
+        const type = r.type ?? r.reward_type
+        const qty = Number(r.quantity) || 0
+        if (type === helperC.TYPE_EXP) expDelta += qty
+        else if (type === helperC.TYPE_COIN) coinDelta += qty
+        else if (type === helperC.TYPE_RUBY) rubyDelta += qty
+      })
+      if (expDelta > 0 || coinDelta > 0 || rubyDelta > 0) {
+        const updates = {}
+        if (expDelta > 0) updates[helperC.TYPE_EXP] = expDelta
+        if (coinDelta > 0) updates[helperC.TYPE_COIN] = coinDelta
+        if (rubyDelta > 0) updates[helperC.TYPE_RUBY] = rubyDelta
+        await updateUserData(updates)
+        initializeBagItems()
+      }
+    }
   } catch (e) {
     showAlert(e.response?.data?.message || e.message || (t('component.bag.openBoxFailed') || 'Failed to open'))
   } finally {

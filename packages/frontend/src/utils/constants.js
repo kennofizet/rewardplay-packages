@@ -47,6 +47,7 @@ function getFallbackConstants() {
       TYPE_GEAR: 'gear',
       TYPE_COIN: 'coin',
       TYPE_EXP: 'exp',
+      TYPE_RUBY: 'ruby',
       TYPE_TICKET: 'ticket'
     }
   }

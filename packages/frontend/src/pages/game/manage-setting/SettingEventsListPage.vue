@@ -370,23 +370,18 @@ const newItemForm = ref({
   image_preview: null,
 })
 
-// Type options for new item: same source as Setting Items page (gear + other)
+// Type options for new item: same source as Setting Items page
 const newItemTypeOptions = computed(() => {
   const types = itemTypes.value
   if (!types.length) {
     const names = itemC.ITEM_TYPE_NAMES || {}
-    const otherNames = itemC.OTHER_ITEM_TYPE_NAMES || {}
-    const gear = [
+    const item = [
       itemC.ITEM_TYPE_SWORD, itemC.ITEM_TYPE_HAT, itemC.ITEM_TYPE_SHIRT, itemC.ITEM_TYPE_TROUSER,
       itemC.ITEM_TYPE_SHOE, itemC.ITEM_TYPE_NECKLACE, itemC.ITEM_TYPE_BRACELET, itemC.ITEM_TYPE_RING,
       itemC.ITEM_TYPE_CLOTHES, itemC.ITEM_TYPE_WING,
     ].map((t) => ({ value: t, label: names[t] || t }))
-    const other = [
-      { value: itemC.ITEM_TYPE_BOX_RANDOM, label: otherNames[itemC.ITEM_TYPE_BOX_RANDOM] || 'Box Random' },
-      { value: itemC.ITEM_TYPE_TICKET, label: otherNames[itemC.ITEM_TYPE_TICKET] || 'Ticket' },
-      { value: itemC.ITEM_TYPE_BUFF, label: otherNames[itemC.ITEM_TYPE_BUFF] || 'Buff Card' },
-    ]
-    return [...gear, ...other]
+   
+    return [...item]
   }
   return types.map((itemType) => ({ value: itemType.type, label: itemType.name || itemType.type }))
 })

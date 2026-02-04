@@ -53,9 +53,13 @@ class SettingItemConstant
         self::ITEM_TYPE_BUFF => 'Buff Card'
     ];
 
-    /** Box random default_property keys: rate_list (array of {setting_item_id, rate}), item_count (int) */
+    /** Box random default_property keys: rate_list (array of {setting_item_id, rate, count} or {reward_type, rate, min, max}), item_count (int) */
     const BOX_RANDOM_RATE_LIST = 'rate_list';
     const BOX_RANDOM_ITEM_COUNT = 'item_count';
+    /** For rate_list entries that grant exp/coin/ruby: reward_type (exp|coin|ruby), min, max (random amount) */
+    const BOX_RANDOM_REWARD_TYPE = 'reward_type';
+    const BOX_RANDOM_MIN = 'min';
+    const BOX_RANDOM_MAX = 'max';
 
     /**
      * Check if type is box_random (use for logic checks; do not compare with constant in business code).

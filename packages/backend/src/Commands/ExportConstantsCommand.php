@@ -40,6 +40,7 @@ class ExportConstantsCommand extends Command
         'TYPE_EXP',
         'TYPE_GEAR',
         'TYPE_TICKET',
+        'TYPE_RUBY',
         'REPONSE_MODE_SELECTER_API',
     ];
 

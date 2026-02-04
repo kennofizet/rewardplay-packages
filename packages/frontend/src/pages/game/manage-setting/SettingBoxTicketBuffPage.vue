@@ -37,7 +37,7 @@
             <td>{{ row.name }}</td>
             <td>{{ typeLabels[row.type] ?? row.type }}</td>
             <td>
-              <span v-if="row.actions?.is_box_random">{{ (row.default_property?.rate_list?.length || 0) }} items (rate + count per item)</span>
+              <span v-if="row.actions?.is_box_random">{{ (row.default_property?.rate_list?.length || 0) }} entries (items: rate+count; exp/coin/ruby: rate+min-max)</span>
               <span v-else-if="row.actions?.is_buff">{{ row.default_property?.buff_type ?? '—' }}: {{ row.default_property?.buff_value ?? '—' }}</span>
               <span v-else>—</span>
             </td>
@@ -94,21 +94,55 @@
             </div>
           </div>
 
-          <!-- Box Random: rate_list (per item: rate + count) -->
+          <!-- Box Random: rate_list (Item: rate + count | Exp/Coin/Ruby: rate + min + max) -->
           <template v-if="formData.type === itemC.ITEM_TYPE_BOX_RANDOM">
             <div class="form-section-block">
               <h4 class="form-section-title">{{ t('page.manageSetting.settingBoxTicketBuff.form.rateList') }}</h4>
               <div class="form-hint">{{ t('page.manageSetting.settingBoxTicketBuff.form.rateListHint') }}</div>
               <div v-for="(r, i) in formData.rate_list" :key="i" class="option-row">
-                <select v-model.number="r.setting_item_id" class="form-select form-select--small">
-                  <option :value="null">—</option>
-                  <option v-for="item in zoneItems" :key="item.id" :value="item.id">{{ item.name }} ({{ item.type }})</option>
-                </select>
-                <input v-model.number="r.rate" type="number" min="0" step="1" class="form-input form-input--small" :placeholder="t('page.manageSetting.settingBoxTicketBuff.form.rate')" />
-                <input v-model.number="r.count" type="number" min="1" max="99" class="form-input form-input--small" :placeholder="t('page.manageSetting.settingBoxTicketBuff.form.countPerItem')" />
+                <div class="rate-list-field rate-list-field--type">
+                  <label class="rate-list-label">{{ t('page.manageSetting.settingBoxTicketBuff.form.rewardType') }}</label>
+                  <select v-model="r.reward_type" class="form-select form-select--small">
+                    <option :value="null">{{ t('page.manageSetting.settingBoxTicketBuff.form.rewardItem') }}</option>
+                    <option :value="helperC.TYPE_EXP">{{ t('page.manageSetting.settingBoxTicketBuff.form.rewardExp') }}</option>
+                    <option :value="helperC.TYPE_COIN">{{ t('page.manageSetting.settingBoxTicketBuff.form.rewardCoin') }}</option>
+                    <option :value="helperC.TYPE_RUBY">{{ t('page.manageSetting.settingBoxTicketBuff.form.rewardRuby') }}</option>
+                  </select>
+                </div>
+                <template v-if="r.reward_type">
+                  <div class="rate-list-field">
+                    <label class="rate-list-label">{{ t('page.manageSetting.settingBoxTicketBuff.form.rate') }}</label>
+                    <input v-model.number="r.rate" type="number" min="0" step="1" class="form-input form-input--small" />
+                  </div>
+                  <div class="rate-list-field">
+                    <label class="rate-list-label">{{ t('page.manageSetting.settingBoxTicketBuff.form.min') }}</label>
+                    <input v-model.number="r.min" type="number" min="0" class="form-input form-input--small" />
+                  </div>
+                  <div class="rate-list-field">
+                    <label class="rate-list-label">{{ t('page.manageSetting.settingBoxTicketBuff.form.max') }}</label>
+                    <input v-model.number="r.max" type="number" min="0" class="form-input form-input--small" />
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="rate-list-field rate-list-field--item">
+                    <label class="rate-list-label">{{ t('page.manageSetting.settingBoxTicketBuff.form.rewardItem') }}</label>
+                    <select v-model.number="r.setting_item_id" class="form-select form-select--small">
+                      <option :value="null">—</option>
+                      <option v-for="item in zoneItems" :key="item.id" :value="item.id">{{ item.name }} ({{ item.type }})</option>
+                    </select>
+                  </div>
+                  <div class="rate-list-field">
+                    <label class="rate-list-label">{{ t('page.manageSetting.settingBoxTicketBuff.form.rate') }}</label>
+                    <input v-model.number="r.rate" type="number" min="0" step="1" class="form-input form-input--small" />
+                  </div>
+                  <div class="rate-list-field">
+                    <label class="rate-list-label">{{ t('page.manageSetting.settingBoxTicketBuff.form.countPerItem') }}</label>
+                    <input v-model.number="r.count" type="number" min="1" max="99" class="form-input form-input--small" />
+                  </div>
+                </template>
                 <button type="button" class="btn-icon btn-icon--danger" @click="formData.rate_list.splice(i, 1)" aria-label="Remove">×</button>
               </div>
-              <button type="button" class="btn-outline btn-outline--small" @click="formData.rate_list.push({ setting_item_id: null, rate: 10, count: 1 })">
+              <button type="button" class="btn-outline btn-outline--small" @click="formData.rate_list.push({ setting_item_id: null, rate: 10, count: 1, reward_type: null, min: 0, max: 100 })">
                 + {{ t('page.manageSetting.settingBoxTicketBuff.form.addRate') }}
               </button>
             </div>
@@ -152,9 +186,10 @@
 <script setup>
 import { ref, onMounted, inject } from 'vue'
 import { parsePaginatedResponse } from '../../../utils/settingApiResponse'
-import { getItemConstants } from '../../../utils/constants'
+import { getItemConstants, getHelperConstants } from '../../../utils/constants'
 
 const itemC = getItemConstants()
+const helperC = getHelperConstants()
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 const gameApi = inject('gameApi')
@@ -203,7 +238,7 @@ const defaultForm = () => ({
   description: '',
   image: '',
   image_preview: null,
-  rate_list: [{ setting_item_id: null, rate: 10, count: 1 }],
+  rate_list: [{ setting_item_id: null, rate: 10, count: 1, reward_type: null, min: 0, max: 100 }],
   buff_type: 'exp',
   buff_value: 0,
   buff_duration_minutes: 60,
@@ -289,8 +324,15 @@ function handleEdit(row) {
     image: row.image ?? '',
     image_preview: null,
     rate_list: Array.isArray(dp.rate_list) && dp.rate_list.length
-      ? dp.rate_list.map((r) => ({ setting_item_id: r.setting_item_id ?? null, rate: r.rate ?? 10, count: Math.max(1, Math.min(99, Number(r.count) ?? 1)) }))
-      : [{ setting_item_id: null, rate: 10, count: 1 }],
+      ? dp.rate_list.map((r) => ({
+          setting_item_id: r.setting_item_id ?? null,
+          rate: r.rate ?? 10,
+          count: Math.max(1, Math.min(99, Number(r.count) ?? 1)),
+          reward_type: r.reward_type ?? null,
+          min: r.min != null ? Number(r.min) : 0,
+          max: r.max != null ? Number(r.max) : 100,
+        }))
+      : [{ setting_item_id: null, rate: 10, count: 1, reward_type: null, min: 0, max: 100 }],
     buff_type: dp.buff_type ?? 'exp',
     buff_value: dp.buff_value ?? 0,
     buff_duration_minutes: dp.buff_duration_minutes ?? 60,
@@ -327,12 +369,22 @@ async function handleSave() {
     if (formData.value.type === itemC.ITEM_TYPE_BOX_RANDOM) {
       default_property = {
         rate_list: formData.value.rate_list
-          .filter((r) => r.setting_item_id)
-          .map((r) => ({
-            setting_item_id: r.setting_item_id,
-            rate: Number(r.rate) || 0,
-            count: Math.max(1, Math.min(99, Number(r.count) || 1)),
-          })),
+          .filter((r) => r.reward_type || r.setting_item_id)
+          .map((r) => {
+            if (r.reward_type) {
+              return {
+                reward_type: r.reward_type,
+                rate: Number(r.rate) || 0,
+                min: Math.max(0, Number(r.min) ?? 0),
+                max: Math.max(0, Number(r.max) ?? 100),
+              }
+            }
+            return {
+              setting_item_id: r.setting_item_id,
+              rate: Number(r.rate) || 0,
+              count: Math.max(1, Math.min(99, Number(r.count) || 1)),
+            }
+          }),
       }
     } else if (formData.value.type === itemC.ITEM_TYPE_BUFF) {
       default_property = {
@@ -410,7 +462,13 @@ onMounted(() => {
 .form-input--small { width: 80px; padding: 6px 8px; }
 .form-select--small { min-width: 120px; padding: 6px 8px; }
 .form-hint { font-size: 0.85rem; color: #8a9ba8; margin-top: 4px; margin-bottom: 8px; display: block; }
-.option-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+.option-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; flex-wrap: wrap; }
+.rate-list-field { display: flex; flex-direction: column; gap: 4px; }
+.rate-list-field--type { min-width: 100px; }
+.rate-list-field--item { min-width: 140px; }
+.rate-list-label { font-size: 0.8rem; color: #8a9ba8; font-weight: 500; display: block; margin: 0; }
+.rate-list-field .form-input--small { width: 72px; }
+.rate-list-field .form-select--small { min-width: 100%; }
 .btn-icon { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0; background: #ff6b6b; color: white; font-size: 1.1rem; }
 .btn-icon:hover { background: #ee5a5a; }
 .btn-outline, .btn-outline--small { background: #253344; border: 1px solid #1a2332; color: #d0d4d6; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }

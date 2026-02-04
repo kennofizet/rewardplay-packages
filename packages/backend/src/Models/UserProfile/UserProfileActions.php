@@ -89,6 +89,21 @@ trait UserProfileActions
     }
 
     /**
+     * Give ruby to the profile
+     * Adds to ruby amount
+     *
+     * @param int $rubyAmount - Amount of ruby to give
+     * @return UserProfile
+     */
+    public function giveRuby(int $rubyAmount): UserProfile
+    {
+        $this->ruby = ($this->ruby ?? 0) + $rubyAmount;
+        $this->save();
+
+        return $this->fresh();
+    }
+
+    /**
      * Deduct coin from the profile. Throws if insufficient.
      *
      * @param int $coinAmount - Amount to deduct
