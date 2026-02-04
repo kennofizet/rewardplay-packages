@@ -22,8 +22,7 @@ class SettingItem extends BaseModel
      */
     public function getTable()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . 'rewardplay_settings_items';
+        return self::getPivotTableName('rewardplay_settings_items');
     }
 
     /**
@@ -37,6 +36,7 @@ class SettingItem extends BaseModel
         'description',
         'type',
         'default_property',
+        'custom_stats',
         'image',
         'zone_id',
     ];
@@ -48,6 +48,7 @@ class SettingItem extends BaseModel
      */
     protected $casts = [
         'default_property' => 'array',
+        'custom_stats' => 'array',
     ];
 
     /**

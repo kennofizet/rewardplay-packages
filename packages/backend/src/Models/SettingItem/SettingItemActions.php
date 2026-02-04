@@ -31,29 +31,6 @@ trait SettingItemActions
     }
 
     /**
-     * Get zones that current user can manage
-     * 
-     * @return array
-     */
-    public static function getZonesUserCanManage(): array
-    {
-        $zoneIds = BaseModelActions::currentUserManagedZoneIds();
-        if (empty($zoneIds)) {
-            return [];
-        }
-
-        $zones = \Kennofizet\RewardPlay\Models\Zone::byZoneIds($zoneIds)
-            ->get();
-
-        return $zones->map(function($zone) {
-            return [
-                'id' => $zone->id,
-                'name' => $zone->name,
-            ];
-        })->toArray();
-    }
-
-    /**
      * Get all item types with their names
      * 
      * @return array
@@ -61,15 +38,25 @@ trait SettingItemActions
     public static function getItemTypes(): array
     {
         $itemTypes = [];
-        
+
         foreach (SettingItemConstant::ITEM_TYPE_NAMES as $type => $name) {
             $itemTypes[] = [
                 'type' => $type,
                 'name' => $name
             ];
         }
-        
+
         return $itemTypes;
+    }
+
+    /**
+     * Get all active items
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function getActiveItems()
+    {
+        return self::all();
     }
 }
 

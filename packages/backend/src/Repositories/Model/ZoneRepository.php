@@ -3,6 +3,7 @@
 namespace Kennofizet\RewardPlay\Repositories\Model;
 
 use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 
 class ZoneRepository
 {
@@ -10,7 +11,8 @@ class ZoneRepository
     {
         return Zone::create([
             'name' => $data['name'],
-            'server_id' => $data['server_id'] ?? null,
+            // default to current server id if not provided
+            'server_id' => $data['server_id'] ?? BaseModelActions::currentServerId(),
         ]);
     }
 
@@ -18,6 +20,7 @@ class ZoneRepository
     {
         $zone->update([
             'name' => $data['name'],
+            // preserve existing server_id unless explicitly provided
             'server_id' => $data['server_id'] ?? $zone->server_id,
         ]);
 

@@ -2,7 +2,7 @@
 
 namespace Kennofizet\RewardPlay\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Kennofizet\RewardPlay\Models\User;
 use Kennofizet\RewardPlay\Models\Zone;
 use Kennofizet\RewardPlay\Models\ZoneUser\ZoneUserScopes;
@@ -10,9 +10,10 @@ use Kennofizet\RewardPlay\Models\ZoneUser\ZoneUserScopes;
 /**
  * ZoneUser Model (Pivot table for zone-user many-to-many relationship)
  */
-class ZoneUser extends Model
+class ZoneUser extends Pivot
 {
     use ZoneUserScopes;
+    use \Kennofizet\RewardPlay\Core\Model\BaseModelActions;
     /**
      * Get the table name with prefix
      * 
@@ -20,8 +21,7 @@ class ZoneUser extends Model
      */
     public function getTable()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . 'rewardplay_zone_users';
+        return self::getPivotTableName('rewardplay_zone_users');
     }
 
     /**

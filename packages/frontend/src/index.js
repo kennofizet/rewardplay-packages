@@ -3,6 +3,7 @@ import RewardPlayPage from './pages/RewardPlayPage.vue'
 import ComingSoonPage from './pages/ComingSoonPage.vue'
 import LoadingSource from './components/LoadingSource.vue'
 import LoginScreen from './components/LoginScreen.vue'
+import * as StatHelpers from './utils/statHelpers'
 
 /**
  * Install game module
@@ -30,6 +31,10 @@ export function installGameModule(app, options = {}) {
   app.provide('backendUrl', backendUrl)
   app.config.globalProperties.$backendUrl = backendUrl
 
+  // Provide stat helpers globally
+  app.provide('statHelpers', StatHelpers)
+  app.config.globalProperties.$statHelpers = StatHelpers
+
   // Register components
   app.component('RewardPlayPage', RewardPlayPage)
   app.component('ComingSoonPage', ComingSoonPage)
@@ -48,6 +53,17 @@ export {
 // Export utilities
 export { ResourceLoader } from './utils/resourceLoader'
 export { useResourceLoader } from './composables/useResourceLoader'
+export {
+  getRewardPlayConstants,
+  getItemConstants,
+  getShopConstants,
+  getHelperConstants,
+  getGearTypes,
+  SHOP_CATEGORY_ALL,
+  REWARDPLAY_CONSTANTS_SCRIPT_PATH,
+  getConstantsScriptUrl,
+  resetConstantsCache,
+} from './utils/constants'
 
 // Export i18n
 export { t, createTranslator, translations } from './i18n'

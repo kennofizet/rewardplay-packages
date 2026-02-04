@@ -3,6 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Kennofizet\RewardPlay\Models\Token;
+use Kennofizet\RewardPlay\Models\User;
 
 return new class extends Migration
 {
@@ -11,8 +13,7 @@ return new class extends Migration
      */
     protected function getTokensTableName()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . 'rewardplay_tokens';
+        return (new Token())->getTable();
     }
 
     /**
@@ -20,7 +21,7 @@ return new class extends Migration
      */
     protected function getUserTableName()
     {
-        return config('rewardplay.table_user', 'users');
+        return (new User())->getTable();
     }
 
     /**

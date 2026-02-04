@@ -60,6 +60,14 @@ const props = defineProps({
       unzipping: 'Unzipping Files',
       userData: 'Load Data User'
     })
+  },
+  loadingSubTexts: {
+    type: Object,
+    default: () => ({
+      assets: '',
+      unzipping: '',
+      userData: ''
+    })
   }
 })
 
@@ -175,7 +183,7 @@ const updateCanvas = () => {
   ctx.font = 'bold 48px Arial, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  const loadingTitle = props.loadingTitle || 'LOADING'
+  const loadingTitle = props.loadingTitle
   ctx.fillText(loadingTitle, width / 2, titleY)
   
   // Reset shadow
@@ -184,7 +192,7 @@ const updateCanvas = () => {
   // Draw subtitle
   ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
   ctx.font = '18px Arial, sans-serif'
-  const loadingSubtitle = props.loadingSubtitle || 'Preparing your gaming experience...'
+  const loadingSubtitle = props.loadingSubtitle
   ctx.fillText(loadingSubtitle, width / 2, titleY + 50)
 
   // Draw main loading bar with chunky game-like style
@@ -284,13 +292,25 @@ const updateCanvas = () => {
 
   // Draw progress items with better styling
   const progressItems = [
-    { label: props.loadingLabels.assets, progress: Math.min(props.loadingProgress, 100) },
-    { label: props.loadingLabels.unzipping, progress: Math.min(props.unzipProgress, 100) },
-    { label: props.loadingLabels.userData, progress: Math.min(props.userDataProgress, 100) }
+    { 
+      label: props.loadingLabels.assets, 
+      progress: Math.min(props.loadingProgress, 100),
+      subText: props.loadingSubTexts.assets || ''
+    },
+    { 
+      label: props.loadingLabels.unzipping, 
+      progress: Math.min(props.unzipProgress, 100),
+      subText: props.loadingSubTexts.unzipping || ''
+    },
+    { 
+      label: props.loadingLabels.userData, 
+      progress: Math.min(props.userDataProgress, 100),
+      subText: props.loadingSubTexts.userData || ''
+    }
   ]
 
   const startY = height * 0.68
-  const itemHeight = 30
+  const itemHeight = 40 // Increased to accommodate sub-text
   const spacing = 12
 
   progressItems.forEach((item, index) => {
@@ -323,10 +343,30 @@ const updateCanvas = () => {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
     ctx.textAlign = 'right'
     ctx.fillText(`${Math.round(item.progress)}%`, itemBarX + itemBarWidth, y - 5)
+    
+    // Sub-text under progress bar
+    if (item.subText) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+      ctx.font = '12px Arial, sans-serif'
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'top'
+      // Truncate long text
+      const maxWidth = itemBarWidth - 10
+      let displayText = item.subText
+      const metrics = ctx.measureText(displayText)
+      if (metrics.width > maxWidth) {
+        // Truncate with ellipsis
+        while (ctx.measureText(displayText + '...').width > maxWidth && displayText.length > 0) {
+          displayText = displayText.slice(0, -1)
+        }
+        displayText = displayText + '...'
+      }
+      ctx.fillText(displayText, itemBarX, y + 12)
+    }
   })
 
   // Check if loading is complete
-  if (props.loadingProgress >= 100 && props.unzipProgress >= 100) {
+  if (props.loadingProgress >= 100 && props.unzipProgress >= 100 && props.userDataProgress >= 100) {
     emit('loading-complete')
   }
 }

@@ -13,6 +13,6 @@ trait BaseModelManage
     public static function tableHasColumn(string $table, string $column): bool
     {
         $columns = Schema::getColumnListing($table);
-        return isset($columns[$column]) ? true : false;
+        return in_array($column, $columns);
     }
 }

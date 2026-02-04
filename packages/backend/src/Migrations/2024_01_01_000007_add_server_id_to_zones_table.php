@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Kennofizet\RewardPlay\Models\Zone;
 
 return new class extends Migration
 {
@@ -11,8 +12,7 @@ return new class extends Migration
      */
     public function up()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $zonesTableName = $tablePrefix . 'rewardplay_zones';
+        $zonesTableName = (new Zone())->getTable();
 
         Schema::table($zonesTableName, function (Blueprint $table) use ($zonesTableName) {
             if (!Schema::hasColumn($zonesTableName, 'server_id')) {
@@ -27,8 +27,7 @@ return new class extends Migration
      */
     public function down()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $zonesTableName = $tablePrefix . 'rewardplay_zones';
+        $zonesTableName = (new Zone())->getTable();
 
         Schema::table($zonesTableName, function (Blueprint $table) use ($zonesTableName) {
             if (Schema::hasColumn($zonesTableName, 'server_id')) {

@@ -6,6 +6,7 @@ use Kennofizet\RewardPlay\Models\SettingItem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 
 class SettingItemRepository
 {
@@ -13,17 +14,16 @@ class SettingItemRepository
      * Handle image upload and return relative path
      * 
      * @param UploadedFile|null $imageFile
-     * @param int|null $zoneId
      * @return string|null
      */
-    protected function handleImageUpload(?UploadedFile $imageFile, ?int $zoneId): ?string
+    protected function handleImageUpload(?UploadedFile $imageFile): ?string
     {
-        if (!$imageFile || !$zoneId) {
+        if (!$imageFile) {
             return null;
         }
-
+        
         $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
-        $uploadPath = public_path($imagesFolder . '/items/' . $zoneId);
+        $uploadPath = public_path($imagesFolder . '/items/' . BaseModelActions::currentUserZoneId());
         
         // Ensure directory exists
         File::ensureDirectoryExists($uploadPath);
@@ -36,7 +36,7 @@ class SettingItemRepository
         $imageFile->move($uploadPath, $filename);
         
         // Return relative path
-        return $imagesFolder . '/items/' . $zoneId . '/' . $filename;
+        return $imagesFolder . '/items/' . BaseModelActions::currentUserZoneId() . '/' . $filename;
     }
 
     /**
@@ -64,11 +64,9 @@ class SettingItemRepository
      */
     public function create(array $data, ?UploadedFile $imageFile = null): SettingItem
     {
-        $zoneId = $data['zone_id'] ?? null;
-
         // Handle image upload
         if ($imageFile) {
-            $data['image'] = $this->handleImageUpload($imageFile, $zoneId);
+            $data['image'] = $this->handleImageUpload($imageFile);
         }
 
         return SettingItem::create([
@@ -76,8 +74,8 @@ class SettingItemRepository
             'description' => $data['description'] ?? null,
             'type' => $data['type'] ?? '',
             'default_property' => $data['default_property'] ?? null,
-            'image' => $data['image'] ?? null,
-            'zone_id' => $zoneId,
+            'custom_stats' => $data['custom_stats'] ?? null,
+            'image' => $data['image'] ?? null
         ]);
     }
 
@@ -91,15 +89,13 @@ class SettingItemRepository
      */
     public function update(SettingItem $settingItem, array $data, ?UploadedFile $imageFile = null): SettingItem
     {
-        $zoneId = $data['zone_id'] ?? $settingItem->zone_id;
-
         // Handle image upload
         if ($imageFile) {
             // Delete old image if exists
-            $this->deleteImageFile($settingItem->image);
+            // $this->deleteImageFile($settingItem->image);
             
             // Upload new image
-            $data['image'] = $this->handleImageUpload($imageFile, $zoneId);
+            $data['image'] = $this->handleImageUpload($imageFile);
         }
 
         $updateData = [];
@@ -113,14 +109,10 @@ class SettingItemRepository
         if (isset($data['type'])) {
             $updateData['type'] = $data['type'];
         }
-        if (isset($data['default_property'])) {
-            $updateData['default_property'] = $data['default_property'];
-        }
+        $updateData['default_property'] = $data['default_property'] ?? null;
+        $updateData['custom_stats'] = $data['custom_stats'] ?? null;
         if (isset($data['image'])) {
             $updateData['image'] = $data['image'];
-        }
-        if (isset($data['zone_id'])) {
-            $updateData['zone_id'] = $data['zone_id'];
         }
 
         $settingItem->update($updateData);
@@ -136,8 +128,9 @@ class SettingItemRepository
      */
     public function delete(SettingItem $settingItem): bool
     {
-        // Delete associated image file
-        $this->deleteImageFile($settingItem->image);
+        // Soft delete: do not remove image files from disk so items can be restored later.
+        // The model uses SoftDeletes trait, so calling delete() will set deleted_at.
+        // $this->deleteImageFile($settingItem->image);
 
         return (bool) $settingItem->delete();
     }

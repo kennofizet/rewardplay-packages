@@ -56,7 +56,7 @@ const props = defineProps({
 
 defineEmits(['click'])
 
-const imagesUrl = inject('imagesUrl', '')
+import { getFileImageUrl } from '../../utils/imageResolverRuntime'
 
 const iconClass = computed(() => {
   if (props.iconImage) {
@@ -66,14 +66,15 @@ const iconClass = computed(() => {
 })
 
 const iconStyle = computed(() => {
-  if (props.iconImage && imagesUrl) {
-    const url = unref(imagesUrl)
-    const imageUrl = url.endsWith('/') 
-      ? `${url}${props.iconImage}` 
-      : `${url}/${props.iconImage}`
-    return {
-      '-webkit-mask': `url('${imageUrl}') no-repeat 50% 50%`,
-      '-webkit-mask-size': '25px'
+  if (props.iconImage) {
+    // getFileImageUrl handles both full URLs and manifest keys
+    const imageUrl = getFileImageUrl(props.iconImage)
+    
+    if (imageUrl) {
+      return {
+        '-webkit-mask': `url('${imageUrl}') no-repeat 50% 50%`,
+        '-webkit-mask-size': '25px'
+      }
     }
   }
   return {}

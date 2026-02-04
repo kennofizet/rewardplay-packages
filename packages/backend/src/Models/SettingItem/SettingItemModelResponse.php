@@ -27,6 +27,14 @@ class SettingItemModelResponse extends BaseModelResponse
             return [];
         }
 
+        $type = $settingItem->type ?? '';
+        $actions = [
+            'is_box_random' => SettingItemConstant::isBoxRandom($type),
+            'is_gear' => SettingItemConstant::isGearSlotType($type),
+            'is_buff' => SettingItemConstant::isBuff($type),
+            'is_ticket' => SettingItemConstant::isTicket($type),
+        ];
+
         if(in_array($mode, [
             self::getAvailableModeDefault()
         ])){
@@ -37,14 +45,9 @@ class SettingItemModelResponse extends BaseModelResponse
                 'description' => $settingItem->description,
                 'type' => $settingItem->type,
                 'default_property' => $settingItem->default_property,
-                'image' => $settingItem->image,
-                'zone_id' => $settingItem->zone_id,
-                'zone' => $settingItem->zone ? [
-                    'id' => $settingItem->zone->id,
-                    'name' => $settingItem->zone->name,
-                ] : null,
-                'created_at' => $settingItem->created_at,
-                'updated_at' => $settingItem->updated_at,
+                'custom_stats' => $settingItem->custom_stats ?? [],
+                'image' => self::getImageFullUrl($settingItem->image),
+                'actions' => $actions,
             ];
 
             return $default_reponse;
@@ -53,8 +56,7 @@ class SettingItemModelResponse extends BaseModelResponse
         ])){
             return [
                 'id' => $settingItem->id,
-                'name' => $settingItem->name,
-                'slug' => $settingItem->slug,
+                'name' => $settingItem->name
             ];
         }
 
@@ -65,8 +67,9 @@ class SettingItemModelResponse extends BaseModelResponse
             'description' => $settingItem->description,
             'type' => $settingItem->type,
             'default_property' => $settingItem->default_property,
-            'image' => $settingItem->image,
-            'zone_id' => $settingItem->zone_id,
+            'custom_stats' => $settingItem->custom_stats ?? [],
+            'image' => self::getImageFullUrl($settingItem->image),
+            'actions' => $actions,
         ];
     }
 

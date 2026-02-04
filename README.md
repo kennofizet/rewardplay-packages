@@ -1,160 +1,146 @@
 # RewardPlay Packages
 
-A monorepo containing frontend and backend packages for RewardPlay - an entertainment platform where members can exchange rewards and play games.
+**RewardPlay** is a game layer where members earn and spend rewards: bag, shop, daily rewards, ranking, and more. This repository contains the **frontend** and **backend** as two installable packages you can plug into any app.
 
-## What is This Project.?
+---
 
-This repository contains two reusable packages:
+## What is this project?
 
-1. **Frontend Package** (`@kennofizet/rewardplay-frontend`) - A Vue.js 3 component library for the RewardPlay game interface
-2. **Backend Package** (`kennofizet/rewardplay-backend`) - A Laravel 12 package providing the API and business logic for RewardPlay
+This repository contains two **reusable packages** that work together:
 
-Both packages are designed to be installed in any project that needs RewardPlay functionality, allowing you to reuse the game system across multiple applications.
+| Package | Purpose |
+|--------|---------|
+| **@kennofizet/rewardplay-frontend** | Vue 3 game UI: login, bag/gear, shop, daily rewards, ranking, settings. Embeddable in your app with a backend URL + token. |
+| **kennofizet/rewardplay-backend** | Laravel API and business logic: user data, bag, shop, daily rewards, ranking, zones, items, events. Token-based auth. |
 
-## Quick Start
+Use them in **one app** (Laravel API + Vue frontend) or split (e.g. backend in Laravel, frontend in Nuxt/Next). Both are designed to be installed via npm/composer and configured in your project.
 
-### Prerequisites
+---
 
-**Frontend Package:**
-- Node.js 16+
-- Vue.js 3.2.0+ (Vue 2 is NOT supported)
-- Vuetify 3.0+
+## Requirements
 
-**Backend Package:**
-- PHP 8.2+
-- Laravel 12.x (Laravel 11 or earlier is NOT supported)
-- Composer 2.x
+### Frontend (`@kennofizet/rewardplay-frontend`)
 
-### Installation
+- **Node.js** 16+
+- **Vue 3** (^3.2.0). Vue 2 is not supported.
+- Your app provides Vue; the package is a Vue 3 component library.
 
-#### Option 1: Monorepo Setup (Recommended)
+### Backend (`kennofizet/rewardplay-backend`)
 
-1. **Clone and setup the monorepo:**
-   ```bash
-   git clone <repository-url>
-   cd rewardplay-packages
-   ```
+- **PHP** 8.2+
+- **Laravel** 12.x
+- **Composer** 2.x
 
-2. **Install frontend dependencies:**
-   ```bash
-   npm install
-   ```
+---
 
-3. **Install backend dependencies:**
-   ```bash
-   composer install
-   ```
+## Quick start
 
-4. **Build frontend package:**
-   ```bash
-   npm run build:frontend
-   ```
+### Install in your own project
 
-#### Option 2: Install in Your Project
+**1. Backend (Laravel)**
 
-**Frontend Package:**
-```bash
-npm install @kennofizet/rewardplay-frontend vue@^3.2.30
-```
-
-**Backend Package:**
 ```bash
 composer require kennofizet/rewardplay-backend
 php artisan vendor:publish --tag=rewardplay-migrations
 php artisan vendor:publish --tag=rewardplay-config
 php artisan rewardplay:publish-images
+php artisan rewardplay:export-constants
+php artisan rewardplay:publish-constants
 php artisan migrate
 ```
 
-## Usage
+Configure `config/rewardplay.php` or `.env` (e.g. `REWARDPLAY_TABLE_USER`, `REWARDPLAY_API_PREFIX`). Then:
 
-### Frontend Package
-
-```javascript
-import { createApp } from 'vue'
-import RewardPlay from '@kennofizet/rewardplay-frontend'
-
-const app = createApp({})
-
-// Get token from your authentication system
-const rewardPlayToken = user.rewardPlayToken // or however you store it
-
-app.use(RewardPlay, {
-  backendUrl: 'https://api.example.com',
-  token: rewardPlayToken // Required: RewardPlay token
-})
-
-app.mount('#app')
-```
-
-### Backend Package
-
-Configure in your `.env`:
-```env
-REWARDPLAY_TABLE_USER=users
-REWARDPLAY_API_PREFIX=api/rewardplay
-```
-
-**Important:** After publishing config, clear cache:
 ```bash
 php artisan config:clear
 ```
 
-The package will:
-- Add a token column to your users table (via migration)
-- Generate tokens for existing users automatically
-- Register routes at `/api/rewardplay/*`
-- Provide a demo API endpoint
-- Publish default images to `public/rewardplay-images/` (configurable)
+**2. Frontend (Vue 3 app)**
 
-See `packages/backend/README.md` for detailed documentation including:
-- Token management
-- Default images publishing
-- Configuration options
+```bash
+npm install @kennofizet/rewardplay-frontend
+```
 
-## Project Structure
+Mount RewardPlay with your backend URL and token (see [packages/frontend/README.md](packages/frontend/README.md) for mount point and `createApp` + `RewardPlay` plugin setup).
+
+---
+
+### Development (work on the packages)
+
+If you clone this repo to change the packages themselves:
+
+1. **Clone and enter the repo**
+
+   ```bash
+   git clone <repository-url>
+   cd rewardplay-packages
+   ```
+
+2. **Frontend**
+
+   ```bash
+   npm install
+   npm run dev:frontend    # or build:frontend, watch:frontend
+   ```
+
+   Dependencies are installed at the repo root; the frontend package lives in `packages/frontend`.
+
+3. **Backend**
+
+   Use Composer from the repo root or from `packages/backend` (e.g. `composer install` where your `composer.json` is). The backend is a Laravel package; for full API you’ll typically use it inside a Laravel app via `path` or published package.
+
+---
+
+## Project structure
 
 ```
 rewardplay-packages/
 ├── packages/
-│   ├── frontend/          # Frontend Vue.js package
-│   └── backend/           # Backend Laravel package
-├── package.json           # NPM workspaces config
-├── composer.json          # Composer path repository config
-└── README.md
+│   ├── frontend/          # @kennofizet/rewardplay-frontend (Vue 3)
+│   └── backend/           # kennofizet/rewardplay-backend (Laravel)
+├── package.json           # NPM config (frontend package)
+├── composer.json          # Composer config (if present)
+└── README.md              # This file
 ```
 
-## Features
+- **Frontend:** [packages/frontend/README.md](packages/frontend/README.md) — install, mount point, plugin options, props.
+- **Backend:** [packages/backend/README.md](packages/backend/README.md) — config, token, traits, commands, API overview.
 
-- **Token-based Authentication** - Secure token system for user authentication
-- **Demo API Endpoint** - Example API endpoint to demonstrate token validation
-- **Automatic Token Generation** - Tokens are automatically generated for existing users during migration
+---
 
-## Version Requirements
+## What you get
 
-### Frontend
-- **Vue.js 3.2.0+** (REQUIRED - Vue 2 is NOT supported)
-- Uses Composition API, `<script setup>`, and Vue 3 features
+- **Token-based auth** — One RewardPlay token per user; frontend sends it as `X-RewardPlay-Token`.
+- **Game API** — User data, bag, shop, daily rewards, ranking, zones, setting items, events, etc.
+- **Embeddable UI** — Mount the Vue game UI in a div after login; pass backend URL + token.
+- **Reusable** — Same frontend and backend packages across multiple projects.
 
-### Backend
-- **Laravel 12.x** (REQUIRED - Laravel 11 or earlier is NOT supported)
-- **PHP 8.2+** (Laravel 12 requirement)
+---
 
-See `VERSION_REQUIREMENTS.md` for detailed version information and migration guides.
+## Development commands
 
-## Development
+From the repo root:
 
-### Frontend Development
-```bash
-npm run dev:frontend      # Development build
-npm run build:frontend    # Production build
-npm run watch:frontend    # Watch for changes
-```
+| Command | Description |
+|--------|-------------|
+| `npm install` | Install frontend dependencies |
+| `npm run dev:frontend` | Development build (frontend) |
+| `npm run build:frontend` | Production build (frontend) |
+| `npm run watch:frontend` | Watch and rebuild on change |
 
-### Backend Development
-The backend package is symlinked, so changes reflect immediately in your main Laravel project.
+Backend: use Artisan and Composer as usual inside your Laravel app that depends on this package.
+
+---
+
+## Support and docs
+
+- **Frontend:** [packages/frontend/README.md](packages/frontend/README.md) — setup, mount, plugin, RewardPlayPage props.
+- **Backend:** [packages/backend/README.md](packages/backend/README.md) — installation, config, traits, custom commands, upgrading.
+
+For bugs or feature requests, open an issue in this repository.
+
+---
 
 ## License
 
-[Your License Here]
-
+MIT (or see [LICENSE](LICENSE) in the repo).

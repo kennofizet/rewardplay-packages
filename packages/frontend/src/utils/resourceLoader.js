@@ -2,17 +2,16 @@
  * Resource loader for tracking real loading progress
  */
 import axios from 'axios'
-import { setCustomGlobalFiles, setBaseManifest } from './imageResolverRuntime'
+import { setBaseManifest, registerPreloadedBlobUrl } from './imageResolverRuntime'
 
 /**
- * Load image and track progress
+ * Load image (for fallback when fetch fails). No CORS required.
  * @param {string} url - Image URL
  * @returns {Promise<HTMLImageElement>}
  */
 export function loadImage(url) {
   return new Promise((resolve, reject) => {
     const img = new Image()
-    // Avoid forcing CORS on hosts that don't send ACAO; set explicitly only when needed upstream
     img.onload = () => resolve(img)
     img.onerror = reject
     img.src = url
@@ -20,37 +19,61 @@ export function loadImage(url) {
 }
 
 /**
- * Load multiple images
- * @param {Array<string>} urls - Array of image URLs
- * @param {Function} onProgress - Progress callback (loaded, total)
- * @returns {Promise<Array<HTMLImageElement>>}
+ * Preload image via fetch -> blob -> object URL and register so getFileImageUrl returns in-memory blob.
+ * When backend has CORS enabled (rewardplay.allow_cors_for_files), fetch succeeds and reuse is from cache.
+ * If fetch fails, falls back to loadImage so the image still loads (browser cache).
  */
-export function loadImages(urls, onProgress) {
-  let loaded = 0
-  const total = urls.length
-  const images = []
-
-  return Promise.all(
-    urls.map((url, index) => {
+function preloadImageAsBlob(url, onLoaded) {
+  return fetch(url, { mode: 'cors' })
+    .then((r) => {
+      if (!r.ok) throw new Error(r.status)
+      return r.blob()
+    })
+    .then((blob) => {
+      const blobUrl = URL.createObjectURL(blob)
+      registerPreloadedBlobUrl(url, blobUrl)
+      if (onLoaded) onLoaded()
+    })
+    .catch(() => {
       return loadImage(url)
-        .then(img => {
-          images[index] = img
-          loaded++
-          if (onProgress) {
-            onProgress(loaded, total)
-          }
-          return img
-        })
-        .catch(err => {
+        .then(() => { if (onLoaded) onLoaded() })
+        .catch((err) => {
           console.warn(`Failed to load image: ${url}`, err)
-          loaded++
-          if (onProgress) {
-            onProgress(loaded, total)
-          }
-          return null
+          if (onLoaded) onLoaded()
         })
     })
-  ).then(() => images.filter(img => img !== null))
+}
+
+/**
+ * Load multiple images. When useCorsForFiles is true, preload via fetch+blob (in-memory cache).
+ * When false, load via Image only (old code, no CORS required).
+ * @param {Array<string>} urls - Array of image URLs
+ * @param {Function} onProgress - Progress callback (loaded, total)
+ * @param {boolean} [useCorsForFiles=false] - From manifest _cors_for_files; if true use fetch+blob
+ * @returns {Promise<void>}
+ */
+export function loadImages(urls, onProgress, useCorsForFiles = false) {
+  if (urls.length === 0) return Promise.resolve()
+  let loaded = 0
+  const total = urls.length
+  const update = () => {
+    loaded++
+    if (onProgress) onProgress(loaded, total)
+  }
+  if (useCorsForFiles) {
+    return Promise.all(urls.map((url) => preloadImageAsBlob(url, update)))
+  }
+  return Promise.all(
+    urls.map((url) =>
+      loadImage(url)
+        .then(() => { update(); return null })
+        .catch((err) => {
+          console.warn(`Failed to load image: ${url}`, err)
+          update()
+          return null
+        })
+    )
+  )
 }
 
 /**
@@ -102,27 +125,32 @@ export function loadFont(url, fontFamily) {
   })
 }
 
-/**
- * Simulate unzip progress (can be replaced with real unzip logic)
- * @param {Function} onProgress - Progress callback (progress: 0-100)
- * @param {number} duration - Duration in milliseconds
- * @returns {Promise<void>}
- */
-export function simulateUnzip(onProgress, duration = 2000) {
+  /**
+   * Simulate unzip progress (can be replaced with real unzip logic)
+   * @param {Function} onProgress - Progress callback (progress, current, total)
+   * @param {number} duration - Duration in milliseconds
+   * @param {number} totalSteps - Total number of steps for progress calculation
+   * @returns {Promise<void>}
+   */
+export function simulateUnzip(onProgress, duration = 2000, totalSteps = 100) {
   return new Promise((resolve) => {
-    let progress = 0
+    let current = 0
     const interval = 100
-    const increment = (100 / duration) * interval
+    const increment = (totalSteps / duration) * interval
+
+    // Notify start
+    if (onProgress) onProgress(0, 0, totalSteps)
 
     const timer = setInterval(() => {
-      progress += increment
-      if (progress >= 100) {
-        progress = 100
+      current += increment
+      if (current >= totalSteps) {
+        current = totalSteps
         clearInterval(timer)
-        if (onProgress) onProgress(100)
+        if (onProgress) onProgress(100, totalSteps, totalSteps)
         resolve()
       } else {
-        if (onProgress) onProgress(progress)
+        const progress = (current / totalSteps) * 100
+        if (onProgress) onProgress(progress, Math.floor(current), totalSteps)
       }
     }, interval)
   })
@@ -139,7 +167,6 @@ export class ResourceLoader {
     this.fontUrls = []
     this.onLoadingProgress = null
     this.onUnzipProgress = null
-    this.imagesBaseUrl = ''
     this.backendUrl = ''
     this.gameApi = null
   }
@@ -186,6 +213,7 @@ export class ResourceLoader {
 
   /**
    * Set loading progress callback
+   * Callback receives: (progress, current, total, currentFileName)
    */
   onLoadingProgressCallback(callback) {
     this.onLoadingProgress = callback
@@ -194,19 +222,13 @@ export class ResourceLoader {
 
   /**
    * Set unzip progress callback
+   * Callback receives: (progress, current, total)
    */
   onUnzipProgressCallback(callback) {
     this.onUnzipProgress = callback
     return this
   }
 
-  /**
-   * Set backend images base URL (images_url from API) for manifest/custom fetch
-   */
-  setImagesBaseUrl(url) {
-    this.imagesBaseUrl = url || ''
-    return this
-  }
 
   /**
    * Set backend API base URL for manifest API endpoint
@@ -224,88 +246,163 @@ export class ResourceLoader {
     return this
   }
 
+
   /**
-   * Fetch base manifest (image-manifest.json) from images base URL
-   * Uses API endpoint if backendUrl is set, otherwise falls back to direct static file fetch
+   * Fetch custom images from API
+   * Returns all images from zones user is in or manages (no zone_id needed)
+   * @returns {Promise<Array>} Array of image objects with url, name, slug, type
+   */
+  async fetchCustomImages() {
+    if (!this.gameApi || typeof this.gameApi.getCustomImages !== 'function') {
+      console.warn('gameApi not available or getCustomImages method not found')
+      return []
+    }
+
+    try {
+      const res = await this.gameApi.getCustomImages()
+      return res?.data?.datas?.images || []
+    } catch (err) {
+      console.warn('Failed to fetch custom images', err)
+      return []
+    }
+  }
+
+  /**
+   * Fetch base manifest from API
+   * Manifest now returns full URLs from backend
    */
   async fetchBaseManifest() {
-    // Try API endpoint first if backendUrl is available
+    // Use API endpoint to get manifest with full URLs
     if (this.backendUrl && this.gameApi && typeof this.gameApi.getManifest === 'function') {
       try {
         const res = await this.gameApi.getManifest()
         return res?.data || null
       } catch (err) {
-        console.warn('Failed to fetch manifest via gameApi, falling back to static file', err)
-        // Fall through to static file fetch
+        console.warn('Failed to fetch manifest via gameApi', err)
+        return null
       }
     }
 
-    // Fallback to direct static file fetch
-    if (!this.imagesBaseUrl) return null
-    const base = this.imagesBaseUrl.endsWith('/') ? this.imagesBaseUrl.slice(0, -1) : this.imagesBaseUrl
-    const manifestUrl = `${base}/image-manifest.json`
-    try {
-      const res = await axios.get(manifestUrl, { timeout: 5000 })
-      return res.data || null
-    } catch (err) {
-      console.warn(`Failed to fetch base manifest from ${manifestUrl}`, err)
-      return null
-    }
+    return null
   }
 
+
+
+  /**
+   * Calculate total resources count (including custom images)
+   * This should be called before load() to get accurate totals
+   */
+  async calculateTotalResources() {
+    // Fetch custom images to include them in total count
+    let customImages = []
+    if (this.gameApi && typeof this.gameApi.getCustomImages === 'function') {
+      try {
+        customImages = await this.fetchCustomImages()
+      } catch (err) {
+        console.warn('Failed to fetch custom images', err)
+      }
+    }
+
+    const totalResources = 
+      this.imageUrls.length + 
+      this.scriptUrls.length + 
+      this.stylesheetUrls.length + 
+      this.fontUrls.length +
+      customImages.length
+
+    return {
+      total: totalResources,
+      customImages: customImages,
+      breakdown: {
+        images: this.imageUrls.length,
+        customImages: customImages.length,
+        scripts: this.scriptUrls.length,
+        stylesheets: this.stylesheetUrls.length,
+        fonts: this.fontUrls.length
+      }
+    }
+  }
 
   /**
    * Load all resources
    */
   async load() {
-    const totalResources = 
-      this.imageUrls.length + 
-      this.scriptUrls.length + 
-      this.stylesheetUrls.length + 
-      this.fontUrls.length
+    // Calculate totals first (including custom images)
+    const totals = await this.calculateTotalResources()
+    const totalResources = totals.total
+    const customImages = totals.customImages
 
     let loadedResources = 0
+    let currentFileName = ''
 
-    const updateProgress = () => {
+    const updateProgress = (fileName = '') => {
       loadedResources++
+      currentFileName = fileName
       const progress = totalResources > 0 
         ? (loadedResources / totalResources) * 100 
         : 100
       if (this.onLoadingProgress) {
-        this.onLoadingProgress(progress)
+        // Pass progress with current file info for sub-text
+        this.onLoadingProgress(progress, loadedResources, totalResources, currentFileName)
       }
     }
 
+    // Notify start with totals
+    if (this.onLoadingProgress && totalResources > 0) {
+      this.onLoadingProgress(0, 0, totalResources, '')
+    }
+
+    let useCorsForFiles = false
     // Simulate unzip if needed (or replace with real unzip logic)
     if (this.onUnzipProgress) {
       try {
         const baseManifest = await this.fetchBaseManifest()
         if (baseManifest) {
-          // Extract custom key from manifest if present
-          const customList = baseManifest.custom || []
-          // Remove custom key from manifest before setting it
-          const { custom, ...manifestWithCustom } = baseManifest
-          setBaseManifest(manifestWithCustom, this.imagesBaseUrl || '')
-          if (customList && Array.isArray(customList)) {
-            setCustomGlobalFiles(customList)
-          }
+          // Strip _cors_for_files (backend tells us CORS is enabled for file URLs)
+          const { custom, _cors_for_files, ...manifestWithCustom } = baseManifest
+          useCorsForFiles = _cors_for_files === true
+          // Manifest values are already full URLs from backend
+          setBaseManifest(manifestWithCustom)
 
-          const convertUrls = Object.values(manifestWithCustom).map(url => {
-            return this.imagesBaseUrl ? `${this.imagesBaseUrl}/${url}` : url
-          })
-          this.addImages(convertUrls)
+          // Manifest values are already full URLs from backend, add to image loader
+          const manifestUrls = Object.values(manifestWithCustom)
+          this.addImages(manifestUrls)
         }
       } catch (err) {
         console.warn('Failed to fetch manifest', err)
       }
-      await simulateUnzip(this.onUnzipProgress)
+      // Pass callback that receives (progress, current, total)
+      await simulateUnzip((progress, current, total) => {
+        if (this.onUnzipProgress) {
+          this.onUnzipProgress(progress, current, total)
+        }
+      })
     }
 
-    // Load images
+    // Load images: fetch+blob when CORS enabled, else Image only (old code)
     if (this.imageUrls.length > 0) {
-      await loadImages(this.imageUrls, () => {
-        updateProgress()
-      })
+      await loadImages(this.imageUrls, () => updateProgress(), useCorsForFiles)
+    }
+
+    // Load custom images: same as above
+    if (customImages.length > 0) {
+      if (useCorsForFiles) {
+        for (const imageInfo of customImages) {
+          await preloadImageAsBlob(imageInfo.url, () =>
+            updateProgress(imageInfo.name || imageInfo.slug || '')
+          )
+        }
+      } else {
+        for (const imageInfo of customImages) {
+          try {
+            await loadImage(imageInfo.url)
+            updateProgress(imageInfo.name || imageInfo.slug || '')
+          } catch (err) {
+            console.warn(`Failed to load custom image: ${imageInfo.url}`, err)
+            updateProgress(imageInfo.name || imageInfo.slug || '')
+          }
+        }
+      }
     }
 
     // Load scripts

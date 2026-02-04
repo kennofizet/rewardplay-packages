@@ -7,6 +7,7 @@
       <div class="wrapper">
         <div class="header">
           <TopMenu 
+            :is-manager="isManager"
             @page-change="$emit('page-change', $event)"
             @icon-click="$emit('icon-click', $event)"
           />
@@ -15,6 +16,9 @@
         <div class="body">
           <slot></slot>
         </div>
+      </div>
+      <div class="game-container__overlay">
+        <slot name="overlay"></slot>
       </div>
     </div>
   </div>
@@ -28,6 +32,11 @@ const props = defineProps({
   rotate: {
     type: Boolean,
     default: true
+  }
+  ,
+  isManager: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -71,7 +80,6 @@ const calculateScale = () => {
   const containerRect = mainWrapper.value.getBoundingClientRect()
   let viewportWidth = containerRect.width
   let viewportHeight = containerRect.height
-  console.log('viewportWidth', viewportWidth)
   
   // Check if we need to rotate (portrait mode)
   const isPortrait = viewportWidth < viewportHeight
@@ -145,6 +153,16 @@ onUnmounted(() => {
   background: linear-gradient(#101d2d 40px, #345579 50%, #395d84 85%, #101d2d 100%);
 }
 
+.game-container__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.game-container__overlay > * {
+  pointer-events: auto;
+}
+
 .wrapper {
   width: 100%;
   height: 100%;
@@ -155,6 +173,6 @@ onUnmounted(() => {
 
 .body {
   margin: 0 60px;
-  height: 100%;
+  height: calc(100% - 60px);
 }
 </style>

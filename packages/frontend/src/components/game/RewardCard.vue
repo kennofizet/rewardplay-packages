@@ -25,7 +25,28 @@
     
     <div class="reward-description">
       <div class="reward-description-title">{{ title }}</div>
-      <div class="reward-description-info">{{ description }}</div>
+      <div class="reward-description-info">
+        <template v-if="typeof description === 'object' && description.items">
+          <div v-for="(item, index) in description.items" :key="index" class="reward-description-item">
+            {{ item }}
+          </div>
+          <div v-if="description.extraInfo" class="reward-description-extra">
+            {{ description.extraInfo }}
+          </div>
+          <RewardItemsTooltip 
+            v-if="description.total > description.count && description.allItems" 
+            :all-items="description.allItems"
+            trigger="both"
+          >
+            <div class="reward-description-more">
+              +{{ description.total - description.count }} {{ t('component.dailyReward.more')}}
+            </div>
+          </RewardItemsTooltip>
+        </template>
+        <template v-else>
+          {{ description }}
+        </template>
+      </div>
     </div>
     
     <div 
@@ -52,6 +73,7 @@
 import { inject, computed } from 'vue'
 import { removeVietnameseDiacritics } from '../../i18n/utils'
 import { getFileImageUrl } from '../../utils/imageResolverRuntime'
+import RewardItemsTooltip from './RewardItemsTooltip.vue'
 
 const translator = inject('translator', null)
 const language = inject('language', 'en')
@@ -67,7 +89,7 @@ const props = defineProps({
     required: true
   },
   description: {
-    type: String,
+    type: [String, Object],
     default: ''
   },
   rarity: {
@@ -356,6 +378,32 @@ const imageStyle = computed(() => {
 .reward-description > .reward-description-info {
   text-align: center;
   width: 90%;
+}
+
+.reward-description-item {
+  margin-bottom: 8px;
+}
+
+.reward-description-item:last-of-type {
+  margin-bottom: 0;
+}
+
+.reward-description-extra {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.reward-description-more {
+  margin-top: 8px;
+  font-style: italic;
+  opacity: 0.8;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.reward-description-more:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .ico-green {

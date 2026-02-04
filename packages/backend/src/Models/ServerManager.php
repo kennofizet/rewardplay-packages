@@ -21,8 +21,7 @@ class ServerManager extends BaseModel
      */
     public function getTable()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . 'rewardplay_server_managers';
+        return self::getPivotTableName('rewardplay_server_managers');
     }
 
     /**

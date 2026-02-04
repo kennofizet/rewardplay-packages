@@ -1,7 +1,7 @@
 {
   "name": "rewardplay-packages",
   "version": "1.0.0",
-  "description": "RewardPlay packages monorepo - Frontend and backend packages for entertainment platform",
+  "description": "RewardPlay packages - Frontend and backend packages for entertainment platform",
   "private": true,
   "workspaces": [
     "packages/frontend"

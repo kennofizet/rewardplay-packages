@@ -2,8 +2,8 @@
 
 namespace Kennofizet\RewardPlay\Core\Model;
 
-
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 use Kennofizet\RewardPlay\Core\Model\BaseModelManage;
 use Kennofizet\RewardPlay\Core\Model\BaseModelRelations;
@@ -17,6 +17,7 @@ class BaseModel extends Model
     use BaseModelManage;
     use BaseModelRelations;
     use BaseModelScopes;
+    use SoftDeletes;
     /**
      * Boot the model and apply global scopes
      */
@@ -46,7 +47,7 @@ class BaseModel extends Model
                 $table = $builder->getModel()->getTable();
 
                 $array_skips = [
-                    config('rewardplay.table_user', 'users')
+                    (new \Kennofizet\RewardPlay\Models\User())->getTable()
                 ];
                 
                 if (self::tableHasColumn($table, HelperConstant::IS_DELETED_STATUS_COLUMN) && !in_array($table, $array_skips)) {
@@ -55,6 +56,31 @@ class BaseModel extends Model
             } catch (\Exception $e) {
             }
         });
+
+        // Auto-add zone_id when creating models (if table has zone_id column and it's not already set)
+        static::creating(function ($model) {
+            $table = $model->getTable();
+            
+            // Check if table has zone_id column
+            if (self::tableHasColumn($table, HelperConstant::ZONE_ID_COLUMN)) {
+                // Only set zone_id if it's not already set and we have a current zone_id from request
+                if (empty($model->zone_id) && request()) {
+                    $currentZoneId = request()->attributes->get('rewardplay_user_zone_id_current');
+                    if (!empty($currentZoneId)) {
+                        $model->zone_id = $currentZoneId;
+                    }
+                }
+            }
+        });
     }
+
+    /**
+     * Get table name with prefix
+     * Use this in all model's getTable() method
+     * 
+     * @param string $tableName - Table name without prefix (e.g., 'rewardplay_tokens', 'rewardplay_setting_item_set_items')
+     * @return string
+     */
+
 
 }

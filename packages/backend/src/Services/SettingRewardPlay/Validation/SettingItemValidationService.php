@@ -5,9 +5,11 @@ namespace Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
+use Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation\Traits\StatsCustomCheckTrait;
 
 class SettingItemValidationService
 {
+    use StatsCustomCheckTrait;
     /**
      * Validate create / update setting item data.
      * Permission checks are handled by middleware.
@@ -19,19 +21,17 @@ class SettingItemValidationService
      */
     public function validateSettingItem(array $data, ?\Illuminate\Http\UploadedFile $imageFile = null, ?int $id = null)
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $zonesTableName = $tablePrefix . 'rewardplay_zones';
-
-        // Get allowed types (item types)
-        $itemTypes = array_keys(SettingItemConstant::ITEM_TYPE_NAMES);
+        // Get allowed types: gear + other (box_random, ticket, buff, etc.)
+        $itemTypes = array_merge(
+            array_keys(SettingItemConstant::ITEM_TYPE_NAMES),
+            array_keys(SettingItemConstant::OTHER_ITEM_TYPE_NAMES)
+        );
         $allowedTypesString = implode(',', $itemTypes);
 
         $rules = [
-            'name' => 'required|string|max:255',
+            'name' => $id ? 'sometimes|required|string|max:255' : 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|string|in:' . $allowedTypesString,
-            'default_property' => 'nullable|json',
-            'zone_id' => 'nullable|integer|exists:' . $zonesTableName . ',id',
+            'type' => $id ? 'sometimes|required|string|in:' . $allowedTypesString : 'required|string|in:' . $allowedTypesString,
         ];
 
         // Add image validation if file is provided
@@ -44,6 +44,46 @@ class SettingItemValidationService
 
         if ($validator->fails()) {
             throw new ValidationException($validator);
+        }
+
+        // Validate default_property: only run stats check for gear types (wearable)
+        $type = $data['type'] ?? null;
+        $isGearType = SettingItemConstant::isGearSlotType($type);
+
+        if ($isGearType) {
+            $defaultProperty = $data['default_property'] ?? [];
+            $validatorStats = $this->statsCustomCheck($defaultProperty, false);
+            if (!$validatorStats['success']) {
+                $validator->errors()->add('default_property', $validatorStats['message']);
+            }
+        }
+        // For box_random, ticket, buff, etc. default_property structure is type-specific and not stat keys
+
+        // Validate custom_stats format only for gear types (other types don't use custom_stats)
+        if ($isGearType && isset($data['custom_stats'])) {
+            $customStats = $data['custom_stats'];
+            if (!is_array($customStats)) {
+                $validator->errors()->add('custom_stats', 'Custom stats must be an array');
+            } else {
+                foreach ($customStats as $index => $customStat) {
+                    if (!is_array($customStat)) {
+                        $validator->errors()->add("custom_stats.{$index}", "Custom stat at index {$index} must be an object");
+                        continue;
+                    }
+                    if (empty($customStat['name']) || !is_string($customStat['name'])) {
+                        $validator->errors()->add("custom_stats.{$index}.name", "Custom stat at index {$index} must have a name");
+                    }
+                    if (empty($customStat['properties']) || !is_array($customStat['properties'])) {
+                        $validator->errors()->add("custom_stats.{$index}.properties", "Custom stat at index {$index} must have properties object");
+                    } else {
+                        // Validate properties (rates) - should only contain CONVERSION_KEYS
+                        $propertiesValidator = $this->statsCustomCheck($customStat['properties'], false);
+                        if (!$propertiesValidator['success']) {
+                            $validator->errors()->add("custom_stats.{$index}.properties", $propertiesValidator['message']);
+                        }
+                    }
+                }
+            }
         }
     }
 }

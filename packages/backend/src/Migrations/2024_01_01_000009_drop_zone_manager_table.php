@@ -3,6 +3,9 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Kennofizet\RewardPlay\Models\ZoneManager;
+use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\RewardPlay\Models\User;
 
 return new class extends Migration
 {
@@ -11,8 +14,7 @@ return new class extends Migration
      */
     public function up()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $zoneManagerTableName = $tablePrefix . 'rewardplay_zone_manager';
+        $zoneManagerTableName = (new ZoneManager())->getTable();
 
         Schema::dropIfExists($zoneManagerTableName);
     }
@@ -22,10 +24,9 @@ return new class extends Migration
      */
     public function down()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $zoneManagerTableName = $tablePrefix . 'rewardplay_zone_manager';
-        $userTable = config('rewardplay.table_user', 'users');
-        $zonesTableName = $tablePrefix . 'rewardplay_zones';
+        $zoneManagerTableName = (new ZoneManager())->getTable();
+        $userTable = (new User())->getTable();
+        $zonesTableName = (new Zone())->getTable();
 
         Schema::create($zoneManagerTableName, function (Blueprint $table) use ($userTable, $zonesTableName) {
             $table->id();

@@ -28,7 +28,7 @@
         {{ t('component.menu.shop') }}
       </MenuItem>
 
-      <MenuItem @click="$emit('page-change', 'manage-setting')">
+      <MenuItem @click="$emit('page-change', 'manage-setting')" v-if="isManager">
         {{ t('component.menu.manageSetting') }}
       </MenuItem>
     </div>
@@ -37,7 +37,6 @@
       <MenuItem 
         is-icon 
         is-light 
-        icon-image="test.png"
         @click="$emit('icon-click', 'icon1')"
       >
         &nbsp;
@@ -46,7 +45,6 @@
       <MenuItem 
         is-icon 
         is-light 
-        icon-image="test.png"
         @click="$emit('icon-click', 'icon2')"
       >
         &nbsp;
@@ -55,7 +53,6 @@
       <MenuItem 
         is-icon 
         is-dark 
-        icon-image="test.png"
         @click="$emit('icon-click', 'icon3')"
       >
         &nbsp;
@@ -70,6 +67,13 @@ import MenuItem from './MenuItem.vue'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
+
+const props = defineProps({
+  isManager: {
+    type: Boolean,
+    default: false
+  }
+})
 
 defineEmits(['page-change', 'icon-click'])
 </script>

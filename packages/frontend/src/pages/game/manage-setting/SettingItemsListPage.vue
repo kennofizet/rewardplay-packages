@@ -1,9 +1,9 @@
 <template>
   <div class="setting-items-list-page">
     <div class="page-header">
-      <h2>{{ t('page.manageSetting.settingItems.title') || 'Setting Items' }}</h2>
+      <h2>{{ t('page.manageSetting.settingItems.title') }}</h2>
       <button class="btn-primary" @click="handleCreate">
-        {{ t('page.manageSetting.settingItems.create') || 'Create New' }}
+        {{ t('page.manageSetting.settingItems.create') }}
       </button>
     </div>
 
@@ -11,28 +11,21 @@
       <input 
         v-model="filters.search"
         type="text" 
-        :placeholder="t('page.manageSetting.settingItems.searchPlaceholder') || 'Search by name or description...'"
+        :placeholder="t('page.manageSetting.settingItems.searchPlaceholder')"
         class="search-input"
         @input="handleSearch"
       />
       <CustomSelect
-        v-model="filters.zone_id"
-        :options="zoneOptionsWithEmpty"
-        :placeholder="t('page.manageSetting.settingItems.allZones') || 'All Zones'"
-        @change="loadSettingItems"
-        trigger-class="zone-select"
-      />
-      <CustomSelect
         v-model="filters.type"
         :options="typeOptionsWithEmpty"
-        :placeholder="t('page.manageSetting.settingItems.allTypes') || 'All Types'"
+        :placeholder="t('page.manageSetting.settingItems.allTypes')"
         @change="loadSettingItems"
         trigger-class="type-select"
       />
     </div>
 
     <div v-if="loading" class="loading">
-      {{ t('page.manageSetting.settingItems.loading') || 'Loading...' }}
+      {{ t('page.manageSetting.settingItems.loading') }}
     </div>
 
     <div v-if="error" class="error">
@@ -43,14 +36,14 @@
       <table class="settings-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Slug</th>
-            <th>Type</th>
-            <th>Zone</th>
-            <th>Image</th>
-            <th>Description</th>
-            <th>Actions</th>
+            <th>{{ t('page.manageSetting.settingItems.table.id') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.name') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.slug') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.type') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.image') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.defaultProperty') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.description') }}</th>
+            <th>{{ t('page.manageSetting.settingItems.table.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -58,16 +51,23 @@
             <td>{{ item.id }}</td>
             <td>{{ item.name }}</td>
             <td>{{ item.slug }}</td>
-            <td>{{ item.type }}</td>
-            <td>{{ item.zone ? item.zone.name : '-' }}</td>
+            <td>{{ getTypeName ? getTypeName(item.type) : item.type }}</td>
             <td>
-              <img v-if="item.image" :src="getImageUrl(item.image)" alt="" class="item-image" />
+              <img v-if="item.image" :src="item.image" alt="" class="item-image" />
               <span v-else>-</span>
+            </td>
+            <td>
+              <StatMapPreview :value="item.default_property" :max-items="3" />
+              <div v-if="item.custom_stats && item.custom_stats.length > 0" class="custom-stats-preview">
+                <div v-for="(customStat, idx) in item.custom_stats" :key="idx" class="custom-stat-tag">
+                  {{ customStat.name }}
+                </div>
+              </div>
             </td>
             <td>{{ truncateDescription(item.description) }}</td>
             <td class="actions-cell">
-              <button class="btn-edit" @click="handleEdit(item)">Edit</button>
-              <button class="btn-delete" @click="handleDelete(item)">Delete</button>
+              <button class="btn-edit" @click="handleEdit(item)">{{ t('page.manageSetting.settingItems.actions.edit') }}</button>
+              <button class="btn-delete" @click="handleDelete(item)">{{ t('page.manageSetting.settingItems.actions.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -78,14 +78,14 @@
           :disabled="pagination.current_page === 1"
           @click="changePage(pagination.current_page - 1)"
         >
-          Previous
+          {{ t('page.manageSetting.settingItems.pagination.prev') }}
         </button>
-        <span>Page {{ pagination.current_page }} of {{ pagination.last_page }}</span>
+        <span>{{ t('page.manageSetting.settingItems.pagination.page') }} {{ pagination.current_page }} {{ t('page.manageSetting.settingItems.pagination.of') }} {{ pagination.last_page }}</span>
         <button 
           :disabled="pagination.current_page === pagination.last_page"
           @click="changePage(pagination.current_page + 1)"
         >
-          Next
+          {{ t('page.manageSetting.settingItems.pagination.next') }}
         </button>
       </div>
     </div>
@@ -94,20 +94,12 @@
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>{{ editingItem ? (t('page.manageSetting.settingItems.edit') || 'Edit Setting Item') : (t('page.manageSetting.settingItems.create') || 'Create Setting Item') }}</h3>
+          <h3>{{ editingItem ? t('page.manageSetting.settingItems.edit') : t('page.manageSetting.settingItems.createModal') }}</h3>
           <button class="btn-close" @click="closeModal">×</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Zone *</label>
-            <CustomSelect
-              v-model="formData.zone_id"
-              :options="zoneOptions"
-              :placeholder="t('page.manageSetting.settingItems.selectZone') || 'Select Zone'"
-            />
-          </div>
-          <div class="form-group">
-            <label>Name *</label>
+            <label>{{ t('page.manageSetting.settingItems.form.name') }}</label>
             <input v-model="formData.name" type="text" required />
           </div>
           <div class="form-group">
@@ -115,41 +107,90 @@
             <CustomSelect
               v-model="formData.type"
               :options="typeOptions"
-              :placeholder="t('page.manageSetting.settingItems.selectType') || 'Select Type'"
+              :placeholder="t('page.manageSetting.settingItems.selectType')"
               :disabled="loadingTypes"
             />
-            <div v-if="loadingTypes" class="loading-types">Loading types...</div>
+            <div v-if="loadingTypes" class="loading-types">{{ t('page.manageSetting.settingItems.loadingTypes') }}</div>
           </div>
           <div class="form-group">
-            <label>Description</label>
+            <label>{{ t('page.manageSetting.settingItems.form.description') }}</label>
             <textarea v-model="formData.description" rows="3"></textarea>
           </div>
           <div class="form-group">
-            <label>Default Property (JSON)</label>
-            <textarea v-model="formData.default_property_json" rows="5" placeholder='{"key": "value"}'></textarea>
-            <small class="form-hint">Enter valid JSON format</small>
+            <label>{{ t('page.manageSetting.settingItems.form.defaultProperty') || 'Properties' }}</label>
+            <div class="properties-list">
+              <div 
+                v-for="(item, index) in propertiesList" 
+                :key="index"
+                class="property-item"
+              >
+                <template v-if="item.type === 'custom_option' && item.name">
+                  <!-- Show display component for custom options (snapshot, doesn't depend on customOptions list) -->
+                  <CustomOptionDisplay
+                    :name="item.name"
+                    :properties="item.properties || {}"
+                    :stats-label="t('page.manageSetting.settingItems.stats')"
+                    class="property-display"
+                  />
+                </template>
+                <template v-else>
+                  <!-- Show selector for stats or when nothing selected yet -->
+                  <CustomSelect
+                    v-model="item.selectedValue"
+                    :options="propertyOptions"
+                    :placeholder="t('page.manageSetting.settingItems.selectKey') || 'Select Stat or Custom Option'"
+                    @change="handlePropertyChange(index)"
+                    trigger-class="property-select"
+                  />
+                  <input 
+                    v-if="item.type === 'stat' && item.selectedValue"
+                    v-model.number="item.value"
+                    type="number"
+                    step="0.01"
+                    :placeholder="t('page.manageSetting.settingItems.valuePlaceholder')"
+                    class="rate-value-input"
+                  />
+                </template>
+                <button 
+                  type="button"
+                  class="btn-remove-rate"
+                  @click="removeProperty(index)"
+                  :title="t('page.manageSetting.settingItems.removeProperty')"
+                >
+                  ×
+                </button>
+              </div>
+              <button 
+                type="button"
+                class="btn-add-rate"
+                @click="addProperty"
+              >
+                <span class="btn-add-icon">+</span>
+                <span>{{ t('page.manageSetting.settingItems.addProperty') }}</span>
+              </button>
+            </div>
           </div>
           <div class="form-group">
-            <label>Image</label>
+            <label>{{ t('page.manageSetting.settingItems.form.image') }}</label>
             <input type="file" accept="image/*" @change="handleImageChange" />
             <div v-if="formData.image_preview" class="image-preview">
               <img :src="formData.image_preview" alt="Preview" />
             </div>
             <div v-else-if="editingItem && editingItem.image" class="image-preview">
-              <img :src="getImageUrl(editingItem.image)" alt="Current" />
+              <img :src="editingItem.image" alt="Current" />
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeModal" :disabled="saveLoading">Cancel</button>
+          <button class="btn-secondary" @click="closeModal" :disabled="saveLoading">{{ t('page.manageSetting.settingItems.actions.cancel') }}</button>
           <button 
             class="btn-primary" 
             :class="{ 'btn-loading': saveLoading, 'btn-fail': saveFailed }"
             @click="handleSave"
-            :disabled="saveLoading || !formData.type || !formData.zone_id || !formData.name"
+            :disabled="saveLoading || !formData.type || !formData.name"
           >
-            <span v-if="saveLoading">{{ t('page.manageSetting.settingItems.saving') || 'Saving...' }}</span>
-            <span v-else-if="saveFailed">{{ t('page.manageSetting.settingItems.saveFailed') || 'Failed' }}</span>
+            <span v-if="saveLoading">{{ t('page.manageSetting.settingItems.saving') }}</span>
+            <span v-else-if="saveFailed">{{ t('page.manageSetting.settingItems.saveFailed') }}</span>
             <span v-else>{{ editingItem ? 'Update' : 'Create' }}</span>
           </button>
         </div>
@@ -159,85 +200,177 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject, computed } from 'vue'
+import { ref, onMounted, inject, computed, watch } from 'vue'
 import CustomSelect from '../../../components/CustomSelect.vue'
+import StatMapPreview from '../../../components/StatMapPreview.vue'
+import CustomOptionDisplay from '../../../components/CustomOptionDisplay.vue'
+import { getGlobalStats, getGlobalTypes, isStatsDataLoaded, isTypesDataLoaded } from '../../../utils/globalData'
+import { getGearTypes } from '../../../utils/constants'
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
-
+const statHelpers = inject('statHelpers', null)
+const getTypeName = inject('getTypeName', null)
 const loading = ref(false)
 const loadingTypes = ref(false)
+const loadingKeys = ref(false)
 const error = ref(null)
 const settingItems = ref([])
+const stats = ref([])
+const customOptions = ref([])
 const itemTypes = ref([])
-const zones = ref([])
 const pagination = ref(null)
 const showModal = ref(false)
 const editingItem = ref(null)
 const saveLoading = ref(false)
 const saveFailed = ref(false)
+const propertiesList = ref([])
 const selectedImageFile = ref(null)
 
-const zoneOptions = computed(() => {
-  const options = zones.value.map(zone => ({
-    value: zone.id,
-    label: zone.name
-  }))
-  return options
-})
+// Gear types only (this page lists gear items)
+const GEAR_TYPES_CSV = getGearTypes().join(',')
 
 const typeOptions = computed(() => {
-  const options = itemTypes.value.map(itemType => ({
-    value: itemType.type,
-    label: itemType.name
-  }))
+  const options = itemTypes.value
+    .map((itemType) => ({ value: itemType.type, label: itemType.name }))
   return options
-})
-
-const zoneOptionsWithEmpty = computed(() => {
-  return [
-    { value: '', label: t('page.manageSetting.settingItems.allZones') || 'All Zones' },
-    ...zoneOptions.value
-  ]
 })
 
 const typeOptionsWithEmpty = computed(() => {
   return [
-    { value: '', label: t('page.manageSetting.settingItems.allTypes') || 'All Types' },
+    { value: '', label: t('page.manageSetting.settingItems.allGear') || 'All gear' },
     ...typeOptions.value
   ]
 })
 
+// Unified selector options: combines stats and custom_options
+const propertyOptions = computed(() => {
+  const options = []
+  
+  // Add regular stats
+  stats.value.forEach(stat => {
+    options.push({
+      value: stat.key,
+      label: `${stat.name} (${stat.key})`,
+      type: 'stat',
+      isCustom: false
+    })
+  })
+  
+  // Add custom options
+  customOptions.value.forEach(customOption => {
+    options.push({
+      value: customOption.id,
+      label: customOption.name,
+      type: 'custom_option',
+      isCustom: true,
+      properties: customOption.properties
+    })
+  })
+  
+  return options
+})
+
+
+const syncPropertiesToList = () => {
+  propertiesList.value = []
+  
+  // Add stats from default_property
+  const defaultProperty = formData.value.default_property || {}
+  if (statHelpers) {
+    const statsList = statHelpers.mapToList(defaultProperty, stats.value, { customPrefix: '' })
+    statsList.forEach(prop => {
+      if (prop.key) {
+        propertiesList.value.push({
+          selectedValue: prop.key,
+          type: 'stat',
+          key: prop.key,
+          value: prop.value,
+          name: null,
+          properties: {}
+        })
+      }
+    })
+  }
+  
+  // Add custom options from custom_stats
+  // Show them even if they don't exist in customOptions (deleted/renamed)
+  const customStats = formData.value.custom_stats || []
+  customStats.forEach(cs => {
+    // Try to find matching option, but use stored data if not found
+    const matchingOption = customOptions.value.find(opt => opt.name === cs.name)
+    // Use stored name and properties from custom_stats (snapshot), not from customOptions
+    propertiesList.value.push({
+      selectedValue: matchingOption ? matchingOption.id : `custom_${cs.name}`, // Use ID if exists, otherwise use name-based identifier
+      type: 'custom_option',
+      key: null,
+      value: null,
+      name: cs.name, // Use stored name
+      properties: cs.properties || {} // Use stored properties (snapshot)
+    })
+  })
+}
+
+
+const addProperty = () => {
+  propertiesList.value.push({
+    selectedValue: null,
+    type: null, // 'stat' or 'custom_option'
+    key: null, // for stats
+    value: null, // for stats
+    name: null, // for custom options
+    properties: {} // for custom options
+  })
+}
+
+const removeProperty = (index) => {
+  propertiesList.value.splice(index, 1)
+}
+
+const handlePropertyChange = (index) => {
+  const item = propertiesList.value[index]
+  if (!item || !item.selectedValue) return
+  
+  // Find the selected option in unified list
+  const selected = propertyOptions.value.find(opt => opt.value === item.selectedValue)
+  if (!selected) return
+  
+  if (selected.type === 'stat') {
+    // It's a regular stat
+    item.type = 'stat'
+    item.key = selected.value
+    item.value = null
+    item.name = null
+    item.properties = {}
+  } else if (selected.type === 'custom_option') {
+    // It's a custom option
+    item.type = 'custom_option'
+    item.name = selected.label
+    item.properties = selected.properties || {}
+    item.key = null
+    item.value = null
+  }
+}
+
 const filters = ref({
   search: '',
-  zone_id: '',
   type: '',
   currentPage: 1,
-  perPage: 15
+  perPage: 11
 })
 
 const formData = ref({
   name: '',
   description: '',
   type: '',
-  default_property_json: '',
-  zone_id: '',
+  default_property: {},
+  custom_stats: [],
   image_preview: null
 })
 
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return ''
-  if (imagePath.startsWith('http')) return imagePath
-  return `/${imagePath}`
-}
 
 const loadSettingItems = async () => {
-  if (!gameApi) {
-    error.value = 'Game API not available'
-    return
-  }
-
   loading.value = true
   error.value = null
 
@@ -251,12 +384,12 @@ const loadSettingItems = async () => {
       params.keySearch = filters.value.search
     }
 
-    if (filters.value.zone_id) {
-      params.zone_id = filters.value.zone_id
-    }
 
     if (filters.value.type) {
       params.type = filters.value.type
+    } else {
+      // Default: show only gear items
+      params.type = GEAR_TYPES_CSV
     }
 
     const response = await gameApi.getSettingItems(params)
@@ -270,17 +403,6 @@ const loadSettingItems = async () => {
       }
     }
 
-    // Load zones from response
-    if (response.data && response.data.datas && response.data.datas.zones) {
-      zones.value = response.data.datas.zones
-      // Set default zone if not selected
-      if (!filters.value.zone_id && zones.value.length > 0) {
-        filters.value.zone_id = zones.value[0].id
-        // Reload with default zone
-        await loadSettingItems()
-        return
-      }
-    }
   } catch (err) {
     error.value = err.response?.data?.message || err.message || 'Failed to load setting items'
     console.error('Error loading setting items:', err)
@@ -308,14 +430,15 @@ const handleCreate = () => {
     name: '',
     description: '',
     type: '',
-    default_property_json: '',
-    zone_id: zones.value.length > 0 ? zones.value[0].id : '',
+    default_property: {},
+    custom_stats: [],
     image_preview: null
   }
+  propertiesList.value = []
   showModal.value = true
 }
 
-const handleEdit = (item) => {
+const handleEdit = async (item) => {
   editingItem.value = item
   saveLoading.value = false
   saveFailed.value = false
@@ -324,10 +447,15 @@ const handleEdit = (item) => {
     name: item.name || '',
     description: item.description || '',
     type: item.type || '',
-    default_property_json: item.default_property ? JSON.stringify(item.default_property, null, 2) : '',
-    zone_id: item.zone_id || '',
+    default_property: item.default_property ? { ...item.default_property } : {},
+    custom_stats: item.custom_stats ? [...item.custom_stats] : [],
     image_preview: null
   }
+  // Ensure stats are loaded before syncing properties
+  if (stats.value.length === 0) {
+    await loadStats()
+  }
+  syncPropertiesToList()
   showModal.value = true
 }
 
@@ -343,66 +471,140 @@ const handleImageChange = (event) => {
   }
 }
 
-const loadItemTypes = async () => {
-  if (!gameApi) {
-    return
-  }
-
-  loadingTypes.value = true
-  try {
-    const response = await gameApi.getItemTypes()
-    if (response.data && response.data.datas && response.data.datas.item_types) {
-      itemTypes.value = response.data.datas.item_types
-    }
-  } catch (err) {
-    console.error('Error loading item types:', err)
-  } finally {
+const loadItemTypes = () => {
+  // Use global types data
+  if (isTypesDataLoaded()) {
+    itemTypes.value = getGlobalTypes()
     loadingTypes.value = false
+  } else {
+    loadingTypes.value = true
+    // Wait a bit for global data to load
+    const checkInterval = setInterval(() => {
+      if (isTypesDataLoaded()) {
+        itemTypes.value = getGlobalTypes()
+        loadingTypes.value = false
+        clearInterval(checkInterval)
+      }
+    }, 100)
+    setTimeout(() => {
+      clearInterval(checkInterval)
+      if (loadingTypes.value) {
+        loadingTypes.value = false
+      }
+    }, 5000)
   }
 }
 
+const loadStats = () => {
+  // Use global stats data
+  if (isStatsDataLoaded()) {
+    const globalData = getGlobalStats()
+    stats.value = globalData.stats || []
+    customOptions.value = globalData.custom_options || []
+    loadingKeys.value = false
+  } else {
+    loadingKeys.value = true
+    // Wait a bit for global data to load
+    const checkInterval = setInterval(() => {
+      if (isStatsDataLoaded()) {
+        const globalData = getGlobalStats()
+        stats.value = globalData.stats || []
+        customOptions.value = globalData.custom_options || []
+        loadingKeys.value = false
+        clearInterval(checkInterval)
+      }
+    }, 100)
+    setTimeout(() => {
+      clearInterval(checkInterval)
+      if (loadingKeys.value) {
+        loadingKeys.value = false
+      }
+    }, 5000)
+  }
+}
+
+// Watch stats and customOptions to update selections when they load
+watch([() => stats.value.length, () => customOptions.value.length], ([statsLength, customLength], [oldStatsLength, oldCustomLength]) => {
+  // Only trigger if stats were just loaded (length changed from 0 to > 0)
+  if ((statsLength > 0 && oldStatsLength === 0) || (customLength > 0 && oldCustomLength === 0)) {
+    if (editingItem.value) {
+      // Re-sync properties
+      syncPropertiesToList()
+    }
+  }
+})
+
 const handleSave = async () => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingItems.errors.apiNotAvailable')
     return
   }
 
   if (!formData.value.name) {
-    error.value = 'Name is required'
+    error.value = t('page.manageSetting.settingItems.errors.nameRequired')
     return
   }
 
   if (!formData.value.type) {
-    error.value = 'Type is required'
+    error.value = t('page.manageSetting.settingItems.errors.typeRequired')
     return
   }
 
-  if (!formData.value.zone_id) {
-    error.value = 'Zone is required'
-    return
-  }
 
   saveLoading.value = true
   saveFailed.value = false
   error.value = null
 
   try {
+    // Build default_property and custom_stats from unified properties list
+    const defaultPropertyClean = {}
+    const customStatsClean = []
+    const keyCounters = {}
+    
+    propertiesList.value.forEach(item => {
+      if (item.type === 'stat' && item.key) {
+        // Regular stat - add to default_property
+        if (item.value === null || item.value === undefined || item.value === '') {
+          return
+        }
+        
+        let keyToUse = item.key
+        
+        // Track key usage to allow duplicates by suffixing
+        if (!keyCounters[keyToUse]) {
+          keyCounters[keyToUse] = 0
+        }
+        keyCounters[keyToUse]++
+        const uniqueKey = keyCounters[keyToUse] === 1 ? keyToUse : `${keyToUse}_${keyCounters[keyToUse]}`
+        
+        // Parse value as number
+        const numValue = typeof item.value === 'number' ? item.value : parseFloat(item.value)
+        
+        // Only add if the value is a valid number
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          defaultPropertyClean[uniqueKey] = numValue
+        }
+      } else if (item.type === 'custom_option' && item.name && item.properties && Object.keys(item.properties).length > 0) {
+        // Custom option - use stored snapshot (name and properties), not look up by ID
+        // This ensures deleted/renamed options still save correctly
+        customStatsClean.push({
+          name: item.name, // Use stored name
+          properties: item.properties // Use stored properties
+        })
+      }
+    })
+
     const formDataToSend = new FormData()
     formDataToSend.append('name', formData.value.name)
     formDataToSend.append('description', formData.value.description || '')
     formDataToSend.append('type', formData.value.type)
-    formDataToSend.append('zone_id', formData.value.zone_id)
 
-    // Parse and add default_property if valid JSON
-    if (formData.value.default_property_json) {
-      try {
-        const parsed = JSON.parse(formData.value.default_property_json)
-        formDataToSend.append('default_property', JSON.stringify(parsed))
-      } catch (e) {
-        error.value = 'Invalid JSON in Default Property'
-        saveLoading.value = false
-        return
-      }
+    if (Object.keys(defaultPropertyClean).length > 0) {
+      formDataToSend.append('default_property', JSON.stringify(defaultPropertyClean))
+    }
+    
+    if (customStatsClean.length > 0) {
+      formDataToSend.append('custom_stats', JSON.stringify(customStatsClean))
     }
 
     // Add image file if selected
@@ -435,11 +637,11 @@ const handleSave = async () => {
 
 const handleDelete = async (item) => {
   if (!gameApi) {
-    error.value = 'Game API not available'
+    error.value = t('page.manageSetting.settingItems.errors.apiNotAvailable')
     return
   }
 
-  if (!confirm(`Are you sure you want to delete "${item.name}"?`)) {
+  if (!confirm(t('page.manageSetting.settingItems.confirm.delete', `Are you sure you want to delete "${item.name}"?`).replace('{name}', item.name))) {
     return
   }
 
@@ -467,10 +669,10 @@ const closeModal = () => {
     name: '',
     description: '',
     type: '',
-    default_property_json: '',
-    zone_id: '',
+    default_property: {},
     image_preview: null
   }
+  propertiesList.value = []
 }
 
 const truncateDescription = (description) => {
@@ -481,6 +683,7 @@ const truncateDescription = (description) => {
 onMounted(() => {
   loadSettingItems()
   loadItemTypes()
+  loadStats()
 })
 </script>
 
@@ -516,7 +719,6 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.zone-select,
 .type-select {
   padding: 10px;
   background: #253344;
@@ -568,6 +770,102 @@ onMounted(() => {
   max-height: 50px;
   object-fit: cover;
   border-radius: 4px;
+}
+
+.rates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rate-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rate-key-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.rate-value-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  background: #253344;
+  border: 1px solid #1a2332;
+  color: #d0d4d6;
+  font-size: 14px;
+}
+
+.property-custom-value {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: #1a2332;
+  border: 1px solid #253344;
+  border-radius: 4px;
+  cursor: help;
+}
+
+.custom-value-label {
+  font-size: 12px;
+  color: #f6a901;
+  font-weight: 500;
+}
+
+.custom-value-count {
+  font-size: 11px;
+  color: #999;
+}
+
+.btn-remove-rate {
+  padding: 8px 12px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-remove-rate:hover {
+  background: #ee5a5a;
+}
+
+.btn-add-rate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #253344;
+  border: 2px dashed #1a2332;
+  color: #d0d4d6;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.btn-add-rate:hover {
+  background: #1a2332;
+  border-color: #f6a901;
+  color: #f6a901;
+}
+
+.btn-add-icon {
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
 }
 
 .actions-cell {
@@ -787,5 +1085,50 @@ onMounted(() => {
   gap: 10px;
   padding: 20px;
   border-top: 1px solid #253344;
+}
+
+.custom-stats-preview {
+  margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.custom-stat-tag {
+  background: #1a2332;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.75em;
+  color: #f6a901;
+}
+
+.custom-stats-list {
+  margin-top: 10px;
+}
+
+.custom-stat-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.custom-option-select {
+  flex: 1;
+}
+
+.properties-list {
+  margin-top: 10px;
+}
+
+.property-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.property-select {
+  flex: 1;
 }
 </style>

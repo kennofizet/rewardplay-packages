@@ -2,28 +2,34 @@
   <div class="ranking-page">
     <div class="ranking-page__grid">
       <div class="ranking-page__main">
-        <TopCoinCard 
-          :top-users="topUsers" 
+        <TopCoinCard
+          :top-users="topUsersByMetric"
+          :period="period"
+          :metric="metric"
           :loading="isLoading"
           :error="hasError ? errorMessage : null"
           @period-change="handlePeriodChange"
-          @retry="loadRankingData(true)"
+          @metric-change="handleMetricChange"
+          @retry="loadRankingData(period, true)"
         />
       </div>
       <div class="ranking-page__sidebar">
-        <TopMeCard 
-          :rank="myRank" 
-          :coin="myCoin"
+        <TopMeCard
+          :rank="myRankByMetric"
+          :coin="rankingData.my_coin"
+          :level="rankingData.my_level"
+          :power="rankingData.my_power"
           :loading="isLoading"
           :error="hasError ? errorMessage : null"
-          @retry="loadRankingData(true)"
+          @retry="loadRankingData(period, true)"
         />
-        <TopWeekCard 
-          :top-three="topThree" 
+        <TopWeekCard
+          :top-three="topThree"
           :remaining-players="remainingPlayers"
+          :value-key="metric"
           :loading="isLoading"
           :error="hasError ? errorMessage : null"
-          @retry="loadRankingData(true)"
+          @retry="loadRankingData(period, true)"
         />
       </div>
     </div>
@@ -41,67 +47,90 @@ const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
 
-const myRank = ref(0)
-const myCoin = ref(0)
-const topUsers = ref([])
-const topWeek = ref([])
+const period = ref('day')
+const metric = ref('coin')
+const rankingData = ref({
+  period: 'day',
+  period_key: '',
+  top_coin: [],
+  top_level: [],
+  top_power: [],
+  my_rank_coin: 0,
+  my_rank_level: 0,
+  my_rank_power: 0,
+  my_coin: 0,
+  my_level: 1,
+  my_power: 0,
+})
 const isLoading = ref(true)
 const hasError = ref(false)
 const errorMessage = ref('')
 
-const topThree = computed(() => {
-  return topWeek.value.slice(0, 3)
+const topUsersByMetric = computed(() => {
+  const list = rankingData.value[`top_${metric.value}`]
+  return Array.isArray(list) ? list : []
 })
 
-const remainingPlayers = computed(() => {
-  return topWeek.value.slice(3, 8)
+const myRankByMetric = computed(() => {
+  const rank = rankingData.value[`my_rank_${metric.value}`]
+  return typeof rank === 'number' ? rank : 0
 })
 
-const handlePeriodChange = (period) => {
-  console.log('Period changed:', period)
-  // Force refresh when period changes
-  loadRankingData(true)
+const topThree = computed(() => topUsersByMetric.value.slice(0, 3))
+const remainingPlayers = computed(() => topUsersByMetric.value.slice(3, 7))
+
+const handlePeriodChange = (newPeriod) => {
+  period.value = newPeriod
+  loadRankingData(newPeriod, true)
 }
 
-const CACHE_KEY = 'rewardplay_ranking_cache'
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
+const handleMetricChange = (newMetric) => {
+  metric.value = newMetric
+}
 
-const getCachedRanking = () => {
+const CACHE_KEY_PREFIX = 'rewardplay_ranking_'
+const CACHE_DURATION = 5 * 60 * 1000
+
+function getCachedRanking(p) {
   try {
-    const cached = localStorage.getItem(CACHE_KEY)
+    const cached = localStorage.getItem(CACHE_KEY_PREFIX + p)
     if (!cached) return null
-
     const { data, timestamp } = JSON.parse(cached)
-    const now = Date.now()
-    
-    // Check if cache is still valid (within 5 minutes)
-    if (now - timestamp < CACHE_DURATION) {
-      return data
-    } else {
-      // Cache expired, remove it
-      localStorage.removeItem(CACHE_KEY)
-      return null
-    }
-  } catch (error) {
-    console.error('Error reading cache:', error)
-    localStorage.removeItem(CACHE_KEY)
+    if (Date.now() - timestamp < CACHE_DURATION) return data
+    localStorage.removeItem(CACHE_KEY_PREFIX + p)
+    return null
+  } catch {
+    localStorage.removeItem(CACHE_KEY_PREFIX + p)
     return null
   }
 }
 
-const setCachedRanking = (data) => {
+function setCachedRanking(p, data) {
   try {
-    const cacheData = {
-      data,
-      timestamp: Date.now()
-    }
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData))
-  } catch (error) {
-    console.error('Error saving cache:', error)
+    localStorage.setItem(CACHE_KEY_PREFIX + p, JSON.stringify({ data, timestamp: Date.now() }))
+  } catch (e) {
+    console.error('Error saving ranking cache', e)
   }
 }
 
-const loadRankingData = async (forceRefresh = false) => {
+function applyRankingData(data) {
+  if (!data) return
+  rankingData.value = {
+    period: data.period ?? 'day',
+    period_key: data.period_key ?? '',
+    top_coin: data.top_coin ?? [],
+    top_level: data.top_level ?? [],
+    top_power: data.top_power ?? [],
+    my_rank_coin: data.my_rank_coin ?? 0,
+    my_rank_level: data.my_rank_level ?? 0,
+    my_rank_power: data.my_rank_power ?? 0,
+    my_coin: data.my_coin ?? 0,
+    my_level: data.my_level ?? 1,
+    my_power: data.my_power ?? 0,
+  }
+}
+
+const loadRankingData = async (p, forceRefresh = false) => {
   if (!gameApi) {
     hasError.value = true
     errorMessage.value = t('page.ranking.errorApiNotAvailable')
@@ -109,17 +138,13 @@ const loadRankingData = async (forceRefresh = false) => {
     return
   }
 
-  // Check cache first (unless forcing refresh)
   if (!forceRefresh) {
-    const cachedData = getCachedRanking()
-    if (cachedData) {
-      myRank.value = cachedData.my_rank || 0
-      myCoin.value = cachedData.my_coin || 0
-      topUsers.value = cachedData.top_users || []
-      topWeek.value = cachedData.top_week || []
+    const cached = getCachedRanking(p)
+    if (cached) {
+      applyRankingData(cached)
       hasError.value = false
       isLoading.value = false
-      // return
+      return
     }
   }
 
@@ -128,33 +153,22 @@ const loadRankingData = async (forceRefresh = false) => {
   errorMessage.value = ''
 
   try {
-    const response = await gameApi.getRanking()
-    if (response.data && response.data.success && response.data.datas) {
-      const ranking_data = response.data.datas
-      myRank.value = ranking_data.my_rank || 0
-      myCoin.value = ranking_data.my_coin || 0
-      topUsers.value = ranking_data.top_users || []
-      topWeek.value = ranking_data.top_week || []
+    const response = await gameApi.getRanking(p)
+    if (response.data?.success && response.data?.datas) {
+      applyRankingData(response.data.datas)
+      setCachedRanking(p, response.data.datas)
       hasError.value = false
-      
-      // Cache the data
-      setCachedRanking(ranking_data)
     } else {
       hasError.value = true
       errorMessage.value = t('page.ranking.error')
     }
   } catch (error) {
-    console.error('Error loading ranking:', error)
+    console.error('Error loading ranking', error)
     hasError.value = true
     errorMessage.value = error.response?.data?.message || error.message || t('page.ranking.errorGeneric')
-    
-    // Try to use cached data as fallback if available
-    const cachedData = getCachedRanking()
-    if (cachedData) {
-      myRank.value = cachedData.my_rank || 0
-      myCoin.value = cachedData.my_coin || 0
-      topUsers.value = cachedData.top_users || []
-      topWeek.value = cachedData.top_week || []
+    const cached = getCachedRanking(p)
+    if (cached) {
+      applyRankingData(cached)
       hasError.value = false
       errorMessage.value = t('page.ranking.usingCachedData') + ' ' + errorMessage.value
     }
@@ -164,7 +178,7 @@ const loadRankingData = async (forceRefresh = false) => {
 }
 
 onMounted(() => {
-  loadRankingData()
+  loadRankingData(period.value)
 })
 </script>
 
@@ -197,5 +211,4 @@ onMounted(() => {
   top: 20px;
   height: fit-content;
 }
-
 </style>

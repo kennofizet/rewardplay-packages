@@ -11,6 +11,8 @@
         @login-failed="handleLoginFailed"
       />
 
+      <ZoneSelectPage v-if="showZoneModal" :zones="zones" @select="handleZoneSelect" @close="showZoneModal = false" />
+
       <LoadingSource
         :is-loading="isLoading"
         :loading-progress="loadingProgress"
@@ -24,16 +26,23 @@
           unzipping: translator('page.loading.unzipping'),
           userData: translator('page.loading.userData')
         }"
+        :loading-sub-texts="loadingSubTexts"
         @loading-complete="handleLoadingComplete"
       />
       
       <div 
-        v-if="!isLoading && !showLogin"
+        v-if="!isLoading && !showLogin && !showZoneModal"
         class="game-content"
         :class="{ 'content-hidden': isLoading || showLogin }"
       >
-        <MainGame :images-url="imagesUrl" :rotate="rotate" />
+        <MainGame :rotate="rotate" :is-manager="isManager" />
       </div>
+
+      <AlertMessage
+        v-if="alertMessage"
+        :message="alertMessage"
+        @close="alertMessage = ''"
+      />
     </div>
   </div>
 </template>
@@ -42,9 +51,13 @@
 import { ref, provide, computed, inject } from 'vue'
 import LoadingSource from '../components/LoadingSource.vue'
 import LoginScreen from '../components/LoginScreen.vue'
+import ZoneSelectPage from '../components/game/ZoneSelectPage.vue'
+import AlertMessage from '../components/game/AlertMessage.vue'
 import { ResourceLoader } from '../utils/resourceLoader'
 import MainGame from '../components/MainGame.vue'
 import { createTranslator } from '../i18n'
+import { loadGlobalStats, loadGlobalTypes, getStatName, getTypeName } from '../utils/globalData'
+import { resetConstantsCache, getConstantsScriptUrl } from '../utils/constants'
 
 const props = defineProps({
   // Resource URLs to load
@@ -108,23 +121,102 @@ const customStyles = computed(() => {
 })
 
 const showLogin = ref(true)
+const isManager = ref(false)
 const isLoading = ref(false)
 const loadingProgress = ref(0)
 const unzipProgress = ref(0)
 const userDataProgress = ref(0)
+const loadingSubTexts = ref({
+  assets: '',
+  unzipping: '',
+  userData: ''
+})
 const loginError = ref(null)
-const imagesUrl = ref('')
 const gameApi = inject('gameApi', null)
 const injectedBackendUrl = inject('backendUrl', '')
 
-const handleLoginSuccess = async (userData) => {
+const zones = ref([])
+const showZoneModal = ref(true)
+const selectedZone = ref(null)
+const zoneTimezone = ref(null)
+
+async function fetchZones() {
+  try {
+    if (gameApi && gameApi.getZones) {
+      const resp = await gameApi.getZones()
+      
+      // Extract timezone from response
+      if (resp?.data?.datas?.timezone) {
+        zoneTimezone.value = resp.data.datas.timezone
+      } else if (resp?.data?.timezone) {
+        zoneTimezone.value = resp.data.timezone
+      } else if (resp?.timezone) {
+        zoneTimezone.value = resp.timezone
+      }
+      
+      // Extract zones
+      if (resp?.data?.datas?.zones) return resp.data.datas.zones
+      if (resp?.data?.zones) return resp.data.zones
+      if (Array.isArray(resp)) return resp
+      if (resp?.zones) return resp.zones
+    }
+  } catch (e) {
+    console.warn('Failed to fetch zones from gameApi', e)
+  }
+
+  return []
+}
+
+const handleLoginSuccess = async (payload = {}) => {
+  // payload may contain { is_manager: boolean }
+  isManager.value = !!payload.is_manager
   showLogin.value = false
   loginError.value = null
-  // Save images URL from user data
-  imagesUrl.value = userData.imagesUrl || ''
-  // Start loading resources after successful login
+   
+   // After successful login, fetch zones for the user and prompt selection if needed
+   const userZones = await fetchZones()
+   if (userZones && userZones.length == 0) {
+    showZoneModal.value = false
+   }
+
+   if (userZones && userZones.length > 1) {
+     zones.value = userZones
+     showZoneModal.value = true
+     // Defer loading resources until zone selected
+     return
+   }
+
+   // If single zone, auto-select it
+   if (userZones && userZones.length === 1) {
+     handleZoneSelect(userZones[0])
+     return // handleZoneSelect will handle loading
+   }
+
+   // If no zones or single zone case, load global data and resources
+   isLoading.value = true
+   await loadUserData()
+   // Load global stats and types before loading resources
+   if (gameApi) {
+     await loadGlobalStats(gameApi)
+     await loadGlobalTypes(gameApi)
+   }
+   loadAllResources()
+}
+
+const handleZoneSelect = async (zone) => {
+  selectedZone.value = zone
+  showZoneModal.value = false
+  try { localStorage.setItem('selected_zone', JSON.stringify(zone)) } catch (e) {}
+  if (gameApi && gameApi.setZone) gameApi.setZone(zone)
+
+  // Proceed with loading now that zone is selected
   isLoading.value = true
   await loadUserData()
+  // Load global stats and types before loading resources
+  if (gameApi) {
+    await loadGlobalStats(gameApi)
+    await loadGlobalTypes(gameApi)
+  }
   loadAllResources()
 }
 
@@ -141,9 +233,6 @@ const handleLoadingComplete = () => {
 
 const loadAllResources = async () => {
   const loader = new ResourceLoader()
-  if (imagesUrl.value) {
-    loader.setImagesBaseUrl(imagesUrl.value)
-  }
   // Set backendUrl from parent prop or injected value
   const backendUrl = props.backendUrl || injectedBackendUrl
   if (backendUrl) {
@@ -157,7 +246,13 @@ const loadAllResources = async () => {
   if (props.imageUrls.length > 0) {
     loader.addImages(props.imageUrls)
   }
-  
+
+  // Load REWARDPLAY_CONSTANTS first so window.REWARDPLAY_CONSTANTS is set before other scripts/components use it
+  const constantsScriptUrl = getConstantsScriptUrl(backendUrl)
+  if (constantsScriptUrl) {
+    loader.addScript(constantsScriptUrl)
+  }
+
   if (props.scriptUrls.length > 0) {
     props.scriptUrls.forEach(url => loader.addScript(url))
   }
@@ -172,31 +267,63 @@ const loadAllResources = async () => {
     })
   }
 
-  loader.onUnzipProgressCallback((progress) => {
+  // Set unzip progress callback with sub-text
+  loader.onUnzipProgressCallback((progress, current, total) => {
     unzipProgress.value = Math.min(progress, 100)
+    if (progress < 100) {
+      if (current !== undefined && total !== undefined) {
+        loadingSubTexts.value.unzipping = `${translator('page.loading.unzippingFiles')} ${current}/${total}`
+      } else {
+        loadingSubTexts.value.unzipping = translator('page.loading.unzippingFiles')
+      }
+    } else {
+      loadingSubTexts.value.unzipping = translator('page.loading.unzipComplete')
+    }
   })
 
-  // Set progress callbacks
-  loader.onLoadingProgressCallback((progress) => {
+  // Set loading progress callback with sub-text (includes custom images)
+  loader.onLoadingProgressCallback((progress, current, total, currentFileName) => {
     loadingProgress.value = Math.min(progress, 100)
+    if (progress < 100) {
+      if (currentFileName) {
+        // Show custom image being loaded
+        loadingSubTexts.value.assets = `${translator('page.loading.loadingAssets')} ${current}/${total} - ${currentFileName}`
+      } else if (total !== undefined && total > 0) {
+        // Show general progress with current/total
+        if (current !== undefined) {
+          loadingSubTexts.value.assets = `${translator('page.loading.loadingAssets')} ${current}/${total}`
+        } else {
+          loadingSubTexts.value.assets = `${translator('page.loading.loadingAssets')} 0/${total}`
+        }
+      } else {
+        loadingSubTexts.value.assets = translator('page.loading.loadingAssets')
+      }
+    } else {
+      loadingSubTexts.value.assets = translator('page.loading.assetsLoaded')
+    }
   })
 
   try {
+    // Load base resources first
     await loader.load()
-    
+    resetConstantsCache()
+
     // Ensure loading reaches 100%
     if (loadingProgress.value < 100) {
       loadingProgress.value = 100
+      loadingSubTexts.value.assets = translator('page.loading.assetsLoaded')
     }
     
     // Ensure unzip reaches 100%
     if (unzipProgress.value < 100) {
       unzipProgress.value = 100
+      loadingSubTexts.value.unzipping = translator('page.loading.unzipComplete')
     }
   } catch (error) {
     console.error('Error loading resources:', error)
     // Still show as loaded even if some resources failed
     loadingProgress.value = 100
+    loadingSubTexts.value.assets = 'Assets load failed'
   }
 
   isLoading.value = false
@@ -206,46 +333,143 @@ const loadUserData = async () => {
   if (!gameApi) {
     console.warn('gameApi not available, skipping user data load')
     userDataProgress.value = 100
+    loadingSubTexts.value.userData = translator('page.loading.noApiAvailable')
     return
   }
 
   try {
     userDataProgress.value = 0
+    const totalSteps = 10 // Total steps for progress calculation
+    let currentStep = 0
+    loadingSubTexts.value.userData = `${translator('page.loading.loadingUserData')} ${currentStep}/${totalSteps}`
     
     // Simulate progress for better UX
     const progressInterval = setInterval(() => {
-      if (userDataProgress.value < 90) {
-        userDataProgress.value += 10
+      if (currentStep < totalSteps - 1) {
+        currentStep++
+        userDataProgress.value = (currentStep / totalSteps) * 100
+        loadingSubTexts.value.userData = `${translator('page.loading.loadingUserData')} ${currentStep}/${totalSteps}`
       }
     }, 100)
 
     const response = await gameApi.getUserData()
     
     clearInterval(progressInterval)
+    currentStep = totalSteps
     userDataProgress.value = 100
+    loadingSubTexts.value.userData = `${translator('page.loading.loadingUserData')} ${currentStep}/${totalSteps}`
+    
+    // Small delay to show completion
+    setTimeout(() => {
+      loadingSubTexts.value.userData = translator('page.loading.userDataLoaded')
+    }, 200)
     
     if (response.data && response.data.success) {
       // Store user data to be provided to child components
       userData.value = response.data.datas
+      
+      // Store gear wear config if available
+      if (response.data.datas && response.data.datas.gear_wear_config) {
+        gearWearConfig.value = response.data.datas.gear_wear_config
+      }
     }
   } catch (error) {
     console.error('Error loading user data:', error)
     // Still mark as complete even if failed
     userDataProgress.value = 100
+    loadingSubTexts.value.userData = translator('page.loading.userDataLoadFailed')
   }
 }
+
+localStorage.removeItem('selected_zone')
 
 // Create translator for the specified language
 const translator = createTranslator(props.language)
 
-// Provide images URL, language, and userData to all child components
-provide('imagesUrl', imagesUrl)
+// Provide language and userData to all child components
 provide('language', props.language)
 provide('translator', translator)
+    // Provide wrapper functions that include translator
+    provide('getStatName', (statKey) => getStatName(statKey, translator))
+    provide('getTypeName', (type) => getTypeName(type, translator))
 
 // Provide userData (will be set after getUserData loads)
 const userData = ref(null)
 provide('userData', userData)
+
+// Gear wear config (will be set from userData)
+const gearWearConfig = ref(null)
+provide('gearWearConfig', gearWearConfig)
+
+// Global function to update userData
+const updateUserData = async (updates = {}) => {
+  if (!userData.value) {
+    // If userData is not loaded, reload it
+    await loadUserData()
+    return
+  }
+  
+  // Update userData with provided updates
+  if (typeof updates === 'object' && updates !== null) {
+    let shouldReload = false
+    
+    Object.keys(updates).forEach(key => {
+      if (userData.value[key] !== undefined) {
+        if (typeof userData.value[key] === 'number' && typeof updates[key] === 'number') {
+          // For numbers, add the update value (for coin, exp, etc.)
+          const oldValue = userData.value[key] || 0
+          userData.value[key] = oldValue + updates[key]
+          
+          // Check if exp update causes level up (handle multiple level-ups)
+          if (key === 'exp' && userData.value.exp_needed !== undefined) {
+            let currentExp = userData.value[key]
+            let currentLv = userData.value.lv || 1
+            let expNeeded = userData.value.exp_needed || 0
+            
+            // Handle multiple level-ups if exp is high enough
+            while (currentExp >= expNeeded && expNeeded > 0) {
+              currentExp -= expNeeded
+              currentLv += 1
+              // Mark that we need to reload to get new exp_needed for the new level
+              shouldReload = true
+              // For now, use the same exp_needed (will be updated after reload)
+              // In a real scenario, we'd need to calculate exp_needed for each level
+              // but since we don't have that data, we'll reload from backend
+            }
+            
+            // Update the values
+            userData.value[key] = currentExp
+            userData.value.lv = currentLv
+          }
+        } else {
+          // For other types, replace the value
+          userData.value[key] = updates[key]
+        }
+      } else {
+        // If key doesn't exist, add it
+        userData.value[key] = updates[key]
+      }
+    })
+    
+    // If level up occurred, reload userData to get new exp_needed
+    if (shouldReload) {
+      await loadUserData()
+    }
+  }
+}
+
+// Provide updateUserData function globally
+provide('updateUserData', updateUserData)
+
+// Provide timezone (scoped to RewardPlay package only - won't affect parent project)
+provide('zoneTimezone', zoneTimezone)
+
+// Global alert message (game-style popup) – use instead of alert()
+const alertMessage = ref('')
+const showAlert = (message) => {
+  alertMessage.value = message != null ? String(message) : ''
+}
+provide('showAlert', showAlert)
 
 // Login screen will auto check user on mount
 // After successful login, loading will start

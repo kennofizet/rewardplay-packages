@@ -21,8 +21,7 @@ class Zone extends BaseModel
      */
     public function getTable()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        return $tablePrefix . 'rewardplay_zones';
+        return self::getPivotTableName('rewardplay_zones');
     }
 
     /**

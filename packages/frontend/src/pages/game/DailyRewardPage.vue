@@ -8,25 +8,24 @@
         <WeekDay
           v-for="day in weekDays"
           :key="day.day"
-          :title="`${t('component.dailyReward.day')} ${day.day}`"
+          :title="day.name"
           :is-completed="day.completed"
           :is-past="day.past"
           :is-current="day.current"
         >
           <RewardItem
-            v-for="(reward, index) in day.rewards"
-            :key="index"
-            :text="reward"
+            v-if="day.rewards"
+            :text="day.rewards"
           />
         </WeekDay>
       </div>
     </Sector>
     
-    <Sector :title="t('component.dailyReward.todaysRewards')">
-      <div class="reward-line">
+    <Sector :title="t('component.dailyReward.monthlyRewards')">
+      <div class="reward-grid">
         <RewardCard
           v-for="reward in rewards"
-          :key="reward.id"
+          :key="reward.date"
           :day-label="reward.day"
           :title="reward.title"
           :description="reward.description"
@@ -46,127 +45,239 @@
 </template>
 
 <script setup>
-import { ref, inject } from 'vue'
+import { ref, inject, onMounted, computed } from 'vue'
 import Sector from '../../components/game/Sector.vue'
 import WeekDay from '../../components/game/WeekDay.vue'
 import RewardItem from '../../components/game/RewardItem.vue'
 import RewardCard from '../../components/game/RewardCard.vue'
+import { useTimezone } from '../../composables/useTimezone'
 
 const gameApi = inject('gameApi', null)
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
+const { isToday, formatDate } = useTimezone()
+const userData = inject('userData', null)
+const updateUserData = inject('updateUserData', null)
 
-const weekDays = ref([
-  { day: 1, completed: true, past: true, current: false, rewards: [] },
-  { day: 2, completed: true, past: false, current: true, rewards: ['+5% V-money'] },
-  { day: 3, completed: false, past: false, current: false, rewards: ['+5% V-money', '+5% daily limit'] },
-  { day: 4, completed: false, past: false, current: false, rewards: ['+5% V-money', '+10% daily limit', '+5% EXP'] },
-  { day: 5, completed: false, past: false, current: false, rewards: ['+15% V-money', '+10% daily limit', '+5% EXP'] },
-  { day: 6, completed: false, past: false, current: false, rewards: ['+15% V-money', '+10% daily limit', '+15% EXP'] },
-  { day: 7, completed: false, past: false, current: false, rewards: ['+15% V-money', '+30% daily limit', '+15% EXP'] }
-])
+const selectedZone = ref(null)
+const loading = ref(false)
+const state = ref(null)
 
-const rewards = ref([
-  {
-    id: 1,
-    day: `${t('component.dailyReward.day')} 8`,
-    title: 'V-money',
-    description: '+100 V-money',
-    rarity: 'common',
-    isCollected: true,
-    imageType: 'coins',
-    imageKey: 'global.coin'
-  },
-  {
-    id: 2,
-    day: `${t('component.dailyReward.day')} 9`,
-    title: 'Wing-Chest',
-    description: 'acquire two common items and one rare weapon',
-    rarity: 'rare',
-    isCollected: true,
-    imageType: 'chest',
-    imageKey: 'global.box_coin'
-  },
-  {
-    id: 3,
-    day: 'day 10',
-    title: 'V-money',
-    description: '+250 V-money',
-    rarity: 'common',
-    isCollected: true,
-    imageType: 'coins',
-    imageKey: 'global.coin'
-  },
-  {
-    id: 4,
-    day: `${t('component.dailyReward.day')} 11`,
-    title: 'First-Aid',
-    description: 'nicely looking upgrade to first aid backpack capacity',
-    rarity: 'epic',
-    isCurrent: true,
-    isCollected: false,
-    imageType: 'backpack',
-    imageKey: 'bag.bag'
-  },
-  {
-    id: 5,
-    day: `${t('component.dailyReward.day')} 12`,
-    title: 'V-money',
-    description: '+500 V-money',
-    rarity: 'common',
-    isFeature: true,
-    imageType: 'coins',
-    imageKey: 'global.coin'
-  },
-  {
-    id: 6,
-    day: `${t('component.dailyReward.day')} 13`,
-    title: 'Wing-Chest',
-    description: 'acquire two common items and one rare weapon',
-    rarity: 'rare',
-    isFeature: true,
-    imageType: 'chest',
-    imageKey: 'global.box_coin'
-  },
-  {
-    id: 7,
-    day: 'day 14',
-    title: 'V-money',
-    description: '+1000 V-money',
-    rarity: 'common',
-    isFeature: true,
-    imageType: 'coins',
-    imageKey: 'global.coin'
-  },
-  {
-    id: 8,
-    day: `${t('component.dailyReward.day')} 28`,
-    title: 'BOOM BOX',
-    description: 'The BOOM BOX is an explosive weapon. Once thrown, it will begin to play music and emit powerful blasts that deal huge damage to all structures within its radius, but do not harm the player.',
-    rarity: 'epic',
-    isEpic: true,
-    isFeature: true,
-    epicTitle: t('component.dailyReward.epicReward'),
-    imageType: 'epic-chest',
-    imageKey: 'global.epic_chest'
-  }
-])
+const weekDays = computed(() => {
+    if (!state.value || !state.value.stack_bonuses) return []
+    
+    // Fixed 1-7 cycle
+    const weeklyStreak = state.value.weekly_streak || 0
+    const bonuses = state.value.stack_bonuses || {}
 
-const handleCollect = async (reward) => {
-  if (!gameApi) {
-    console.error('Game API not available')
-    return
+    return Array.from({length: 7}, (_, i) => {
+        const dayNum = i + 1
+        const bonus = bonuses[dayNum]
+        const rewards = bonus?.rewards || []
+        
+        // Limit to 1 items and create description array with count
+        const limitedRewards = rewards.slice(0, 1)
+        const totalCount = rewards.length
+        const showCount = totalCount > 1 ? 1 : totalCount
+        
+        let rewardsData
+        if (limitedRewards.length > 0) {
+            const descriptionArray = limitedRewards.map(r => `${r.type} x${r.quantity}`)
+            rewardsData = {
+                items: descriptionArray,
+                count: showCount,
+                total: totalCount,
+                allItems: rewards // Store full array for tooltip
+            }
+        } else {
+            rewardsData = null
+        }
+        
+        return {
+            name: bonus?.name || t('component.dailyReward.day') + ' ' + dayNum,
+            day: dayNum,
+            completed: dayNum < weeklyStreak || (dayNum === weeklyStreak && state.value.is_claimed_today),
+            past: dayNum < weeklyStreak,
+            current: dayNum === weeklyStreak && !state.value.is_claimed_today,
+            rewards: rewardsData
+        }
+    })
+})
+
+const rewards = computed(() => {
+    if (!state.value || !state.value.seven_days_rewards) return []
+
+    const weeklyStreak = state.value.weekly_streak || 0
+
+    // Get 7 days starting from today
+    const sevenDays = state.value.seven_days_rewards.slice(0, 7)
+    const nextRewardEpic = state.value.next_reward_epic || null
+    if(nextRewardEpic){
+      nextRewardEpic.isSpecific = true
+      sevenDays.push(nextRewardEpic)
+    }
+    
+    const bonuses = state.value.stack_bonuses || {}
+
+    // Create sevenDaysStack: map stack bonuses to seven days based on weekly streak
+    return sevenDays.map((r, index) => {
+        let currentIndexBonus = weeklyStreak + index - 1
+        
+        // Get day and month using timezone-aware formatting
+        const dayOfMonthNum = parseInt(formatDate(r.date, { day: 'numeric' }))
+        const monthNum = parseInt(formatDate(r.date, { month: 'numeric' }))
+        let dayOfMonth = dayOfMonthNum // Actual day of month (1-31)
+        let extraInfo = ''
+
+        if(r.isSpecific){
+          dayOfMonth = dayOfMonthNum + ' / ' + monthNum
+        }else{
+          const stackBonusDay = currentIndexBonus > 7 ? 7 : currentIndexBonus
+          const stackBonus = bonuses[stackBonusDay]
+          if (stackBonus) {
+              extraInfo = `+ ${stackBonus.name}`
+          }
+        }
+        
+        const dayNumInCycle = index + 1
+        
+        // Use timezone-aware isToday check
+        const isCurrent = isToday(r.date) && !r.claimed
+        const isCollected = r.claimed
+        
+        const items = r.items || []
+        const limitedItems = items.slice(0, 2) // Limit to 2 items
+        const firstItem = limitedItems[0]
+        const type = firstItem?.type || 'coin'
+        
+        // Create description array with count
+        let description
+        if (limitedItems.length > 0) {
+            const descriptionArray = limitedItems.map(item => `x${item.quantity} ${item.type}`)
+            const totalCount = items.length
+            const showCount = totalCount > 2 ? 2 : totalCount
+            
+            description = {
+                items: descriptionArray,
+                count: showCount,
+                total: totalCount,
+                allItems: items, // Store full array for tooltip
+                extraInfo: extraInfo
+            }
+        } else {
+            // Fallback when no items
+            description = extraInfo ? `${t('component.dailyReward.dailyReward')} ${extraInfo}` : t('component.dailyReward.dailyReward')
+        }
+        
+        return {
+            original_date: r.date,
+            day: `${t('component.dailyReward.day')} ${dayOfMonth}`, // Show actual day of month
+            title: firstItem?.actions?.is_coin ? 'COIN' : (firstItem?.actions?.is_exp ? 'EXP' : (firstItem?.actions?.is_gear ? 'GEAR' : '')) || t('component.dailyReward.reward'),
+            description: description,
+            rarity: r.is_epic ? 'epic' : (dayNumInCycle % 3 === 0 ? 'rare' : 'common'),
+            isCurrent: isCurrent,
+            isCollected: isCollected,
+            isEpic: r.isSpecific || false, // Use is_epic from database
+            isFeature: r.is_epic || false,
+            imageType: firstItem?.actions?.is_coin ? 'coins' : (firstItem?.actions?.is_exp ? 'chest' : 'backpack'),
+            imageKey: firstItem?.actions?.is_coin ? 'global.coin' : null
+        }
+    })
+})
+
+const loadData = async () => {
+    if(!gameApi) return
+    loading.value = true
+    try {
+        const res = await gameApi.getPlayerDailyRewardState()
+        state.value = res.data?.datas || {}
+    } catch(e) {
+        console.error(e)
+    } finally {
+        loading.value = false
+    }
+}
+
+/**
+ * Calculate total exp and coin from current day's rewards
+ * Includes both daily reward and stack bonus for current streak day
+ */
+const calculateTodayRewards = () => {
+  if (!state.value) return { exp: 0, coin: 0 }
+  
+  let totalExp = 0
+  let totalCoin = 0
+  
+  // Get today's daily reward
+  const todayDailyReward = state.value.seven_days_rewards?.find(r => isToday(r.date))
+  if (todayDailyReward && todayDailyReward.items) {
+    todayDailyReward.items.forEach(item => {
+      const quantity = item.quantity || 0
+      if (item.actions?.is_exp) totalExp += quantity
+      else if (item.actions?.is_coin) totalCoin += quantity
+    })
   }
   
+  // Get stack bonus for current streak day
+  const weeklyStreak = state.value.weekly_streak || 0
+  const stackBonusDay = weeklyStreak > 7 ? 7 : weeklyStreak
+  const stackBonus = state.value.stack_bonuses?.[stackBonusDay]
+  
+  if (stackBonus && stackBonus.rewards) {
+    stackBonus.rewards.forEach(item => {
+      const quantity = item.quantity || 0
+      if (item.actions?.is_exp) totalExp += quantity
+      else if (item.actions?.is_coin) totalCoin += quantity
+    })
+  }
+  
+  return { exp: totalExp, coin: totalCoin }
+}
+
+const handleCollect = async (reward) => {
+  if (!gameApi) return
+  
   try {
-    // TODO: Call API to collect reward
-    // const response = await gameApi.collectDailyReward(reward.id)
+    // Calculate rewards before collecting
+    const todayRewards = calculateTodayRewards()
+    
+    await gameApi.collectDailyReward()
+    
+    // Update userData with the collected rewards
+    // updateUserData will handle level-up logic automatically
+    if (updateUserData && (todayRewards.exp > 0 || todayRewards.coin > 0)) {
+      const updates = {}
+      if (todayRewards.exp > 0) {
+        updates.exp = todayRewards.exp
+      }
+      if (todayRewards.coin > 0) {
+        updates.coin = todayRewards.coin
+      }
+      
+      // updateUserData will check if exp >= exp_needed and handle level up + reload
+      await updateUserData(updates)
+    }
+    
+    // Optimistic update or reload
     reward.isCollected = true
     reward.isCurrent = false
+    loadData() // Reload to sync everything (e.g. stack might update)
   } catch (error) {
     console.error('Error collecting reward:', error)
   }
 }
+
+onMounted(async () => {
+  try {
+    const stored = localStorage.getItem('selected_zone')
+    if (stored) {
+      selectedZone.value = JSON.parse(stored)
+      if (gameApi && gameApi.setZone) gameApi.setZone(selectedZone.value)
+    }
+  } catch (e) {}
+  
+  loadData()
+})
 </script>
 
 <style scoped>
@@ -175,15 +286,37 @@ const handleCollect = async (reward) => {
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
+  gap: 15px;
   margin-top: 30px;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
 }
 
-.reward-line {
+.reward-grid {
   display: flex;
-  align-items: center;
+  flex-wrap: nowrap;
+  gap: 20px;
   justify-content: space-between;
-  margin-bottom: 60px;
-  margin-top: 128px;
+  align-items: flex-end; /* Align to bottom so bigger card grows upwards */
+  margin-bottom: 80px;
+  margin-top: 40px;
+}
+
+@media (max-width: 1200px) {
+    .reward-grid {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+/* Custom scrollbar */
+.week-line::-webkit-scrollbar, .reward-grid::-webkit-scrollbar {
+  height: 6px;
+}
+.week-line::-webkit-scrollbar-track, .reward-grid::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+}
+.week-line::-webkit-scrollbar-thumb, .reward-grid::-webkit-scrollbar-thumb {
+  background: rgba(246,169, 1, 0.5);
+  border-radius: 3px;
 }
 </style>

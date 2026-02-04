@@ -3,10 +3,12 @@
 namespace Kennofizet\RewardPlay\Services\Model;
 
 use Kennofizet\RewardPlay\Models\SettingItem;
+use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemRelationshipSetting;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Kennofizet\RewardPlay\Repositories\Model\SettingItemRepository;
 use Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation\SettingItemValidationService;
+use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
 
@@ -14,13 +16,16 @@ class SettingItemService
 {
     protected $settingItemRepository;
     protected $validation;
+    protected ZoneService $zoneService;
 
     public function __construct(
         SettingItemRepository $settingItemRepository,
-        SettingItemValidationService $validation
+        SettingItemValidationService $validation,
+        ZoneService $zoneService
     ) {
         $this->settingItemRepository = $settingItemRepository;
         $this->validation = $validation;
+        $this->zoneService = $zoneService;
     }
 
     /**
@@ -39,23 +44,6 @@ class SettingItemService
             $query->with($withRelationships);
         }
 
-        // Always eager load zone relationship to prevent N+1
-        $query->with('zone');
-
-        // Apply zone filter - default to first zone user can manage
-        $zoneId = $filters['zone_id'] ?? null;
-        if (empty($zoneId)) {
-            // Get zones user can manage and use first one
-            $zones = SettingItem::getZonesUserCanManage();
-            if (!empty($zones)) {
-                $zoneId = $zones[0]['id'];
-            }
-        }
-
-        if (!empty($zoneId)) {
-            $query->byZone($zoneId);
-        }
-
         // Apply search scope
         $key_search = '';
         if (!empty($filters['keySearch'])) {
@@ -70,22 +58,20 @@ class SettingItemService
             $query->search($key_search);
         }
 
-        // Apply type filter
+        // Apply type filter (single type or comma-separated for multiple, e.g. box_random,ticket,buff)
         if (!empty($filters['type'])) {
-            $query->byType($filters['type']);
+            $typeVal = $filters['type'];
+            if (is_string($typeVal) && strpos($typeVal, ',') !== false) {
+                $types = array_map('trim', explode(',', $typeVal));
+                $query->whereIn('type', $types);
+            } else {
+                $query->byType($typeVal);
+            }
         }
 
         $query->orderBy('id', 'DESC');
 
         return $query->paginate($perPage, ['*'], 'page', $page);
-    }
-
-    /**
-     * Get a single setting item by ID
-     */
-    public function getSettingItem(int $id): ?SettingItem
-    {
-        return SettingItem::findById($id);
     }
 
     /**
@@ -99,6 +85,10 @@ class SettingItemService
      */
     public function createSettingItem(array $data, ?UploadedFile $imageFile = null): SettingItem
     {
+        // Normalize potential JSON fields
+        $data = $this->normalizeDefaultProperty($data);
+        $data = $this->normalizeCustomStats($data);
+
         // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile);
         
@@ -117,6 +107,10 @@ class SettingItemService
      */
     public function updateSettingItem(int $id, array $data, ?UploadedFile $imageFile = null): ?SettingItem
     {
+        // Normalize potential JSON fields
+        $data = $this->normalizeDefaultProperty($data);
+        $data = $this->normalizeCustomStats($data);
+
         // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile, $id);
         
@@ -124,9 +118,6 @@ class SettingItemService
         if (!$settingItem) {
             return null;
         }
-        
-        // If updating zone_id, middleware already validated it
-        // If not updating zone_id, check existing item's zone (middleware validates on route param if needed)
         
         return $this->settingItemRepository->update($settingItem, $data, $imageFile);
     }
@@ -144,15 +135,145 @@ class SettingItemService
         }
         
         // Permission check: validate that item's zone is in user's managed zones
-        // This is done by checking if zone_id is in managed zones (from middleware)
+        // Use ZoneService which centralizes zone->managed logic instead of calling BaseModelActions directly
         if (!empty($settingItem->zone_id)) {
-            $managedZoneIds = \Kennofizet\RewardPlay\Core\Model\BaseModelActions::currentUserManagedZoneIds();
+            $zones = $this->zoneService->getZonesUserCanManage();
+            $managedZoneIds = array_column($zones, 'id');
             if (!in_array($settingItem->zone_id, $managedZoneIds)) {
                 throw new \Exception('You do not have permission to manage this zone');
             }
         }
         
         return $this->settingItemRepository->delete($settingItem);
+    }
+
+    /**
+     * Generate suggested box/ticket/buff setting items and persist them.
+     *
+     * @return array<int, SettingItem>
+     */
+    public function generateSuggestedBoxTicketBuffItems(): array
+    {
+        $suggested = [
+            [
+                'name' => 'Mystery Box',
+                'description' => 'Open to get random rewards.',
+                'type' => SettingItemConstant::ITEM_TYPE_BOX_RANDOM,
+                'default_property' => [
+                    'rate_list' => [],
+                ],
+            ],
+            [
+                'name' => 'Event Ticket',
+                'description' => 'Ticket for special events.',
+                'type' => SettingItemConstant::ITEM_TYPE_TICKET,
+                'default_property' => null,
+            ],
+            [
+                'name' => 'EXP Buff',
+                'description' => 'Increases EXP gain for a period.',
+                'type' => SettingItemConstant::ITEM_TYPE_BUFF,
+                'default_property' => [
+                    'buff_type' => 'exp',
+                    'buff_value' => 50,
+                    'buff_duration_minutes' => 60,
+                ],
+            ],
+        ];
+
+        $created = [];
+        foreach ($suggested as $data) {
+            $item = $this->settingItemRepository->create($data, null);
+            $created[] = $item;
+        }
+
+        return $created;
+    }
+
+    /**
+     * Get items for a current user zone (for selecting items in set)
+     * 
+     * @return array
+     * @throws \Exception
+     */
+    public function getItemsForZone(array $filters = []): array
+    {
+        $mode = $filters['mode'] ?? null;
+        $type = $filters['type'] ?? null;
+
+        $types = [];
+        if(!empty($type)) {
+            if(SettingItemConstant::isGear($type)){
+                $types = array_keys(SettingItemConstant::ITEM_TYPE_NAMES);
+            }
+        }
+
+        $items = SettingItem::when(!empty($type), function ($query) use ($types) {
+            $query->whereIn('type', $types);
+        })->get();
+
+        // Format items for response (include default_property and actions for frontend filters/display)
+        $formattedItems = $items->map(function ($item) use ($mode) {
+            $default_property = [];
+            if(!empty($mode) && in_array($mode, [
+                'with-default-options'
+            ])){
+                $default_property = $item->default_property ?? [];
+            }
+            $type = $item->type ?? '';
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'type' => $type,
+                'image' => \Kennofizet\RewardPlay\Core\Model\BaseModelResponse::getImageFullUrl($item->image),
+                'actions' => [
+                    'is_box_random' => SettingItemConstant::isBoxRandom($type),
+                    'is_gear' => SettingItemConstant::isGearSlotType($type),
+                    'is_ticket' => SettingItemConstant::isTicket($type),
+                ],
+                'default_property' => $default_property,
+            ];
+        })->toArray();
+
+        return $formattedItems;
+    }
+
+    /**
+     * Normalize default_property when it's passed as JSON string from FormData
+     * Extracted to avoid duplicated code in create/update methods.
+     *
+     * @param array $data
+     * @return array
+     */
+    private function normalizeDefaultProperty(array $data): array
+    {
+        if (isset($data['default_property']) && is_string($data['default_property'])) {
+            $decoded = json_decode($data['default_property'], true);
+            if (is_array($decoded)) {
+                $data['default_property'] = $decoded;
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Normalize custom_stats when it's passed as JSON string from FormData
+     * Extracted to avoid duplicated code in create/update methods.
+     *
+     * @param array $data
+     * @return array
+     */
+    private function normalizeCustomStats(array $data): array
+    {
+        if (isset($data['custom_stats']) && is_string($data['custom_stats'])) {
+            $decoded = json_decode($data['custom_stats'], true);
+            if (is_array($decoded)) {
+                $data['custom_stats'] = $decoded;
+            }
+        }
+
+        return $data;
     }
 }
 

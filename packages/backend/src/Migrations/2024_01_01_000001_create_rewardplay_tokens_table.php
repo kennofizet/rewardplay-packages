@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Kennofizet\RewardPlay\Models\Token;
 
 return new class extends Migration
 {
@@ -11,8 +12,7 @@ return new class extends Migration
      */
     public function up()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $tokensTableName = $tablePrefix . 'rewardplay_tokens';
+        $tokensTableName = (new Token())->getTable();
 
         Schema::create($tokensTableName, function (Blueprint $table) {
             $table->id();
@@ -31,8 +31,7 @@ return new class extends Migration
      */
     public function down()
     {
-        $tablePrefix = config('rewardplay.table_prefix', '');
-        $tokensTableName = $tablePrefix . 'rewardplay_tokens';
+        $tokensTableName = (new Token())->getTable();
 
         Schema::dropIfExists($tokensTableName);
     }
