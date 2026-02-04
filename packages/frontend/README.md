@@ -1,63 +1,131 @@
-# RewardPlay Frontend Package
+# @kennofizet/rewardplay-frontend
 
-Vue.js 3 component library for RewardPlay game interface.
+Vue 3 frontend package for **RewardPlay**: game UI (bag, shop, daily reward, ranking, settings) that talks to the RewardPlay backend API.
+
+## What This Package Is
+
+- **Vue 3 component library** for the RewardPlay game interface (login, loading, bag/gear, shop, daily rewards, ranking, manage settings).
+- **Token-based**: you pass a backend URL and token; the package uses them for all API calls.
+- **Embeddable**: mount it in a host app inside a div (e.g. after login or when entering the game section).
+- Backend API, auth, and data format are defined in **@kennofizet/rewardplay-backend**. Use that package (or its docs) for token, endpoints, and data structures.
 
 ## Installation
 
-**Important:** This package is part of an npm workspace. Dependencies are installed at the **root level**, not in this directory.
-
-### From Root (Recommended)
 ```bash
-cd ../..  # Go to monorepo root
-npm install
+npm i @kennofizet/rewardplay-frontend
 ```
 
-### From Package Directory
-```bash
-npm install
+**Peer dependency:** Vue 3 (`vue@^3.2.0`). The host project must provide Vue.
+
+## Setup: Mount Point and Initialization
+
+### 1. Mount point in template
+
+Render a stable DOM node only when you are ready to mount RewardPlay (e.g. after you have a token):
+
+```html
+<div v-show="initialized" id="rewardplay-mount-point"></div>
 ```
-This will install dependencies, but they'll be hoisted to the root `node_modules/` (this is normal for workspaces).
 
-## What `npm install` Does
+- Use `v-show="initialized"` (or `v-if`) so the element exists only when `initialized` is true, then mount in a `nextTick` after setting `initialized = true`.
+- The ID (`rewardplay-mount-point`) is what you pass to `document.getElementById` before mounting.
 
-When you run `npm install` in this package:
+### 2. Initialize and mount in your app
 
-1. ✅ Installs dependencies listed in `package.json`
-2. ✅ Creates/updates `node_modules/` at the **root level** (not here)
-3. ❌ Does NOT create local `node_modules/` (workspace hoisting)
-4. ❌ Does NOT build or create dist files
-5. ❌ Does NOT modify source files
+Example (Vue 3 Composition API with `createApp`):
 
-**This is normal!** npm workspaces hoist dependencies to the root to avoid duplication.
+```js
+import { createApp, ref, nextTick } from 'vue'
+import RewardPlay, { RewardPlayPage } from '@kennofizet/rewardplay-frontend'
+
+const initialized = ref(false)
+let rewardPlayApp = null
+
+async function initialize() {
+  const backendUrl = 'https://your-backend.com'   // from your config
+  if (!backendUrl?.trim()) {
+    // handle error
+    return
+  }
+
+  try {
+    const token = await fetchToken()   // get token from your backend (see rewardplay-backend)
+    initialized.value = true
+    await nextTick()
+
+    const mountPoint = document.getElementById('rewardplay-mount-point')
+    if (!mountPoint) {
+      initialized.value = false
+      return
+    }
+
+    rewardPlayApp = createApp(RewardPlayPage, {
+      imageUrls: [],
+      scriptUrls: [],
+      stylesheetUrls: [],
+      fontUrls: [],
+      backgroundImage: null,
+      language: 'vi',   // 'en' | 'vi'
+      // enableUnzip: true,  // if your RewardPlayPage supports it
+    })
+
+    rewardPlayApp.use(RewardPlay, {
+      backendUrl: backendUrl.trim(),
+      token,
+    })
+
+    rewardPlayApp.mount(mountPoint)
+  } catch (err) {
+    initialized.value = false
+    // handle err
+  }
+}
+
+// e.g. in onMounted or after login
+onMounted(() => {
+  initialize()
+})
+```
+
+### 3. Plugin options (required)
+
+| Option      | Type   | Description                    |
+|------------|--------|--------------------------------|
+| `backendUrl` | string | Base URL of RewardPlay API     |
+| `token`      | string | RewardPlay auth token          |
+
+Both are required when calling `app.use(RewardPlay, { backendUrl, token })`.
+
+### 4. RewardPlayPage root props (optional)
+
+| Prop             | Type   | Default | Description                    |
+|------------------|--------|--------|--------------------------------|
+| `imageUrls`      | Array  | `[]`   | URLs for image manifest/assets |
+| `scriptUrls`     | Array  | `[]`   | Script URLs to load            |
+| `stylesheetUrls` | Array  | `[]`   | CSS URLs                       |
+| `fontUrls`       | Array  | `[]`   | Font URLs                      |
+| `backgroundImage`| string | null   | Background image URL           |
+| `language`       | string | `'en'` | UI language: `'en'` or `'vi'`  |
+| `rotate`         | boolean| true   | Auto-rotate in portrait        |
+| `customStyles`    | Object | `{}`   | Extra inline/CSS variables     |
+
+## Backend and data
+
+- **Token**: Your host app must obtain the RewardPlay token (e.g. from your own backend that talks to RewardPlay). How to issue/validate the token and which endpoints to call is defined in **@kennofizet/rewardplay-backend**.
+- **API**: The frontend calls endpoints under `backendUrl` (e.g. `/api/rewardplay/auth/user-data`, `/api/rewardplay/player/shop`, etc.). Base URL, routes, and response shapes are documented in the backend package.
+- For API contracts, env vars, and server setup, read **@kennofizet/rewardplay-backend** (or the backend README in the same repo).
+
+## Exports
+
+- **default**: plugin object `{ install }` — use with `app.use(RewardPlay, { backendUrl, token })`.
+- **RewardPlayPage**: root Vue component to mount.
+- **installGameModule**, **createGameApi**, **RewardPlayPage**, **ComingSoonPage**, **LoadingSource**, **LoginScreen**.
+- Utilities: **ResourceLoader**, **useResourceLoader**, constants helpers, **createTranslator**, **translations**.
 
 ## Development
 
-For local development (like in the test environment), the package uses source files directly from `src/`. No build step is required.
+If you work inside the repo (e.g. `rewardplay-packages`):
 
-The `package.json` is configured to point to `src/index.js` for local development, so Vite can resolve the source files directly.
-
-## Building for Production
-
-If you need to build the package for distribution:
-
-```bash
-npm run production
-```
-
-This will create built files in the `dist/` directory using Laravel Mix.
-
-## Local Development Setup
-
-When using this package locally (via `file:` in package.json), Vite will resolve the source files directly. No build needed!
-
-## Where Are My Dependencies?
-
-Dependencies are installed at:
-```
-rewardplay-packages/node_modules/  (root level)
-```
-
-Not at:
-```
-packages/frontend/node_modules/  (doesn't exist - this is normal!)
-```
+- Dependencies are usually installed at the **root** of the repo: `npm install` at root.
+- The package entry is `src/index.js`; the host can resolve source directly (no build step required for development).
+- For a production build of the frontend package, run `npm run production` in this package (output in `dist/`).

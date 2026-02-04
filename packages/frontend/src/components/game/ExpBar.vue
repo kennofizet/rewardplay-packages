@@ -46,7 +46,7 @@ const expPercentage = computed(() => {
   width: 50%;
   margin-left: 170px;
   margin-top: 20px;
-  margin-bottom: 10px;
+  margin-bottom: -1px;
 }
 
 .exp-bar-wrapper {
