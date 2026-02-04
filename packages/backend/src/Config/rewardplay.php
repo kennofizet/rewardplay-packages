@@ -99,5 +99,21 @@ return [
     |
     */
     'custom_global_images_folder' => env('REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER', 'custom/global'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow CORS for file folders
+    |--------------------------------------------------------------------------
+    |
+    | When true, responses for files under images_folder, constants_folder,
+    | and custom_global_images_folder (under images_folder) will include
+    | Access-Control-Allow-Origin so the frontend can fetch them cross-origin
+    | (e.g. for preloading images when frontend is on a different port).
+    |
+    | Only applies when files are served through the package's file routes.
+    | Default: false
+    |
+    */
+    'allow_cors_for_files' => env('REWARDPLAY_ALLOW_CORS_FOR_FILES', false),
 ];
 

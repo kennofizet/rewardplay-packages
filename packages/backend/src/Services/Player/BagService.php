@@ -25,7 +25,6 @@ class BagService
     {
         $userBagItems = $this->getUserBag($userId);
         $menuList = UserBagItemConstant::getBagMenuList();
-        \Log::info('menuList', $menuList);
 
         $categorizedBagItems = [];
         foreach ($menuList as $menu) {

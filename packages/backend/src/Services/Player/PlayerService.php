@@ -17,10 +17,21 @@ class PlayerService
     {
         $settingItems = SettingItem::whereNotNull('image')
             ->where('image', '!=', '')
+            ->withTrashed()
             ->get();
 
         $images = [];
         foreach ($settingItems as $item) {
+            $check_for_duplicate = false;
+            foreach ($images as $image) {
+                if ($image['url'] === BaseModelResponse::getImageFullUrl($item->image)) {
+                    $check_for_duplicate = true;
+                    break;
+                }
+            }
+            if ($check_for_duplicate) {
+                continue;
+            }
             if (!empty($item->image)) {
                 $images[] = [
                     'url' => BaseModelResponse::getImageFullUrl($item->image),

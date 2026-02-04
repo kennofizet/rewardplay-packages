@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Kennofizet\RewardPlay\Controllers\AuthController;
+use Kennofizet\RewardPlay\Controllers\FileController;
 use Kennofizet\RewardPlay\Controllers\RankingController;
 use Kennofizet\RewardPlay\Controllers\Player\PlayerController;
 use Kennofizet\RewardPlay\Controllers\Player\ZoneController;
@@ -11,6 +12,40 @@ use Kennofizet\RewardPlay\Middleware\EnsureUserIsManager;
 
 $prefix = config('rewardplay.api_prefix', 'api/rewardplay');
 $rateLimit = config('rewardplay.rate_limit', 60);
+
+// Public file serving (no auth) – under API path so Laravel serves files and can add CORS
+// OPTIONS = CORS preflight only (browser sends it once before GET when doing cross-origin fetch).
+// GET = runs every time the frontend requests a file; FileController serves the file + CORS headers.
+$imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
+$constantsFolder = config('rewardplay.constants_folder', 'rewardplay-constants');
+Route::prefix($prefix)
+    ->middleware(['api', "throttle:{$rateLimit},1"])
+    ->group(function () use ($imagesFolder, $constantsFolder) {
+        Route::options('files/' . $imagesFolder . '/{path}', function () {
+            if (!config('rewardplay.allow_cors_for_files', false)) {
+                return response('', 404);
+            }
+            return response('', 200)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type');
+        })->where('path', '.*');
+        Route::get('files/' . $imagesFolder . '/{path}', [FileController::class, 'serve'])
+            ->where('path', '.*')
+            ->defaults('folder', $imagesFolder);
+        Route::options('files/' . $constantsFolder . '/{path}', function () {
+            if (!config('rewardplay.allow_cors_for_files', false)) {
+                return response('', 404);
+            }
+            return response('', 200)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type');
+        })->where('path', '.*');
+        Route::get('files/' . $constantsFolder . '/{path}', [FileController::class, 'serve'])
+            ->where('path', '.*')
+            ->defaults('folder', $constantsFolder);
+    });
 
 // Protected routes and manage only
 Route::prefix($prefix)

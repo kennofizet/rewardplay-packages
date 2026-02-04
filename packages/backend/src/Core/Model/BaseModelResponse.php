@@ -2,6 +2,8 @@
 
 namespace Kennofizet\RewardPlay\Core\Model;
 
+use Illuminate\Support\Facades\Config;
+
 class BaseModelResponse
 {
     /**
@@ -57,7 +59,14 @@ class BaseModelResponse
             return $imagePath;
         }
 
-        // Convert relative path to full URL
+        // When CORS for files is enabled, use API file route so Laravel serves and adds CORS
+        $imagesFolder = Config::get('rewardplay.images_folder', 'rewardplay-images');
+        if (Config::get('rewardplay.allow_cors_for_files', false)
+            && (str_starts_with($imagePath, $imagesFolder . '/') || $imagePath === $imagesFolder)) {
+            $apiPrefix = Config::get('rewardplay.api_prefix', 'api/rewardplay');
+            return url($apiPrefix . '/files/' . ltrim($imagePath, '/'));
+        }
+
         return url($imagePath);
     }
 }

@@ -99,13 +99,22 @@ class ImageManifestService
         // Merge custom manifest into main manifest
         $manifest = array_merge($manifest, $customManifest);
 
-        // Convert to full URLs
+        // Convert to full URLs. When allow_cors_for_files is true, use API file route so Laravel serves files and adds CORS.
         $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
+        $apiPrefix = config('rewardplay.api_prefix', 'api/rewardplay');
+        $useFileRoute = config('rewardplay.allow_cors_for_files', false);
         $manifestWithFullUrls = [];
         foreach ($manifest as $key => $value) {
-            $fullPath = $imagesFolder . '/' . ltrim($value, '/');
-            $manifestWithFullUrls[$key] = url($fullPath);
+            $relativePath = ltrim($value, '/');
+            if ($useFileRoute) {
+                $manifestWithFullUrls[$key] = url($apiPrefix . '/files/' . $imagesFolder . '/' . $relativePath);
+            } else {
+                $manifestWithFullUrls[$key] = url($imagesFolder . '/' . $relativePath);
+            }
         }
+
+        // Frontend uses this to decide: fetch+blob (in-memory cache) when true, else Image only (no CORS).
+        $manifestWithFullUrls['_cors_for_files'] = $useFileRoute;
 
         return $manifestWithFullUrls;
     }

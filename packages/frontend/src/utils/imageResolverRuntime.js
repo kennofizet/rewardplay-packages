@@ -1,10 +1,38 @@
 let baseManifest = null
 let urlMap = new Map()
 let basenameMap = new Map()
+/** Preloaded images as blob URLs so <img> uses in-memory cache instead of re-fetching */
+const preloadedBlobByKey = new Map()
+const preloadedBlobByUrl = new Map()
+
+function revokePreloadedBlobs() {
+  for (const blobUrl of preloadedBlobByKey.values()) {
+    try { URL.revokeObjectURL(blobUrl) } catch (_) {}
+  }
+  for (const blobUrl of preloadedBlobByUrl.values()) {
+    try { URL.revokeObjectURL(blobUrl) } catch (_) {}
+  }
+  preloadedBlobByKey.clear()
+  preloadedBlobByUrl.clear()
+}
 
 export function setBaseManifest(manifest) {
+  revokePreloadedBlobs()
   baseManifest = manifest || {}
   rebuildUrlMap()
+}
+
+/**
+ * Register a preloaded blob URL so getFileImageUrl returns it (in-memory cache).
+ * No canvas used, so works for cross-origin when fetch succeeds (CORS or same-origin).
+ * @param {string} url - Image URL
+ * @param {string} blobUrl - URL.createObjectURL(blob) from fetch(url).then(r => r.blob())
+ */
+export function registerPreloadedBlobUrl(url, blobUrl) {
+  if (!url || !blobUrl) return
+  preloadedBlobByUrl.set(url, blobUrl)
+  const key = urlMap.get(url)
+  if (key) preloadedBlobByKey.set(key, blobUrl)
 }
 
 function rebuildUrlMap() {
@@ -25,12 +53,14 @@ function rebuildUrlMap() {
 
 export function getFileImageUrl(key) {
   if (!key) return ''
-  
-  // If already a full URL (http, https, or any protocol), return as-is
+
+  // If already a full URL, return preloaded blob if we have it, else as-is
   if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(key)) {
+    const blobUrl = preloadedBlobByUrl.get(key)
+    if (blobUrl) return blobUrl
     return key
   }
-  
+
   const normKey = key.startsWith('/') ? key.slice(1) : key
 
   // If no manifest loaded, return relative path
@@ -46,6 +76,10 @@ export function getFileImageUrl(key) {
     // Check if basename matches any manifest entry
     resolvedKey = basenameMap.get(normKey)
   }
+
+  // Return preloaded blob URL if we have it (so img uses in-memory cache)
+  const preloadedBlob = preloadedBlobByKey.get(resolvedKey)
+  if (preloadedBlob) return preloadedBlob
 
   const fileUrl = baseManifest[resolvedKey]
   if (!fileUrl) {

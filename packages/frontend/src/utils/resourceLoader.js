@@ -2,17 +2,16 @@
  * Resource loader for tracking real loading progress
  */
 import axios from 'axios'
-import { setBaseManifest } from './imageResolverRuntime'
+import { setBaseManifest, registerPreloadedBlobUrl } from './imageResolverRuntime'
 
 /**
- * Load image and track progress
+ * Load image (for fallback when fetch fails). No CORS required.
  * @param {string} url - Image URL
  * @returns {Promise<HTMLImageElement>}
  */
 export function loadImage(url) {
   return new Promise((resolve, reject) => {
     const img = new Image()
-    // Avoid forcing CORS on hosts that don't send ACAO; set explicitly only when needed upstream
     img.onload = () => resolve(img)
     img.onerror = reject
     img.src = url
@@ -20,37 +19,61 @@ export function loadImage(url) {
 }
 
 /**
- * Load multiple images
- * @param {Array<string>} urls - Array of image URLs
- * @param {Function} onProgress - Progress callback (loaded, total)
- * @returns {Promise<Array<HTMLImageElement>>}
+ * Preload image via fetch -> blob -> object URL and register so getFileImageUrl returns in-memory blob.
+ * When backend has CORS enabled (rewardplay.allow_cors_for_files), fetch succeeds and reuse is from cache.
+ * If fetch fails, falls back to loadImage so the image still loads (browser cache).
  */
-export function loadImages(urls, onProgress) {
-  let loaded = 0
-  const total = urls.length
-  const images = []
-
-  return Promise.all(
-    urls.map((url, index) => {
+function preloadImageAsBlob(url, onLoaded) {
+  return fetch(url, { mode: 'cors' })
+    .then((r) => {
+      if (!r.ok) throw new Error(r.status)
+      return r.blob()
+    })
+    .then((blob) => {
+      const blobUrl = URL.createObjectURL(blob)
+      registerPreloadedBlobUrl(url, blobUrl)
+      if (onLoaded) onLoaded()
+    })
+    .catch(() => {
       return loadImage(url)
-        .then(img => {
-          images[index] = img
-          loaded++
-          if (onProgress) {
-            onProgress(loaded, total)
-          }
-          return img
-        })
-        .catch(err => {
+        .then(() => { if (onLoaded) onLoaded() })
+        .catch((err) => {
           console.warn(`Failed to load image: ${url}`, err)
-          loaded++
-          if (onProgress) {
-            onProgress(loaded, total)
-          }
-          return null
+          if (onLoaded) onLoaded()
         })
     })
-  ).then(() => images.filter(img => img !== null))
+}
+
+/**
+ * Load multiple images. When useCorsForFiles is true, preload via fetch+blob (in-memory cache).
+ * When false, load via Image only (old code, no CORS required).
+ * @param {Array<string>} urls - Array of image URLs
+ * @param {Function} onProgress - Progress callback (loaded, total)
+ * @param {boolean} [useCorsForFiles=false] - From manifest _cors_for_files; if true use fetch+blob
+ * @returns {Promise<void>}
+ */
+export function loadImages(urls, onProgress, useCorsForFiles = false) {
+  if (urls.length === 0) return Promise.resolve()
+  let loaded = 0
+  const total = urls.length
+  const update = () => {
+    loaded++
+    if (onProgress) onProgress(loaded, total)
+  }
+  if (useCorsForFiles) {
+    return Promise.all(urls.map((url) => preloadImageAsBlob(url, update)))
+  }
+  return Promise.all(
+    urls.map((url) =>
+      loadImage(url)
+        .then(() => { update(); return null })
+        .catch((err) => {
+          console.warn(`Failed to load image: ${url}`, err)
+          update()
+          return null
+        })
+    )
+  )
 }
 
 /**
@@ -329,13 +352,15 @@ export class ResourceLoader {
       this.onLoadingProgress(0, 0, totalResources, '')
     }
 
+    let useCorsForFiles = false
     // Simulate unzip if needed (or replace with real unzip logic)
     if (this.onUnzipProgress) {
       try {
         const baseManifest = await this.fetchBaseManifest()
         if (baseManifest) {
-          // Remove custom key from manifest if present (not needed anymore)
-          const { custom, ...manifestWithCustom } = baseManifest
+          // Strip _cors_for_files (backend tells us CORS is enabled for file URLs)
+          const { custom, _cors_for_files, ...manifestWithCustom } = baseManifest
+          useCorsForFiles = _cors_for_files === true
           // Manifest values are already full URLs from backend
           setBaseManifest(manifestWithCustom)
 
@@ -354,23 +379,28 @@ export class ResourceLoader {
       })
     }
 
-    // Load images
+    // Load images: fetch+blob when CORS enabled, else Image only (old code)
     if (this.imageUrls.length > 0) {
-      await loadImages(this.imageUrls, () => {
-        updateProgress()
-      })
+      await loadImages(this.imageUrls, () => updateProgress(), useCorsForFiles)
     }
 
-    // Load custom images as part of assets (already full URLs from backend)
+    // Load custom images: same as above
     if (customImages.length > 0) {
-      for (const imageInfo of customImages) {
-        try {
-          // imageInfo.url is already a full URL from backend
-          await loadImage(imageInfo.url)
-          updateProgress(imageInfo.name || imageInfo.slug || '')
-        } catch (err) {
-          console.warn(`Failed to load custom image: ${imageInfo.url}`, err)
-          updateProgress(imageInfo.name || imageInfo.slug || '')
+      if (useCorsForFiles) {
+        for (const imageInfo of customImages) {
+          await preloadImageAsBlob(imageInfo.url, () =>
+            updateProgress(imageInfo.name || imageInfo.slug || '')
+          )
+        }
+      } else {
+        for (const imageInfo of customImages) {
+          try {
+            await loadImage(imageInfo.url)
+            updateProgress(imageInfo.name || imageInfo.slug || '')
+          } catch (err) {
+            console.warn(`Failed to load custom image: ${imageInfo.url}`, err)
+            updateProgress(imageInfo.name || imageInfo.slug || '')
+          }
         }
       }
     }
