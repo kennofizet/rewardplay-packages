@@ -96,7 +96,24 @@ onMounted(() => {
 
 Both are required when calling `app.use(RewardPlay, { backendUrl, token })`.
 
-### 4. RewardPlayPage root props (optional)
+### 4. Vite: optimizeDeps
+
+If you mount RewardPlay in a separate app with `createApp(RewardPlayPage).use(RewardPlay, { backendUrl, token }).mount(...)`, add the package to Vite’s `optimizeDeps.include` so it uses the same Vue instance and `inject('gameApi')` works:
+
+```js
+// vite.config.js (or vite.config.ts)
+export default {
+  // ...
+  optimizeDeps: {
+    include: ['@kennofizet/rewardplay-frontend'],
+    // ... rest of your config
+  },
+}
+```
+
+Without this, dev and build can end up with a different Vue instance for the package and `gameApi` may be missing (e.g. “gameApi.... is not a function”)
+
+### 5. RewardPlayPage root props (optional)
 
 | Prop             | Type   | Default | Description                    |
 |------------------|--------|--------|--------------------------------|
