@@ -171,7 +171,6 @@
                 <option :value="shopC.PRICE_TYPE_COIN">Coin</option>
                 <option :value="shopC.PRICE_TYPE_GEM">Gem</option>
                 <option :value="shopC.PRICE_TYPE_RUBY">Ruby</option>
-                <option :value="shopC.PRICE_TYPE_GEAR">Gear (item)</option>
                 <option :value="shopC.PRICE_TYPE_ITEM">Item (box/ticket)</option>
               </select>
               <input
@@ -316,7 +315,6 @@ function getPriceActions(type) {
   return {
     is_coin: t === shopC.PRICE_TYPE_COIN,
     is_ruby: t === shopC.PRICE_TYPE_RUBY || t === shopC.PRICE_TYPE_GEM,
-    is_gear: t === shopC.PRICE_TYPE_GEAR,
     is_item: t === shopC.PRICE_TYPE_ITEM,
   }
 }
@@ -329,7 +327,7 @@ const categoryLabels = {
   custom: 'Custom',
 }
 
-const PRICE_LABELS = { coin: 'Coin', gem: 'Gem', ruby: 'Ruby', gear: 'Gear', item: 'Item' }
+const PRICE_LABELS = { coin: 'Coin', gem: 'Gem', ruby: 'Ruby', item: 'Item' }
 
 const selectedItem = computed(() => {
   if (!formData.value.setting_item_id || !zoneItems.value.length) return null

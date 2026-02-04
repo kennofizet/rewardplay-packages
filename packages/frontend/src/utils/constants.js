@@ -40,7 +40,6 @@ function getFallbackConstants() {
       PRICE_TYPE_COIN: 'coin',
       PRICE_TYPE_GEM: 'gem',
       PRICE_TYPE_RUBY: 'ruby',
-      PRICE_TYPE_GEAR: 'gear',
       PRICE_TYPE_ITEM: 'item'
     },
     Helper: {

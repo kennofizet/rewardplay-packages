@@ -27,7 +27,6 @@ class StoreSettingShopItemRequest extends FormRequest
             SettingShopItemConstant::PRICE_TYPE_COIN,
             SettingShopItemConstant::PRICE_TYPE_GEM,
             SettingShopItemConstant::PRICE_TYPE_RUBY,
-            SettingShopItemConstant::PRICE_TYPE_GEAR,
             SettingShopItemConstant::PRICE_TYPE_ITEM,
         ]);
 

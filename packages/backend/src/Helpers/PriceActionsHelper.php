@@ -10,7 +10,7 @@ use Kennofizet\RewardPlay\Models\SettingShopItem\SettingShopItemConstant;
 class PriceActionsHelper
 {
     /**
-     * Add actions (is_coin, is_ruby, is_gear, is_item) to each price row.
+     * Add actions (is_coin, is_ruby, is_item) to each price row.
      *
      * @param array<int, array> $prices Price rows (each may have 'type' key).
      * @return array<int, array> Prices with 'actions' key added.
@@ -26,7 +26,6 @@ class PriceActionsHelper
             $p['actions'] = [
                 'is_coin' => SettingShopItemConstant::isPriceCoin($t),
                 'is_ruby' => SettingShopItemConstant::isPriceRuby($t),
-                'is_gear' => SettingShopItemConstant::isPriceGear($t),
                 'is_item' => SettingShopItemConstant::isPriceItem($t),
             ];
             return $p;

@@ -17,7 +17,6 @@ class SettingShopItemConstant
     const PRICE_TYPE_COIN = 'coin';
     const PRICE_TYPE_GEM = 'gem';
     const PRICE_TYPE_RUBY = 'ruby';
-    const PRICE_TYPE_GEAR = 'gear';
     const PRICE_TYPE_ITEM = 'item';
 
     /** Check if price type is coin (use for logic checks). */
@@ -30,12 +29,6 @@ class SettingShopItemConstant
     public static function isPriceRuby(?string $type): bool
     {
         return $type === self::PRICE_TYPE_RUBY || $type === self::PRICE_TYPE_GEM;
-    }
-
-    /** Check if price type is gear (use for logic checks). */
-    public static function isPriceGear(?string $type): bool
-    {
-        return $type === self::PRICE_TYPE_GEAR;
     }
 
     /** Check if price type is item (use for logic checks). */

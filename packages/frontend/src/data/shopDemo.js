@@ -26,7 +26,6 @@ function addPriceActions(p) {
     actions: {
       is_coin: t === PRICE_TYPE_COIN,
       is_ruby: t === PRICE_TYPE_RUBY || t === shopC.PRICE_TYPE_GEM,
-      is_gear: t === shopC.PRICE_TYPE_GEAR,
       is_item: t === shopC.PRICE_TYPE_ITEM,
       is_voucher: t === PRICE_TYPE_VOUCHER,
     },
