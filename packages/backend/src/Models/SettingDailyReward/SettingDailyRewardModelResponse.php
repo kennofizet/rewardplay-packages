@@ -55,12 +55,15 @@ class SettingDailyRewardModelResponse extends BaseModelResponse
         ])){
             $items = $settingDailyReward->items ?? [];
             $itemsWithActions = RewardItemActionsHelper::enrichWithActions(is_array($items) ? $items : []);
+            // Read 'claimed' from attributes array to avoid Laravel MissingAttributeException (set at runtime by DailyRewardService, not a DB column)
+            $attrs = $settingDailyReward->getAttributes();
+            $claimed = array_key_exists('claimed', $attrs) ? (bool) $attrs['claimed'] : false;
             return [
                 'is_epic' => $settingDailyReward->is_epic,
                 'items' => $itemsWithActions,
                 'stack_bonuses' => $settingDailyReward->stack_bonuses,
                 'date' => $settingDailyReward->date,
-                'claimed' => $settingDailyReward->claimed
+                'claimed' => $claimed,
             ];
         }
 
