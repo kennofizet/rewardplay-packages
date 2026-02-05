@@ -10,13 +10,18 @@ return new class extends Migration
 {
     /**
      * With soft deletes, the old unique (zone_id, slug) blocks reusing the same
-     * zone+slug after deleting an event. Use a generated column so uniqueness
-     * applies only to non-deleted rows: one active row per (zone_id, slug);
-     * deleted rows get distinct deleted_at and do not block re-creating the slug.
+     * zone+slug after deleting an event. Use a normal column n_deleted_at (kept
+     * in sync via triggers) so uniqueness applies only to non-deleted rows: one
+     * active row per (zone_id, slug); deleted rows get distinct n_deleted_at and
+     * do not block re-creating the slug. Triggers are used instead of GENERATED
+     * ALWAYS AS so the migration runs on all MySQL/MariaDB versions (many hosts
+     * disallow IFNULL in generated columns).
      */
     public function up(): void
     {
         $tableName = (new SettingEvent())->getTable();
+        $triggerBi = $tableName . '_n_deleted_at_bi';
+        $triggerBu = $tableName . '_n_deleted_at_bu';
 
         if (!Schema::hasTable($tableName)) {
             return;
@@ -37,8 +42,12 @@ return new class extends Migration
         }
 
         if (!Schema::hasColumn($tableName, 'n_deleted_at')) {
-            // Use IFNULL for MariaDB compatibility (COALESCE can trigger ER_GENERATED_COLUMN_FUNCTION_IS_NOT_ALLOWED)
-            DB::statement("ALTER TABLE `{$tableName}` ADD COLUMN `n_deleted_at` DATETIME GENERATED ALWAYS AS (IFNULL(`deleted_at`, '1980-01-01 00:00:00')) STORED");
+            Schema::table($tableName, function (Blueprint $table) {
+                $table->dateTime('n_deleted_at')->default('1980-01-01 00:00:00');
+            });
+            DB::statement("UPDATE `{$tableName}` SET `n_deleted_at` = IFNULL(`deleted_at`, '1980-01-01 00:00:00')");
+            DB::statement("CREATE TRIGGER `{$triggerBi}` BEFORE INSERT ON `{$tableName}` FOR EACH ROW SET NEW.`n_deleted_at` = IFNULL(NEW.`deleted_at`, '1980-01-01 00:00:00')");
+            DB::statement("CREATE TRIGGER `{$triggerBu}` BEFORE UPDATE ON `{$tableName}` FOR EACH ROW SET NEW.`n_deleted_at` = IFNULL(NEW.`deleted_at`, '1980-01-01 00:00:00')");
         }
 
         $newIndexExists = DB::selectOne(
@@ -55,6 +64,8 @@ return new class extends Migration
     public function down(): void
     {
         $tableName = (new SettingEvent())->getTable();
+        $triggerBi = $tableName . '_n_deleted_at_bi';
+        $triggerBu = $tableName . '_n_deleted_at_bu';
 
         if (!Schema::hasTable($tableName)) {
             return;
@@ -71,7 +82,11 @@ return new class extends Migration
         }
 
         if (Schema::hasColumn($tableName, 'n_deleted_at')) {
-            DB::statement("ALTER TABLE `{$tableName}` DROP COLUMN `n_deleted_at`");
+            DB::statement("DROP TRIGGER IF EXISTS `{$triggerBi}`");
+            DB::statement("DROP TRIGGER IF EXISTS `{$triggerBu}`");
+            Schema::table($tableName, function (Blueprint $table) {
+                $table->dropColumn('n_deleted_at');
+            });
         }
 
         $oldIndexExists = DB::selectOne(
