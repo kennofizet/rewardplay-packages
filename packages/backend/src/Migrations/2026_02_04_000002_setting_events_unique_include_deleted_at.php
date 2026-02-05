@@ -37,7 +37,8 @@ return new class extends Migration
         }
 
         if (!Schema::hasColumn($tableName, 'n_deleted_at')) {
-            DB::statement("ALTER TABLE `{$tableName}` ADD COLUMN `n_deleted_at` DATETIME GENERATED ALWAYS AS (COALESCE(`deleted_at`, '1980-01-01 00:00:00')) VIRTUAL");
+            // Use IFNULL for MariaDB compatibility (COALESCE can trigger ER_GENERATED_COLUMN_FUNCTION_IS_NOT_ALLOWED)
+            DB::statement("ALTER TABLE `{$tableName}` ADD COLUMN `n_deleted_at` DATETIME GENERATED ALWAYS AS (IFNULL(`deleted_at`, '1980-01-01 00:00:00')) STORED");
         }
 
         $newIndexExists = DB::selectOne(

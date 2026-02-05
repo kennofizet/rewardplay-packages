@@ -26,6 +26,7 @@ trait ZoneScopes
     {
         $serverId = BaseModelActions::currentServerId();
         if (empty($serverId)) {
+            // when back to global all zones allowed (no limit by current server)
             return $query;
         }
         
