@@ -250,7 +250,8 @@ class ValidateRewardPlayToken
 
     /**
      * Get the server ID that the user manages (single server per user)
-     * User can only manage one server - the server they are assigned to
+     * When config has no server column, returns null (server optional).
+     * When user manages server_id null (global), returns null.
      *
      * @param int $userId
      * @return int|null
@@ -259,25 +260,28 @@ class ValidateRewardPlayToken
     {
         $serverColumn = config('rewardplay.user_server_id_column');
         if (empty($serverColumn)) {
-            return null;
+            // No server config: user may still be manager of "null" server
+            $managerNull = ServerManager::withoutGlobalScopes()->byUser($userId)->byServer(null)->first();
+            return $managerNull ? null : null;
         }
-        
+
         $user = $this->resolveUserWithServer($userId, $serverColumn);
-        if (empty($user)) {
+        if (empty($user) || $user === false) {
             return null;
         }
-        
-        $serverId = $user->{$serverColumn};
-        if (empty($serverId)) {
-            return null;
+
+        $serverId = $user->{$serverColumn} ?? null;
+        // User with server_id null can still manage "null" server via ServerManager
+        if ($serverId === null || $serverId === '') {
+            $managerNull = ServerManager::withoutGlobalScopes()->byUser($userId)->byServer(null)->first();
+            return $managerNull ? null : null;
         }
-        
-        // Check if user is a manager for this server
+
         $checkManagedServer = ServerManager::byUser($userId)->byServer($serverId)->first();
         if (empty($checkManagedServer)) {
             return null;
         }
-        
-        return $serverId;
+
+        return (int) $serverId;
     }
 }

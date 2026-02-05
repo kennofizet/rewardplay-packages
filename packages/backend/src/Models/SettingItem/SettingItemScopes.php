@@ -50,14 +50,17 @@ trait SettingItemScopes
     }
 
     /**
-     * Scope to filter by zone_id
-     * 
+     * Scope to filter by zone_id (null = rows where zone_id IS NULL)
+     *
      * @param Builder $query
-     * @param int $zoneId
+     * @param int|null $zoneId
      * @return Builder
      */
     public function scopeByZone(Builder $query, $zoneId)
     {
+        if ($zoneId === null) {
+            return $query->whereNull('zone_id');
+        }
         return $query->where('zone_id', $zoneId);
     }
 

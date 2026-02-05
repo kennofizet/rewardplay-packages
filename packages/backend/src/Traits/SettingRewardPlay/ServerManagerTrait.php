@@ -17,7 +17,7 @@ trait ServerManagerTrait
     /**
      * Get managers for a server.
      */
-    public function getServerManagersByServer(int $serverId)
+    public function getServerManagersByServer(?int $serverId = null)
     {
         return app(ServerManagerService::class)->getByServer($serverId);
     }

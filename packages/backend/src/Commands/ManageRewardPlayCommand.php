@@ -53,10 +53,9 @@ class ManageRewardPlayCommand extends Command
         $this->info('=== RewardPlay Management Console ===');
         $this->newLine();
 
-        // Check if server_id column is configured
-        $serverColumn = config('rewardplay.user_server_id_column');
-        if (empty($serverColumn)) {
-            $this->warn('Server ID column is not configured. Some features may be limited.');
+        // When server_id column is not configured, queries use server_id = null (no server required)
+        if (!$this->hasServerIdConfig()) {
+            $this->line('Server ID column is not configured. Zones with server_id = null will be used.');
             $this->newLine();
         }
 
@@ -70,8 +69,8 @@ class ManageRewardPlayCommand extends Command
                 'Show Current Selection',
             ];
             
-            // Add fake data option if server and zone are selected
-            if ($this->currentServerId && $this->currentZoneId) {
+            // Add fake data option when zone is selected (and server too if config requires it)
+            if ($this->currentZoneId && ($this->currentServerId !== null || !$this->hasServerIdConfig())) {
                 $menuOptions[] = 'Generate Fake Data';
             }
             
@@ -105,6 +104,16 @@ class ManageRewardPlayCommand extends Command
     }
 
     /**
+     * Whether the app has server_id column configured (user_server_id_column).
+     * When true, user must select a server before Manage Zones / Manage Server Managers.
+     * When false, queries use server_id = null (zones where server_id IS NULL).
+     */
+    protected function hasServerIdConfig(): bool
+    {
+        return !empty(config('rewardplay.user_server_id_column'));
+    }
+
+    /**
      * Display main menu
      */
     protected function displayMainMenu()
@@ -131,11 +140,11 @@ class ManageRewardPlayCommand extends Command
     protected function selectServer()
     {
         $this->info('--- Select Server ---');
-        
-        $serverColumn = config('rewardplay.user_server_id_column');
-        if (empty($serverColumn)) {
-            $this->error('Server ID column is not configured in config/rewardplay.php');
-            $this->line('Please set REWARDPLAY_USER_SERVER_ID_COLUMN in your .env file');
+
+        if (!$this->hasServerIdConfig()) {
+            $this->currentServerId = null;
+            $this->line('Server ID column is not configured. Queries will use server_id = null.');
+            $this->line('Use "Manage Zones" to work with zones that have no server.');
             return;
         }
 
@@ -184,13 +193,13 @@ class ManageRewardPlayCommand extends Command
      */
     protected function manageZones()
     {
-        if (!$this->currentServerId) {
+        if ($this->hasServerIdConfig() && !$this->currentServerId) {
             $this->error('Please select a server first!');
             return;
         }
 
         while (true) {
-            $this->info('--- Zone Management (Server: ' . $this->currentServerId . ') ---');
+            $this->info('--- Zone Management (Server: ' . ($this->currentServerId ?? 'null') . ') ---');
             
             $choice = $this->choice('Select an option', [
                 'List Zones',
@@ -231,12 +240,12 @@ class ManageRewardPlayCommand extends Command
     protected function listZones()
     {
         $this->info('--- Zones List ---');
-        
+
         try {
             $zones = Zone::byServerId($this->currentServerId)->get();
             
             if ($zones->isEmpty()) {
-                $this->warn('No zones found for server ID: ' . $this->currentServerId);
+                $this->warn('No zones found for server ' . ($this->currentServerId !== null ? 'ID: ' . $this->currentServerId : 'null') . '.');
                 return;
             }
 
@@ -272,7 +281,7 @@ class ManageRewardPlayCommand extends Command
         try {
             $zoneData = [
                 'name' => $name,
-                'server_id' => $this->currentServerId,
+                'server_id' => $this->currentServerId, // null when no server config or not selected
             ];
 
             $zone = $this->createZone($zoneData);
@@ -291,12 +300,12 @@ class ManageRewardPlayCommand extends Command
     protected function selectZone()
     {
         $this->info('--- Select Zone ---');
-        
+
         try {
             $zones = Zone::byServerId($this->currentServerId)->get();
             
             if ($zones->isEmpty()) {
-                $this->warn('No zones found for server ID: ' . $this->currentServerId);
+                $this->warn('No zones found for server ' . ($this->currentServerId !== null ? 'ID: ' . $this->currentServerId : 'null') . '.');
                 return;
             }
 
@@ -396,13 +405,13 @@ class ManageRewardPlayCommand extends Command
      */
     protected function manageServerManagers()
     {
-        if (!$this->currentServerId) {
+        if ($this->hasServerIdConfig() && !$this->currentServerId) {
             $this->error('Please select a server first!');
             return;
         }
 
         while (true) {
-            $this->info('--- Server Manager Management (Server: ' . $this->currentServerId . ') ---');
+            $this->info('--- Server Manager Management (Server: ' . ($this->currentServerId ?? 'null') . ') ---');
             
             $choice = $this->choice('Select an option', [
                 'List Managers',
@@ -435,12 +444,12 @@ class ManageRewardPlayCommand extends Command
     protected function listServerManagers()
     {
         $this->info('--- Server Managers List ---');
-        
+
         try {
             $managers = $this->getServerManagersByServer($this->currentServerId);
             
             if ($managers->isEmpty()) {
-                $this->warn('No managers found for server ID: ' . $this->currentServerId);
+                $this->warn('No managers found for server ' . ($this->currentServerId !== null ? 'ID: ' . $this->currentServerId : 'null') . '.');
                 return;
             }
 
@@ -466,7 +475,6 @@ class ManageRewardPlayCommand extends Command
     protected function addServerManager()
     {
         $this->info('--- Add Server Manager ---');
-        
         $userId = $this->ask('User ID');
         if (empty($userId) || !is_numeric($userId)) {
             $this->error('Valid user ID is required!');
@@ -495,7 +503,7 @@ class ManageRewardPlayCommand extends Command
     protected function removeServerManager()
     {
         $this->info('--- Remove Server Manager ---');
-        
+
         try {
             $managers = $this->getServerManagersByServer($this->currentServerId);
             
@@ -544,20 +552,12 @@ class ManageRewardPlayCommand extends Command
     protected function showCurrentSelection()
     {
         $this->info('--- Current Selection ---');
-        
-        if ($this->currentServerId) {
-            $this->line('Server ID: ' . $this->currentServerId);
-            
-            // Show zones for this server
-            $zones = Zone::byServerId($this->currentServerId)->get();
-            $this->line('Zones in this server: ' . $zones->count());
-            
-            // Show managers for this server
-            $managers = $this->getServerManagersByServer($this->currentServerId);
-            $this->line('Managers for this server: ' . $managers->count());
-        } else {
-            $this->line('Server ID: Not selected');
-        }
+
+        $this->line('Server ID: ' . ($this->currentServerId !== null ? $this->currentServerId : 'null (not selected)'));
+        $zones = $this->zonesQueryForCurrentServer()->get();
+        $this->line('Zones in this server: ' . $zones->count());
+        $managers = $this->getServerManagersByServer($this->currentServerId);
+        $this->line('Managers for this server: ' . $managers->count());
         
         if ($this->currentZoneId) {
             $zone = Zone::findById($this->currentZoneId);
@@ -572,8 +572,12 @@ class ManageRewardPlayCommand extends Command
      */
     protected function generateFakeData()
     {
-        if (!$this->currentServerId || !$this->currentZoneId) {
-            $this->error('Please select both server and zone first!');
+        if ($this->hasServerIdConfig() && !$this->currentServerId) {
+            $this->error('Please select a server first!');
+            return;
+        }
+        if (!$this->currentZoneId) {
+            $this->error('Please select a zone first!');
             return;
         }
 

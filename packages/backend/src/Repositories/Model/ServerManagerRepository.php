@@ -24,7 +24,14 @@ class ServerManagerRepository
         return $serverManager;
     }
 
-    public function remove(int $serverId, int $userId): bool
+    /**
+     * Remove manager for a server (or global when server_id is null).
+     *
+     * @param int|null $serverId
+     * @param int $userId
+     * @return bool
+     */
+    public function remove(?int $serverId, int $userId): bool
     {
         return (bool) ServerManager::byServer($serverId)
             ->byUser($userId)

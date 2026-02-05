@@ -13,12 +13,13 @@ class PermissionValidationService
 {
     /**
      * Validate that current user can manage a specific server
-     * Uses request attributes (no database query needed)
+     * Uses request attributes (no database query needed).
+     * When config has no server column, server_id can be null (global manager).
      *
-     * @param int $serverId
+     * @param int|null $serverId
      * @throws \Exception
      */
-    public function validateServerPermission(int $serverId): void
+    public function validateServerPermission(?int $serverId): void
     {
         if (!BaseModelActions::canManageServer($serverId)) {
             throw new \Exception('You do not have permission to manage this server');

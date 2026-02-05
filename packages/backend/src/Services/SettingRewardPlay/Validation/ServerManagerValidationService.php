@@ -17,7 +17,7 @@ class ServerManagerValidationService
     {
         $validator = Validator::make($data, [
             'user_id' => 'required|integer',
-            'server_id' => 'required|integer',
+            'server_id' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {

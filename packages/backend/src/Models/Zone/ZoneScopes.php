@@ -34,21 +34,25 @@ trait ZoneScopes
     }
 
     /**
-     * Scope to filter by server_id
-     * 
+     * Scope to filter by server_id (null = zones where server_id IS NULL)
+     *
      * @param Builder $query
-     * @param int $serverId
+     * @param int|null $serverId
      * @return Builder
      */
     public function scopeByServerId(Builder $query, $serverId)
     {
         $table = $query->getModel()->getTable();
-        return $query->where($table . '.' . HelperConstant::SERVER_ID_COLUMN, $serverId);
+        $col = $table . '.' . HelperConstant::SERVER_ID_COLUMN;
+        if ($serverId === null) {
+            return $query->whereNull($col);
+        }
+        return $query->where($col, $serverId);
     }
 
     /**
-     * Scope to filter by multiple server IDs
-     * 
+     * Scope to filter by multiple server IDs (array may contain null for server_id IS NULL)
+     *
      * @param Builder $query
      * @param array $serverIds
      * @return Builder
@@ -58,9 +62,21 @@ trait ZoneScopes
         if (empty($serverIds)) {
             return $query->returnNull();
         }
-        
+
         $table = $query->getModel()->getTable();
-        return $query->whereIn($table . '.' . HelperConstant::SERVER_ID_COLUMN, $serverIds);
+        $col = $table . '.' . HelperConstant::SERVER_ID_COLUMN;
+        $nonNull = array_values(array_filter($serverIds, fn ($id) => $id !== null));
+        $hasNull = in_array(null, $serverIds, true);
+
+        if (!empty($nonNull) && $hasNull) {
+            return $query->where(function (Builder $q) use ($col, $nonNull) {
+                $q->whereIn($col, $nonNull)->orWhereNull($col);
+            });
+        }
+        if ($hasNull) {
+            return $query->whereNull($col);
+        }
+        return $query->whereIn($col, $nonNull);
     }
 
     /**

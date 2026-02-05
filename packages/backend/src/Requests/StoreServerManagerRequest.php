@@ -21,7 +21,7 @@ class StoreServerManagerRequest extends FormRequest
     {
         return [
             'user_id' => 'required|integer',
-            'server_id' => 'required|integer',
+            'server_id' => 'nullable|integer', // nullable when config has no server column (global manager)
         ];
     }
 }

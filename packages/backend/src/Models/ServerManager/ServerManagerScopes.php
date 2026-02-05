@@ -22,14 +22,17 @@ trait ServerManagerScopes
     }
 
     /**
-     * Scope to filter by server_id
-     * 
+     * Scope to filter by server_id (null = rows where server_id IS NULL)
+     *
      * @param Builder $query
-     * @param int $serverId
+     * @param int|null $serverId
      * @return Builder
      */
     public function scopeByServer(Builder $query, $serverId)
     {
+        if ($serverId === null) {
+            return $query->whereNull('server_id');
+        }
         return $query->where('server_id', $serverId);
     }
 }

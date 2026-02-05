@@ -29,18 +29,16 @@ class ServerManagerService
     {
         $query = ServerManager::query();
 
-        // Filter by the server the current user can manage
+        // Filter by the server the current user can manage (null = global manager when config has no server column)
         $managedServerId = BaseModelActions::currentUserManagedServerId();
-        if (empty($managedServerId)) {
-            // If user can't manage any server, return empty collection
+        if ($managedServerId === null && !BaseModelActions::canManageServer(null)) {
+            // User doesn't manage any server (including global)
             return collect([]);
         }
 
-        if (!empty($filters['server_id'])) {
-            // Middleware already validated server_id permission
-            $query->byServer($filters['server_id']);
+        if (array_key_exists('server_id', $filters)) {
+            $query->byServer($filters['server_id'] ?? null);
         } else {
-            // Default to user's managed server
             $query->byServer($managedServerId);
         }
 
@@ -55,7 +53,7 @@ class ServerManagerService
      * Get managers by server.
      * Permission checks handled by middleware.
      */
-    public function getByServer(int $serverId)
+    public function getByServer(?int $serverId = null)
     {
         // Middleware already validated server_id permission
         return ServerManager::findByServerId($serverId);

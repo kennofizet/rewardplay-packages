@@ -86,15 +86,19 @@ trait BaseModelActions
 
     /**
      * Check if current user can manage a specific server
-     * Uses request attributes (no database query needed)
-     * 
-     * @param int $serverId
+     * Uses request attributes (no database query needed).
+     * When config has no server column, server_id can be null (global manager).
+     *
+     * @param int|null $serverId
      * @return bool
      */
-    public static function canManageServer(int $serverId): bool
+    public static function canManageServer(?int $serverId): bool
     {
         $managedServerId = self::currentUserManagedServerId();
-        return !empty($managedServerId) && $managedServerId === $serverId;
+        if ($serverId === null && $managedServerId === null) {
+            return true;
+        }
+        return $managedServerId !== null && $managedServerId === $serverId;
     }
 
     /**

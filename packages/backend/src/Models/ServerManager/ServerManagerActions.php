@@ -13,7 +13,7 @@ trait ServerManagerActions
      * @param int $serverId
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public static function findByServerId(int $serverId)
+    public static function findByServerId(?int $serverId = null)
     {
         return ServerManager::byServer($serverId)->get();
     }
