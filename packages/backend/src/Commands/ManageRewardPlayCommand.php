@@ -554,7 +554,7 @@ class ManageRewardPlayCommand extends Command
         $this->info('--- Current Selection ---');
 
         $this->line('Server ID: ' . ($this->currentServerId !== null ? $this->currentServerId : 'null (not selected)'));
-        $zones = $this->zonesQueryForCurrentServer()->get();
+        $zones = Zone::byServerId($this->currentServerId)->get();
         $this->line('Zones in this server: ' . $zones->count());
         $managers = $this->getServerManagersByServer($this->currentServerId);
         $this->line('Managers for this server: ' . $managers->count());

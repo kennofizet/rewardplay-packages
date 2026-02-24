@@ -12,6 +12,10 @@
         {{ t('component.menu.bag') }}
       </MenuItem>
 
+      <MenuItem @click="$emit('page-change', 'rpg-game')">
+        Game
+      </MenuItem>
+
       <MenuItem @click="$emit('page-change', 'ranking')">
         {{ t('component.menu.ranking') }}
       </MenuItem>

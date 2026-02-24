@@ -47,7 +47,9 @@ const pageMap = {
   'ranking': RankingPage,
   'rules': ComingSoonPage,
   'shop': ShopPage,
-  'manage-setting': ManageSettingPage
+  'manage-setting': ManageSettingPage,
+  'rpg-game': () => import('../pages/game/RPGGamePage.vue'),
+  'map-editor': () => import('../pages/game/MapEditorPage.vue')
 }
 
 const currentPage = shallowRef(DailyRewardPage) // Default to DailyReward

@@ -10,7 +10,14 @@
     "dev:frontend": "npm run dev --workspace=packages/frontend",
     "build:frontend": "npm run build --workspace=packages/frontend",
     "watch:frontend": "npm run watch --workspace=packages/frontend",
-    "install:all": "npm install"
+    "install:all": "npm install",
+    "test:e2e": "npx playwright test --config=e2e-browser/playwright.config.js",
+    "test:e2e:ui": "npx playwright test --ui --config=e2e-browser/playwright.config.js",
+    "test:e2e:live": "cross-env E2E_LIVE=1 npx playwright test --config=e2e-browser/playwright.config.js --grep \"emulate play\" --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "cross-env": "^7.0.3"
   },
   "engines": {
     "node": ">=16.0.0"

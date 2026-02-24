@@ -46,4 +46,6 @@ yarn-error.log*
 .cache/
 
 test
-
+e2e/
+e2e-browser/
+playwright-report/

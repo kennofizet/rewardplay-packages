@@ -36,6 +36,7 @@ import SettingEventsListPage from './manage-setting/SettingEventsListPage.vue'
 import SettingShopListPage from './manage-setting/SettingShopListPage.vue'
 import SettingBoxTicketBuffPage from './manage-setting/SettingBoxTicketBuffPage.vue'
 import ManageZonesPage from './manage-setting/ManageZonesPage.vue'
+import SettingMapEditorPage from './manage-setting/SettingMapEditorPage.vue'
 
 const translator = inject('translator', null)
 const t = translator || ((key) => key)
@@ -68,6 +69,7 @@ const allMenuItems = [
   { key: 'setting-item-sets', label: t('page.manageSetting.menu.settingItemSets'), requiresZone: true },
   { key: 'setting-stats-transform', label: t('page.manageSetting.menu.settingStatsTransform'), requiresZone: true },
   { key: 'manage-zones', label: t('page.manageSetting.menu.manageZones'), requiresZone: false },
+  { key: 'map-editor', label: '🗺️ Map Editor', requiresZone: false },
   { key: 'setting-stack-bonuses', label: t('page.manageSetting.settingStackBonuses.title'), requiresZone: true },
   { key: 'setting-daily-rewards', label: t('page.manageSetting.settingDailyRewards.title'), requiresZone: true },
   { key: 'setting-level-exps', label: t('page.manageSetting.settingLevelExps.title'), requiresZone: true },
@@ -93,6 +95,7 @@ const currentPageComponent = computed(() => {
     'setting-item-sets': SettingItemSetsListPage,
     'setting-stats-transform': SettingStatsTransformListPage,
     'manage-zones': ManageZonesPage,
+    'map-editor': SettingMapEditorPage,
     'setting-stack-bonuses': SettingStackBonusListPage,
     'setting-daily-rewards': SettingDailyRewardConfigPage,
     'setting-level-exps': SettingLevelExpListPage,
