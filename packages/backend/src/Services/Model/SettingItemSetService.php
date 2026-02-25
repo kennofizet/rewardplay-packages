@@ -7,7 +7,7 @@ use Kennofizet\RewardPlay\Models\SettingItemSet\SettingItemSetRelationshipSettin
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Kennofizet\RewardPlay\Repositories\Model\SettingItemSetRepository;
 use Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation\SettingItemSetValidationService;
-use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
+use Kennofizet\PackagesCore\Services\ZoneService;
 use Illuminate\Validation\ValidationException;
 
 class SettingItemSetService
@@ -73,7 +73,7 @@ class SettingItemSetService
     public function updateSettingItemSet(int $id, array $data, ?array $itemIds = null): SettingItemSet
     {
         $settingItemSet = SettingItemSet::findById($id);
-        
+
         if (!$settingItemSet) {
             throw new ValidationException(
                 \Illuminate\Support\Facades\Validator::make([], [])->errors()->add('id', 'Setting item set not found')
@@ -96,7 +96,7 @@ class SettingItemSetService
     public function deleteSettingItemSet(int $id): bool
     {
         $settingItemSet = SettingItemSet::findById($id);
-        
+
         if (!$settingItemSet) {
             throw new ValidationException(
                 \Illuminate\Support\Facades\Validator::make([], [])->errors()->add('id', 'Setting item set not found')

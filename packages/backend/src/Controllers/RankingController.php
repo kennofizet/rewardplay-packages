@@ -4,7 +4,7 @@ namespace Kennofizet\RewardPlay\Controllers;
 
 use Kennofizet\RewardPlay\Controllers\Controller;
 use Kennofizet\RewardPlay\Services\Player\RankingService;
-use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
+use Kennofizet\PackagesCore\Core\Model\BaseModelActions;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 

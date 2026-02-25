@@ -5,19 +5,19 @@ use Kennofizet\RewardPlay\Controllers\AuthController;
 use Kennofizet\RewardPlay\Controllers\FileController;
 use Kennofizet\RewardPlay\Controllers\RankingController;
 use Kennofizet\RewardPlay\Controllers\Player\PlayerController;
-use Kennofizet\RewardPlay\Controllers\Player\ZoneController;
-use Kennofizet\RewardPlay\Middleware\ValidateRewardPlayToken;
-use Kennofizet\RewardPlay\Middleware\ValidatorRequestMiddleware;
-use Kennofizet\RewardPlay\Middleware\EnsureUserIsManager;
 
-$prefix = config('rewardplay.api_prefix', 'api/rewardplay');
-$rateLimit = config('rewardplay.rate_limit', 60);
+use Kennofizet\PackagesCore\Middleware\ValidateRewardPlayToken;
+use Kennofizet\PackagesCore\Middleware\ValidatorRequestMiddleware;
+use Kennofizet\PackagesCore\Middleware\EnsureUserIsManager;
+
+// Config keys moved to packages-core
+$prefix = config('packages-core.api_prefix', 'api/rewardplay');
+$rateLimit = config('packages-core.rate_limit', 60);
 
 // Public file serving (no auth) – under API path so Laravel serves files and can add CORS
-// OPTIONS = CORS preflight only (browser sends it once before GET when doing cross-origin fetch).
-// GET = runs every time the frontend requests a file; FileController serves the file + CORS headers.
 $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
 $constantsFolder = config('rewardplay.constants_folder', 'rewardplay-constants');
+
 Route::prefix($prefix)
     ->middleware(['api', "throttle:{$rateLimit},1"])
     ->group(function () use ($imagesFolder, $constantsFolder) {
@@ -47,7 +47,7 @@ Route::prefix($prefix)
             ->defaults('folder', $constantsFolder);
     });
 
-// Protected routes and manage only
+// Protected routes — manage only
 Route::prefix($prefix)
     ->middleware([
         "throttle:{$rateLimit},1",
@@ -65,7 +65,6 @@ Route::prefix($prefix)
         require_once __DIR__ . '/setting/setting-shop-items.php';
         require_once __DIR__ . '/setting/zones.php';
 
-        // New Settings Routes - IMPORTANT: Specific routes MUST come before apiResource
         Route::post('setting-stack-bonuses/suggest', [\Kennofizet\RewardPlay\Controllers\Settings\SettingStackBonusController::class, 'suggest']);
         Route::apiResource('setting-stack-bonuses', \Kennofizet\RewardPlay\Controllers\Settings\SettingStackBonusController::class);
 
@@ -86,21 +85,15 @@ Route::prefix($prefix)
         ValidatorRequestMiddleware::class
     ])
     ->group(function () {
-        Route::get('/auth/check', [AuthController::class, 'checkUser']);
         Route::get('/auth/user-data', [AuthController::class, 'getUserData']);
         Route::get('/ranking', [RankingController::class, 'getRanking']);
 
-        // Get zones the current user belongs to
-        Route::get('/player/zones', [ZoneController::class, 'index']);
-        // Get custom images accessible to the current player
-        Route::get('/player/custom-images', [PlayerController::class, 'getCustomImages']);
-        // Get zones the current user can manage (for settings)
-        Route::get('/player/managed-zones', [ZoneController::class, 'managed']);
 
-        // Global data endpoints (accessible to both player and manage)
+        Route::get('/player/custom-images', [PlayerController::class, 'getCustomImages']);
+        Route::get('/player/managed-zones', [\Kennofizet\RewardPlay\Controllers\Settings\ZoneController::class, 'managed']);
+
         require_once __DIR__ . '/setting/stats.php';
 
-        // New Player Routes
         Route::get('/player/daily-rewards', [\Kennofizet\RewardPlay\Controllers\Player\DailyRewardController::class, 'index']);
         Route::post('/player/daily-rewards/collect', [\Kennofizet\RewardPlay\Controllers\Player\DailyRewardController::class, 'collect']);
         Route::get('/player/bag', [\Kennofizet\RewardPlay\Controllers\Player\BagController::class, 'index']);
@@ -118,4 +111,3 @@ Route::prefix($prefix)
         });
         Route::get('/manifest', [AuthController::class, 'getImageManifest']);
     });
-

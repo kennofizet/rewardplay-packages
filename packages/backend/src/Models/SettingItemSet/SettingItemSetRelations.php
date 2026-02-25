@@ -4,7 +4,7 @@ namespace Kennofizet\RewardPlay\Models\SettingItemSet;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\PackagesCore\Models\Zone;
 use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Models\SettingItemSetItem;
 

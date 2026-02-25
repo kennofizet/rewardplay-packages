@@ -2,7 +2,7 @@
 
 namespace Kennofizet\RewardPlay\Services\Player;
 
-use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\PackagesCore\Models\User;
 use Kennofizet\RewardPlay\Models\UserProfile;
 use Kennofizet\RewardPlay\Models\UserRankingSnapshot;
 use Kennofizet\RewardPlay\Models\UserRankingSnapshot\UserRankingSnapshotConstant;

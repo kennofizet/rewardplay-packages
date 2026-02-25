@@ -3,7 +3,7 @@
 namespace Kennofizet\RewardPlay\Models\UserProfile;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\PackagesCore\Models\User;
 
 trait UserProfileRelations
 {

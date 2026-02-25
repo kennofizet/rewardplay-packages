@@ -5,7 +5,7 @@ namespace Kennofizet\RewardPlay\Controllers\Settings;
 use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
+use Kennofizet\PackagesCore\Services\ZoneService;
 
 class ZoneController extends Controller
 {
@@ -103,7 +103,9 @@ class ZoneController extends Controller
             $serverUsers = $this->zoneService->getServerUsers($filters);
             $zoneUsers = $this->zoneService->getZoneUsers($id);
 
-            $assignedIds = array_map(function ($u) { return $u['id'] ?? ($u->id ?? null); }, $zoneUsers);
+            $assignedIds = array_map(function ($u) {
+                return $u['id'] ?? ($u->id ?? null);
+            }, $zoneUsers);
 
             return $this->apiResponseWithContext([
                 'users' => $serverUsers,
@@ -122,7 +124,7 @@ class ZoneController extends Controller
         $userId = $request->input('user_id');
 
         try {
-            $this->zoneService->assignUserToZone($id, (int)$userId);
+            $this->zoneService->assignUserToZone($id, (int) $userId);
 
             return $this->apiResponseWithContext(['message' => 'User assigned']);
         } catch (\Exception $e) {
@@ -143,4 +145,16 @@ class ZoneController extends Controller
             return $this->handleException($e);
         }
     }
+    /**
+     * Get zones the current user can manage (for player-facing endpoint)
+     */
+    public function managed(Request $request): JsonResponse
+    {
+        $zones = $this->zoneService->getZonesUserCanManage();
+
+        return $this->apiResponseWithContext([
+            'zones' => $zones,
+        ]);
+    }
 }
+

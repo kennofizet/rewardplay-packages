@@ -8,7 +8,7 @@ use Kennofizet\RewardPlay\Models\SettingItem\SettingItemRelationshipSetting;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Kennofizet\RewardPlay\Repositories\Model\SettingItemRepository;
 use Kennofizet\RewardPlay\Services\SettingRewardPlay\Validation\SettingItemValidationService;
-use Kennofizet\RewardPlay\Services\SettingRewardPlay\ZoneService;
+use Kennofizet\PackagesCore\Services\ZoneService;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
 
@@ -91,7 +91,7 @@ class SettingItemService
 
         // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile);
-        
+
         return $this->settingItemRepository->create($data, $imageFile);
     }
 
@@ -113,12 +113,12 @@ class SettingItemService
 
         // Permission checks handled by middleware
         $this->validation->validateSettingItem($data, $imageFile, $id);
-        
+
         $settingItem = SettingItem::findById($id);
         if (!$settingItem) {
             return null;
         }
-        
+
         return $this->settingItemRepository->update($settingItem, $data, $imageFile);
     }
 
@@ -133,7 +133,7 @@ class SettingItemService
         if (!$settingItem) {
             return false;
         }
-        
+
         // Permission check: validate that item's zone is in user's managed zones
         // Use ZoneService which centralizes zone->managed logic instead of calling BaseModelActions directly
         if (!empty($settingItem->zone_id)) {
@@ -143,7 +143,7 @@ class SettingItemService
                 throw new \Exception('You do not have permission to manage this zone');
             }
         }
-        
+
         return $this->settingItemRepository->delete($settingItem);
     }
 
@@ -202,8 +202,8 @@ class SettingItemService
         $type = $filters['type'] ?? null;
 
         $types = [];
-        if(!empty($type)) {
-            if(SettingItemConstant::isGear($type)){
+        if (!empty($type)) {
+            if (SettingItemConstant::isGear($type)) {
                 $types = array_keys(SettingItemConstant::ITEM_TYPE_NAMES);
             }
         }
@@ -215,9 +215,11 @@ class SettingItemService
         // Format items for response (include default_property and actions for frontend filters/display)
         $formattedItems = $items->map(function ($item) use ($mode) {
             $default_property = [];
-            if(!empty($mode) && in_array($mode, [
-                'with-default-options'
-            ])){
+            if (
+                !empty($mode) && in_array($mode, [
+                    'with-default-options'
+                ])
+            ) {
                 $default_property = $item->default_property ?? [];
             }
             $type = $item->type ?? '';

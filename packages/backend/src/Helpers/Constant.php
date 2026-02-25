@@ -2,19 +2,33 @@
 
 namespace Kennofizet\RewardPlay\Helpers;
 
+use Kennofizet\PackagesCore\Helpers\Constant as CoreConstant;
+
+/**
+ * RewardPlay Constants
+ *
+ * Core infrastructure constants (STATUS_ON, STATUS_OFF, ZONE_ID_COLUMN, etc.)
+ * have moved to Kennofizet\PackagesCore\Helpers\Constant.
+ *
+ * For backwards compatibility, proxy constants are declared below so existing
+ * code using `HelperConstant::STATUS_ON` continues to work without changes.
+ */
 class Constant
 {
-    const STATUS_ON = 1;
-    const STATUS_OFF = 0;
+    // ── Proxied from packages-core ──────────────────────────────────────────
+    const STATUS_ON = CoreConstant::STATUS_ON;
+    const STATUS_OFF = CoreConstant::STATUS_OFF;
 
-    const ZONE_ID_COLUMN = 'zone_id';
-    const SERVER_ID_COLUMN = 'server_id';
-    const IS_DELETED_STATUS_COLUMN = 'is_deleted_status';
-    const STATUS_COLUMN = 'status';
+    const ZONE_ID_COLUMN = CoreConstant::ZONE_ID_COLUMN;
+    const SERVER_ID_COLUMN = CoreConstant::SERVER_ID_COLUMN;
+    const IS_DELETED_STATUS_COLUMN = CoreConstant::IS_DELETED_STATUS_COLUMN;
+    const STATUS_COLUMN = CoreConstant::STATUS_COLUMN;
 
-    const REPONSE_MODE_SELECTER_API = 'api.selecter';
+    const REPONSE_MODE_SELECTER_API = CoreConstant::REPONSE_MODE_SELECTER_API;
 
-    const PER_PAGE_DEFAULT = 15;
+    const PER_PAGE_DEFAULT = CoreConstant::PER_PAGE_DEFAULT;
+
+    // ── RewardPlay-specific ─────────────────────────────────────────────────
 
     // Conversion Keys for Property Stats
     const POWER_KEY = 'power';
@@ -30,9 +44,6 @@ class Constant
     const DODGE_KEY = 'dodge';
     const RESISTANCE_KEY = 'resistance';
 
-    /**
-     * Available conversion keys for rates (mapping key => display name)
-     */
     const CONVERSION_KEYS = [
         self::POWER_KEY => 'Power',
         self::CV_KEY => 'CV',
@@ -48,54 +59,45 @@ class Constant
         self::RESISTANCE_KEY => 'Resistance',
     ];
 
-    /**
-     * Conversion keys that can accept conversions from other stats
-     * These are the target stats that can receive converted values
-     */
     const CONVERSION_KEYS_ACCEPT_CONVERT = [
         self::POWER_KEY => 'Power',
-        self::CV_KEY => 'CV'
+        self::CV_KEY => 'CV',
     ];
 
     // Reward Types
     const TYPE_COIN = 'coin';
     const TYPE_EXP = 'exp';
     const TYPE_RUBY = 'ruby';
-    const TYPE_GEAR = 'gear'; // gear is a setting item
-    const TYPE_TICKET = 'ticket'; // potentially mentioned later or good practice
+    const TYPE_GEAR = 'gear';
+    const TYPE_TICKET = 'ticket';
 
     const REWARD_TYPES = [
         self::TYPE_COIN => 'Coin',
         self::TYPE_EXP => 'Exp',
         self::TYPE_RUBY => 'Ruby',
         self::TYPE_GEAR => 'Gear',
-        // self::TYPE_TICKET => 'Ticket',
     ];
 
-    /** Check if reward type is coin (use for logic checks). */
     public static function isRewardCoin(?string $type): bool
     {
         return $type === self::TYPE_COIN;
     }
 
-    /** Check if reward type is exp (use for logic checks). */
     public static function isRewardExp(?string $type): bool
     {
         return $type === self::TYPE_EXP;
     }
 
-    /** Check if reward type is ruby (use for logic checks). */
     public static function isRewardRuby(?string $type): bool
     {
         return $type === self::TYPE_RUBY;
     }
 
-    /** Check if reward type is gear (use for logic checks). */
     public static function isRewardGear(?string $type): bool
     {
         return $type === self::TYPE_GEAR;
     }
 
     // Level Exp Defaults
-    const DEFAULT_EXP_NEEDED = 100; // Default exp needed to level up if no setting found
+    const DEFAULT_EXP_NEEDED = 100;
 }

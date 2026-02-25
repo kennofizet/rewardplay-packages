@@ -4,7 +4,6 @@ namespace Kennofizet\RewardPlay\Models\SettingItem;
 
 use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
-use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 
 trait SettingItemActions
 {

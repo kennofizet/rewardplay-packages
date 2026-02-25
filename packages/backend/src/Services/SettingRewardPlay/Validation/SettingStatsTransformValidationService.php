@@ -21,13 +21,13 @@ class SettingStatsTransformValidationService
         $allowedTargetKeys = array_keys(HelperConstant::CONVERSION_KEYS_ACCEPT_CONVERT);
         $allowedSourceKeys = array_keys(HelperConstant::CONVERSION_KEYS);
         $allowedSourceKeys = array_diff($allowedSourceKeys, $allowedTargetKeys);
-        
+
         $rules = [
             'target_key' => 'required|string|in:' . implode(',', $allowedTargetKeys),
             'conversions' => 'required|array|min:1',
             'conversions.*.source_key' => 'required|string|in:' . implode(',', $allowedSourceKeys),
             'conversions.*.conversion_value' => 'required|numeric|min:0',
-            'zone_id' => 'nullable|integer|exists:' . (new \Kennofizet\RewardPlay\Models\Zone())->getTable() . ',id',
+            'zone_id' => 'nullable|integer|exists:' . (new \Kennofizet\PackagesCore\Models\Zone())->getTable() . ',id',
         ];
 
         $validator = Validator::make($data, $rules);

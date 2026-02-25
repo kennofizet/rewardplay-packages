@@ -6,7 +6,7 @@ use Kennofizet\RewardPlay\Models\SettingItem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
+use Kennofizet\PackagesCore\Core\Model\BaseModelActions;
 
 class SettingItemRepository
 {
@@ -21,20 +21,20 @@ class SettingItemRepository
         if (!$imageFile) {
             return null;
         }
-        
+
         $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
         $uploadPath = public_path($imagesFolder . '/items/' . BaseModelActions::currentUserZoneId());
-        
+
         // Ensure directory exists
         File::ensureDirectoryExists($uploadPath);
-        
+
         // Generate unique filename
         $extension = $imageFile->getClientOriginalExtension();
         $filename = Str::random(40) . '.' . $extension;
-        
+
         // Move uploaded file
         $imageFile->move($uploadPath, $filename);
-        
+
         // Return relative path
         return $imagesFolder . '/items/' . BaseModelActions::currentUserZoneId() . '/' . $filename;
     }
@@ -93,13 +93,13 @@ class SettingItemRepository
         if ($imageFile) {
             // Delete old image if exists
             // $this->deleteImageFile($settingItem->image);
-            
+
             // Upload new image
             $data['image'] = $this->handleImageUpload($imageFile);
         }
 
         $updateData = [];
-        
+
         if (isset($data['name'])) {
             $updateData['name'] = $data['name'];
         }

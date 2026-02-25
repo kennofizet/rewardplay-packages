@@ -3,6 +3,7 @@
 namespace Kennofizet\RewardPlay\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Kennofizet\PackagesCore\Models\Zone;
 
 class StoreSettingOptionRequest extends FormRequest
 {
@@ -22,7 +23,7 @@ class StoreSettingOptionRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'rates' => 'nullable|array',
-            'zone_id' => 'nullable|integer|exists:' . (new \Kennofizet\RewardPlay\Models\Zone())->getTable() . ',id',
+            'zone_id' => 'nullable|integer|exists:' . (new Zone())->getTable() . ',id',
         ];
     }
 }

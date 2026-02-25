@@ -4,7 +4,7 @@ namespace Kennofizet\RewardPlay\Services\Player;
 
 use Kennofizet\RewardPlay\Models\SettingShopItem;
 use Kennofizet\RewardPlay\Models\SettingShopItem\SettingShopItemConstant;
-use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\PackagesCore\Models\User;
 use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
 use Kennofizet\RewardPlay\Core\Model\BaseModelResponse;

@@ -3,7 +3,6 @@
 namespace Kennofizet\RewardPlay\Models\UserRankingSnapshot;
 
 use Kennofizet\RewardPlay\Models\UserRankingSnapshot;
-use Kennofizet\RewardPlay\Models\User;
 use Carbon\Carbon;
 
 trait UserRankingSnapshotActions

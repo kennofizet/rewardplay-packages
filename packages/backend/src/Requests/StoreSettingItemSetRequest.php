@@ -3,7 +3,7 @@
 namespace Kennofizet\RewardPlay\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\PackagesCore\Models\Zone;
 use Kennofizet\RewardPlay\Models\SettingItem;
 
 class StoreSettingItemSetRequest extends FormRequest

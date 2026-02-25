@@ -2,7 +2,7 @@
 
 namespace Kennofizet\RewardPlay\Services\Model;
 
-use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
+use Kennofizet\PackagesCore\Core\Model\BaseModelActions;
 use Kennofizet\RewardPlay\Models\SettingEvent;
 use Kennofizet\RewardPlay\Models\SettingEvent\SettingEventConstant;
 use Kennofizet\RewardPlay\Models\SettingEvent\SettingEventRelationshipSetting;

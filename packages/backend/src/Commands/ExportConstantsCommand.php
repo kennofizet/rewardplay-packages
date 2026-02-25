@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
 use Kennofizet\RewardPlay\Models\SettingShopItem\SettingShopItemConstant;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
+use Kennofizet\PackagesCore\Helpers\Constant as CoreConstant;
 
 /**
  * Export PHP constants to a JS file for frontend use.
@@ -83,13 +84,14 @@ class ExportConstantsCommand extends Command
             'SettingItem' => SettingItemConstant::class,
             'SettingShopItem' => SettingShopItemConstant::class,
             'Helper' => HelperConstant::class,
+            'Core' => CoreConstant::class,
         ];
 
         $result = [];
         foreach ($classes as $key => $class) {
             $ref = new \ReflectionClass($class);
             $constants = $ref->getConstants();
-            if ($key === 'Helper') {
+            if (in_array($key, ['Helper', 'Core'])) {
                 $result[$key] = array_intersect_key($constants, array_flip(self::HELPER_KEEP_NAMES));
             } else {
                 $result[$key] = array_diff_key($constants, array_flip(self::SKIP_CONSTANT_NAMES));

@@ -3,7 +3,7 @@
 namespace Kennofizet\RewardPlay\Models\UserProfile;
 
 use Kennofizet\RewardPlay\Models\UserProfile;
-use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\PackagesCore\Models\User;
 use Kennofizet\RewardPlay\Models\UserRankingSnapshot;
 use Kennofizet\RewardPlay\Models\UserRankingSnapshot\UserRankingSnapshotConstant;
 use Kennofizet\RewardPlay\Models\SettingLevelExp;
