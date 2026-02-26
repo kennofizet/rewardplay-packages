@@ -3,7 +3,7 @@
 namespace Kennofizet\RewardPlay\Models\SettingShopItem;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\PackagesCore\Models\Zone;
 use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Models\SettingEvent;
 

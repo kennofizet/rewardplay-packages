@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Kennofizet\RewardPlay\Models\SettingItemSet;
-use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\PackagesCore\Models\Zone;
 
 return new class extends Migration
 {

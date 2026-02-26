@@ -1,61 +1,10 @@
 <?php
 
+// NOTE: table_user, user_server_id_column, table_prefix, api_prefix, rate_limit
+// have been moved to the packages-core config (packages-core.php).
+// Use config('packages-core.table_user') etc. going forward.
+
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | User Table Name
-    |--------------------------------------------------------------------------
-    |
-    | The name of the users table in your database.
-    | Default: 'users'
-    |
-    */
-    'table_user' => env('REWARDPLAY_TABLE_USER', 'users'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | User Server ID Column
-    |--------------------------------------------------------------------------
-    |
-    | The name of the column that stores the server ID for the user.
-    | Default: null merge all users to one server
-    |
-    */
-    'user_server_id_column' => env('REWARDPLAY_USER_SERVER_ID_COLUMN'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Table Prefix
-    |--------------------------------------------------------------------------
-    |
-    | Prefix for RewardPlay tables (e.g., 'rp_' will create 'rp_rewardplay_tokens').
-    | Default: '' (no prefix)
-    |
-    */
-    'table_prefix' => env('REWARDPLAY_TABLE_PREFIX', ''),
-
-    /*
-    |--------------------------------------------------------------------------
-    | API Route Prefix
-    |--------------------------------------------------------------------------
-    |
-    | Prefix for all RewardPlay API routes.
-    | Default: 'api/rewardplay'
-    |
-    */
-    'api_prefix' => env('REWARDPLAY_API_PREFIX', 'api/rewardplay'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Rate Limiting
-    |--------------------------------------------------------------------------
-    |
-    | Maximum number of requests per minute per token.
-    | Default: 60 requests per minute
-    |
-    */
-    'rate_limit' => env('REWARDPLAY_RATE_LIMIT', 60),
-
     /*
     |--------------------------------------------------------------------------
     | Default Images Folder Name
@@ -91,12 +40,6 @@ return [
     | are stored. These images will override default global images when present.
     | Default: 'custom/global'
     |
-    | Example: If set to 'custom/global', images should be placed in:
-    | public/custom/global/
-    |
-    | The manifest API endpoint will automatically scan this folder and include
-    | the file list in the 'custom' key of the manifest response.
-    |
     */
     'custom_global_images_folder' => env('REWARDPLAY_CUSTOM_GLOBAL_IMAGES_FOLDER', 'custom/global'),
 
@@ -106,11 +49,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | When true, responses for files under images_folder, constants_folder,
-    | and custom_global_images_folder (under images_folder) will include
-    | Access-Control-Allow-Origin so the frontend can fetch them cross-origin
-    | (e.g. for preloading images when frontend is on a different port).
-    |
-    | Only applies when files are served through the package's file routes.
+    | and custom_global_images_folder will include Access-Control-Allow-Origin.
     | Default: false
     |
     */

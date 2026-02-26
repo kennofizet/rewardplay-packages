@@ -3,7 +3,6 @@
 namespace Kennofizet\RewardPlay\Models\SettingItemSet;
 
 use Kennofizet\RewardPlay\Models\SettingItemSet;
-use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 
 trait SettingItemSetActions
 {

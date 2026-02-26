@@ -4,7 +4,7 @@ namespace Kennofizet\RewardPlay\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
-use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\PackagesCore\Models\Zone;
 
 class UpdateSettingItemRequest extends FormRequest
 {

@@ -2,7 +2,7 @@
 
 namespace Kennofizet\RewardPlay\Models\SettingStatsTransform;
 
-use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\PackagesCore\Models\Zone;
 
 trait SettingStatsTransformRelations
 {

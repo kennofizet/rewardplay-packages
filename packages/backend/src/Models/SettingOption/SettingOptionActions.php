@@ -3,7 +3,6 @@
 namespace Kennofizet\RewardPlay\Models\SettingOption;
 
 use Kennofizet\RewardPlay\Models\SettingOption;
-use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 
 trait SettingOptionActions
 {

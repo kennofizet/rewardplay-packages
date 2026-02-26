@@ -3,7 +3,6 @@
 namespace Kennofizet\RewardPlay\Models\SettingStatsTransform;
 
 use Kennofizet\RewardPlay\Models\SettingStatsTransform;
-use Kennofizet\RewardPlay\Core\Model\BaseModelActions;
 
 trait SettingStatsTransformActions
 {

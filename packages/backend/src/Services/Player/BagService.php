@@ -3,7 +3,7 @@
 namespace Kennofizet\RewardPlay\Services\Player;
 
 use Kennofizet\RewardPlay\Models\UserBagItem;
-use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\PackagesCore\Models\User;
 use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
 use Kennofizet\RewardPlay\Models\UserProfile\UserProfileConstant;

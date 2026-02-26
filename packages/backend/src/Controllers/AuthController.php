@@ -5,7 +5,7 @@ namespace Kennofizet\RewardPlay\Controllers;
 use Kennofizet\RewardPlay\Controllers\Controller;
 use Illuminate\Http\Request;
 use Kennofizet\RewardPlay\Services\ImageManifestService;
-use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\PackagesCore\Models\User;
 use Kennofizet\RewardPlay\Models\UserProfile\UserProfileConstant;
 use Kennofizet\RewardPlay\Models\UserBagItem\UserBagItemModelResponse;
 
@@ -36,33 +36,6 @@ class AuthController extends Controller
             ->header('Access-Control-Allow-Headers', 'Content-Type');
     }
 
-    /**
-     * Check user authentication
-     */
-    public function checkUser(Request $request)
-    {
-        // Middleware ValidateRewardPlayToken already validates token and attaches user id
-        $userId = $request->attributes->get('rewardplay_user_id');
-
-        if (empty($userId)) {
-            return $this->apiErrorResponse('User not authenticated', 401);
-        }
-
-        // Determine manager status from attributes set by ValidateRewardPlayToken
-        $managedServerId = $request->attributes->get('rewardplay_user_managed_server_id');
-        $managedZoneIds = $request->attributes->get('rewardplay_user_managed_zone_ids', []);
-
-        $isManager = false;
-        if (!empty($managedServerId)) {
-            $isManager = true;
-        } elseif (!empty($managedZoneIds) && is_array($managedZoneIds) && count($managedZoneIds) > 0) {
-            $isManager = true;
-        }
-
-        return $this->apiResponseWithContext([
-            'is_manager' => $isManager,
-        ]);
-    }
 
     /**
      * Get user data

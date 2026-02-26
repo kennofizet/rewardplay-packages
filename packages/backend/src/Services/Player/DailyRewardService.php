@@ -5,7 +5,7 @@ namespace Kennofizet\RewardPlay\Services\Player;
 use Kennofizet\RewardPlay\Services\Model\SettingDailyRewardService;
 use Kennofizet\RewardPlay\Services\Model\SettingStackBonusService;
 use Kennofizet\RewardPlay\Models\UserDailyStatus;
-use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\PackagesCore\Models\User;
 use Kennofizet\RewardPlay\Helpers\Constant as HelperConstant;
 use Carbon\Carbon;
 use Exception;

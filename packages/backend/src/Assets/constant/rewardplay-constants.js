@@ -60,6 +60,9 @@
         "TYPE_RUBY": "ruby",
         "TYPE_GEAR": "gear",
         "TYPE_TICKET": "ticket"
+    },
+    "Core": {
+        "REPONSE_MODE_SELECTER_API": "api.selecter"
     }
 };
 })();

@@ -2,7 +2,7 @@
 
 namespace Kennofizet\RewardPlay\Models\UserRankingSnapshot;
 
-use Kennofizet\RewardPlay\Models\User;
+use Kennofizet\PackagesCore\Models\User;
 
 trait UserRankingSnapshotRelations
 {

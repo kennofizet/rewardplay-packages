@@ -4,7 +4,7 @@ namespace Kennofizet\RewardPlay\Models\SettingEvent;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\PackagesCore\Models\Zone;
 use Kennofizet\RewardPlay\Models\SettingItem;
 
 trait SettingEventRelations

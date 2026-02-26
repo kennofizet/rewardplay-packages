@@ -4,8 +4,8 @@ namespace Kennofizet\RewardPlay\Models\UserEventTransaction;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Kennofizet\RewardPlay\Models\User;
-use Kennofizet\RewardPlay\Models\Zone;
+use Kennofizet\PackagesCore\Models\User;
+use Kennofizet\PackagesCore\Models\Zone;
 
 trait UserEventTransactionRelations
 {
