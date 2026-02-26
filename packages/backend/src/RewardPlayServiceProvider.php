@@ -16,13 +16,37 @@ class RewardPlayServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        // Rewardplay migrations — also publishes packages-core migrations
         $this->publishes([
             __DIR__ . '/Migrations' => database_path('migrations'),
         ], 'rewardplay-migrations');
 
+        // Resolve packages-core src path — works for both vendor installs and local path repos
+        $coreBasePath = null;
+        if (class_exists(\Kennofizet\PackagesCore\PackagesCoreServiceProvider::class)) {
+            $coreBasePath = dirname(
+                (new \ReflectionClass(\Kennofizet\PackagesCore\PackagesCoreServiceProvider::class))->getFileName(),
+            );
+        }
+
+        // Include packages-core migrations in the same tag
+        if ($coreBasePath && is_dir($coreBasePath . '/Migrations')) {
+            $this->publishes([
+                $coreBasePath . '/Migrations' => database_path('migrations'),
+            ], 'rewardplay-migrations');
+        }
+
+        // Rewardplay config — also publishes packages-core config
         $this->publishes([
             __DIR__ . '/Config/rewardplay.php' => config_path('rewardplay.php'),
         ], 'rewardplay-config');
+
+        // Include packages-core config in the same tag
+        if ($coreBasePath && is_dir($coreBasePath . '/Config')) {
+            $this->publishes([
+                $coreBasePath . '/Config/packages-core.php' => config_path('packages-core.php'),
+            ], 'rewardplay-config');
+        }
 
         // Publish default images folder
         $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');

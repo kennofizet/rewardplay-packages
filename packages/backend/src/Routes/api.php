@@ -63,7 +63,6 @@ Route::prefix($prefix)
         require_once __DIR__ . '/setting/setting-stats-transforms.php';
         require_once __DIR__ . '/setting/setting-events.php';
         require_once __DIR__ . '/setting/setting-shop-items.php';
-        require_once __DIR__ . '/setting/zones.php';
 
         Route::post('setting-stack-bonuses/suggest', [\Kennofizet\RewardPlay\Controllers\Settings\SettingStackBonusController::class, 'suggest']);
         Route::apiResource('setting-stack-bonuses', \Kennofizet\RewardPlay\Controllers\Settings\SettingStackBonusController::class);
@@ -90,7 +89,6 @@ Route::prefix($prefix)
 
 
         Route::get('/player/custom-images', [PlayerController::class, 'getCustomImages']);
-        Route::get('/player/managed-zones', [\Kennofizet\RewardPlay\Controllers\Settings\ZoneController::class, 'managed']);
 
         require_once __DIR__ . '/setting/stats.php';
 
