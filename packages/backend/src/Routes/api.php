@@ -6,19 +6,16 @@ use Kennofizet\RewardPlay\Controllers\FileController;
 use Kennofizet\RewardPlay\Controllers\RankingController;
 use Kennofizet\RewardPlay\Controllers\Player\PlayerController;
 
-use Kennofizet\PackagesCore\Middleware\ValidateRewardPlayToken;
-use Kennofizet\PackagesCore\Middleware\ValidatorRequestMiddleware;
-use Kennofizet\PackagesCore\Middleware\EnsureUserIsManager;
-
 // Config keys moved to packages-core
-$prefix = config('packages-core.api_prefix', 'api/rewardplay');
+$prefix = config('packages-core.api_prefix', 'api/knf');
+$rewardplayPrefix = config('rewardplay.api_prefix', 'rewardplay');
 $rateLimit = config('packages-core.rate_limit', 60);
 
 // Public file serving (no auth) – under API path so Laravel serves files and can add CORS
 $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
 $constantsFolder = config('rewardplay.constants_folder', 'rewardplay-constants');
 
-Route::prefix($prefix)
+Route::prefix($prefix . '/' . $rewardplayPrefix)
     ->middleware(['api', "throttle:{$rateLimit},1"])
     ->group(function () use ($imagesFolder, $constantsFolder) {
         Route::options('files/' . $imagesFolder . '/{path}', function () {
@@ -48,13 +45,13 @@ Route::prefix($prefix)
     });
 
 // Protected routes — manage only
-Route::prefix($prefix)
+Route::prefix($prefix . '/' . $rewardplayPrefix)
     ->middleware([
         "throttle:{$rateLimit},1",
         'api',
-        ValidateRewardPlayToken::class,
-        ValidatorRequestMiddleware::class,
-        EnsureUserIsManager::class,
+        'knf.core.token',
+        'knf.core.validator',
+        'knf.core.manager',
     ])
     ->group(function () {
         require_once __DIR__ . '/setting/setting-items.php';
@@ -76,12 +73,12 @@ Route::prefix($prefix)
     });
 
 // Protected routes (require token validation)
-Route::prefix($prefix)
+Route::prefix($prefix . '/' . $rewardplayPrefix)
     ->middleware([
         "throttle:{$rateLimit},1",
         'api',
-        ValidateRewardPlayToken::class,
-        ValidatorRequestMiddleware::class
+        'knf.core.token',
+        'knf.core.validator'
     ])
     ->group(function () {
         Route::get('/auth/user-data', [AuthController::class, 'getUserData']);

@@ -4,8 +4,8 @@ namespace Kennofizet\RewardPlay\Commands;
 
 use Illuminate\Console\Command;
 use Kennofizet\PackagesCore\Traits\GlobalDataTrait;
-use Kennofizet\PackagesCore\Traits\SettingRewardPlay;
-use Kennofizet\PackagesCore\Traits\ManagesZonesRewardPlay;
+use Kennofizet\PackagesCore\Traits\SettingKnfCore;
+use Kennofizet\PackagesCore\Traits\ManagesZonesKnfCore;
 use Kennofizet\PackagesCore\Models\Zone;
 use Kennofizet\RewardPlay\Models\SettingItem;
 use Kennofizet\RewardPlay\Models\SettingItem\SettingItemConstant;
@@ -24,7 +24,7 @@ use Illuminate\Http\Request;
  */
 class ManageRewardPlayCommand extends Command
 {
-    use GlobalDataTrait, SettingRewardPlay, ManagesZonesRewardPlay;
+    use GlobalDataTrait, SettingKnfCore, ManagesZonesKnfCore;
 
     protected $signature = 'rewardplay:manage';
     protected $description = 'View RewardPlay zones, server managers, and generate fake data (read-only). Use packages-core:manage for CRUD';
@@ -294,7 +294,7 @@ class ManageRewardPlayCommand extends Command
 
         // Set zone_id in request attributes so BaseModel can auto-populate
         $request = Request::create('/', 'GET');
-        $request->attributes->set('rewardplay_user_zone_id_current', $this->currentZoneId);
+        $request->attributes->set('knf_core_user_zone_id_current', $this->currentZoneId);
         app()->instance('request', $request);
 
         try {

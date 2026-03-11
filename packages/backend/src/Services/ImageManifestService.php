@@ -120,7 +120,7 @@ class ImageManifestService
 
         // Convert to full URLs. When allow_cors_for_files is true, use API file route so Laravel serves files and adds CORS.
         $imagesFolder = config('rewardplay.images_folder', 'rewardplay-images');
-        $apiPrefix = config('rewardplay.api_prefix', 'api/rewardplay');
+        $apiPrefix = config('packages-core.api_prefix', 'api/knf') . '/' . config('rewardplay.api_prefix', 'rewardplay');
         $useFileRoute = config('rewardplay.allow_cors_for_files', false);
         $manifestWithFullUrls = [];
         foreach ($manifest as $key => $value) {

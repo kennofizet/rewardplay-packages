@@ -37,7 +37,7 @@ class BaseModelResponse extends CoreBaseModelResponse
             && (str_starts_with($imagePath, $imagesFolder . '/') || $imagePath === $imagesFolder)
         ) {
             // api_prefix moved to packages-core
-            $apiPrefix = Config::get('packages-core.api_prefix', 'api/rewardplay');
+            $apiPrefix = Config::get('packages-core.api_prefix', 'api/knf') . '/' . Config::get('rewardplay.api_prefix', 'rewardplay');
             return url($apiPrefix . '/files/' . ltrim($imagePath, '/'));
         }
 

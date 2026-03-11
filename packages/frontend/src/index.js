@@ -9,11 +9,16 @@ import * as StatHelpers from './utils/statHelpers'
  * Install game module
  * @param {Object} app - Vue app instance
  * @param {Object} options - Configuration
+ * @param {string} options.coreUrl - Core API URL (required)
  * @param {string} options.backendUrl - Backend API URL (required)
  * @param {string} options.token - RewardPlay token (required)
  */
 export function installGameModule(app, options = {}) {
-  const { backendUrl, token } = options
+  const { coreUrl, backendUrl, token } = options
+
+  if (!coreUrl) {
+    throw new Error('Game Module: coreUrl is required')
+  }
 
   if (!backendUrl) {
     throw new Error('Game Module: backendUrl is required')
@@ -23,10 +28,15 @@ export function installGameModule(app, options = {}) {
     throw new Error('Game Module: token is required')
   }
 
-  const gameApi = createGameApi(backendUrl, token)
+  const gameApi = createGameApi(coreUrl, backendUrl, token)
   
   app.provide('gameApi', gameApi)
   app.config.globalProperties.$gameApi = gameApi
+
+  // Provide coreUrl so components (e.g., RewardPlayPage) can consume it without re-passing
+  app.provide('coreUrl', coreUrl)
+  app.config.globalProperties.$coreUrl = coreUrl
+
   // Provide backendUrl so components (e.g., RewardPlayPage) can consume it without re-passing
   app.provide('backendUrl', backendUrl)
   app.config.globalProperties.$backendUrl = backendUrl

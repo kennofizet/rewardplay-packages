@@ -23,7 +23,7 @@ class ShopController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $userId = $request->attributes->get('rewardplay_user_id');
+        $userId = $request->attributes->get('knf_core_user_id');
         $result = $this->service->getActiveShopItems($userId ? (int) $userId : null);
         return $this->apiResponseWithContext($result);
     }
@@ -36,7 +36,7 @@ class ShopController extends Controller
      */
     public function purchase(PurchaseShopItemRequest $request): JsonResponse
     {
-        $userId = $request->attributes->get('rewardplay_user_id');
+        $userId = $request->attributes->get('knf_core_user_id');
 
         $validated = $request->validated();
         $shopItemId = (int) $validated['shop_item_id'];

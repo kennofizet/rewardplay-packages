@@ -28,7 +28,7 @@ class DailyRewardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $userId = $request->attributes->get('rewardplay_user_id');
+        $userId = $request->attributes->get('knf_core_user_id');
         $reponseMode = SettingDailyRewardConstant::PLAYER_API_RESPONSE_REWARD_PAGE;
         $stackBonusReponseMode = SettingStackBonusConstant::PLAYER_API_RESPONSE_REWARD_PAGE;
         
@@ -75,7 +75,7 @@ class DailyRewardController extends Controller
      */
     public function collect(Request $request): JsonResponse
     {
-        $userId = $request->attributes->get('rewardplay_user_id');
+        $userId = $request->attributes->get('knf_core_user_id');
 
         try {
             $this->service->collectReward($userId);

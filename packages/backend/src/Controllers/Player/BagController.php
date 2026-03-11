@@ -28,7 +28,7 @@ class BagController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $userId = $request->attributes->get('rewardplay_user_id');
+        $userId = $request->attributes->get('knf_core_user_id');
         $reponseMode = UserBagItemConstant::PLAYER_API_RESPONSE_BAG_PAGE;
 
         $categorized = $this->service->getUserBagCategorized($userId);
@@ -59,7 +59,7 @@ class BagController extends Controller
      */
     public function saveGears(SaveGearsRequest $request): JsonResponse
     {
-        $userId = $request->attributes->get('rewardplay_user_id');
+        $userId = $request->attributes->get('knf_core_user_id');
         
         $validated = $request->validated();
         $gearMapping = $validated['gears'];
@@ -83,7 +83,7 @@ class BagController extends Controller
      */
     public function openBox(OpenBoxRequest $request): JsonResponse
     {
-        $userId = $request->attributes->get('rewardplay_user_id');
+        $userId = $request->attributes->get('knf_core_user_id');
 
         $validated = $request->validated();
         $userBagItemId = (int) $validated['user_bag_item_id'];

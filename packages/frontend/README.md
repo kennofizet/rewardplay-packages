@@ -1,38 +1,38 @@
-# @kennofizet/rewardplay-frontend
+# RewardPlay Frontend
 
-Vue 3 frontend package for **RewardPlay**: game UI (bag, shop, daily reward, ranking, settings) that talks to the RewardPlay backend API.
+Vue 3 UI for **RewardPlay**: login, bag, shop, daily rewards, ranking, and settings. It talks to two APIs — **Core** (zones, auth check) and **RewardPlay** (game data) — so you pass **coreUrl**, **backendUrl**, and **token** when mounting.
 
-## What This Package Is
+---
 
-- **Vue 3 component library** for the RewardPlay game interface (login, loading, bag/gear, shop, daily rewards, ranking, manage settings).
-- **Token-based**: you pass a backend URL and token; the package uses them for all API calls.
-- **Embeddable**: mount it in a host app inside a div (e.g. after login or when entering the game section).
-- Backend API, auth, and data format are defined in **@kennofizet/rewardplay-backend**. Use that package (or its docs) for token, endpoints, and data structures.
-
-## Installation
+## Install
 
 ```bash
 npm i @kennofizet/rewardplay-frontend
 ```
 
-**Peer dependency:** Vue 3 (`vue@^3.2.0`). The host project must provide Vue.
+**Peer dependency:** Vue 3 (`vue@^3.2.0`). Your app must provide Vue.
 
-## Setup: Mount Point and Initialization
+---
 
-### 1. Mount point in template
+## Mount in 3 steps
 
-Render a stable DOM node only when you are ready to mount RewardPlay (e.g. after you have a token):
+### 1. Add a mount point (only when you have a token)
 
 ```html
 <div v-show="initialized" id="rewardplay-mount-point"></div>
 ```
 
-- Use `v-show="initialized"` (or `v-if`) so the element exists only when `initialized` is true, then mount in a `nextTick` after setting `initialized = true`.
-- The ID (`rewardplay-mount-point`) is what you pass to `document.getElementById` before mounting.
+Show it only when `initialized` is true (e.g. after login), then mount in a `nextTick` after setting `initialized = true`. Use the same ID in `document.getElementById` below.
 
-### 2. Initialize and mount in your app
+### 2. Get token and URLs
 
-Example (Vue 3 Composition API with `createApp`):
+Your app must provide:
+
+- **coreUrl** — Base URL of the Core API (e.g. `https://your-app.com/api/knf`). Used for auth check, zones, managed zones.
+- **backendUrl** — Base URL of the RewardPlay API (e.g. `https://your-app.com/api/knf/rewardplay`). Used for user data, bag, shop, daily rewards, ranking, manifest, settings.
+- **token** — RewardPlay token (from your backend; see rewardplay-backend README).
+
+### 3. Create app and use the plugin
 
 ```js
 import { createApp, ref, nextTick } from 'vue'
@@ -41,15 +41,13 @@ import RewardPlay, { RewardPlayPage } from '@kennofizet/rewardplay-frontend'
 const initialized = ref(false)
 let rewardPlayApp = null
 
-async function initialize() {
-  const backendUrl = 'https://your-backend.com'   // from your config
-  if (!backendUrl?.trim()) {
-    // handle error
-    return
-  }
+async function initRewardPlay() {
+  const coreUrl = 'https://your-app.com/api/knf'                    // from your config
+  const backendUrl = 'https://your-app.com/api/knf/rewardplay'     // from your config
+  if (!coreUrl?.trim() || !backendUrl?.trim()) return
 
   try {
-    const token = await fetchToken()   // get token from your backend (see rewardplay-backend)
+    const token = await fetchYourRewardPlayToken()   // your API
     initialized.value = true
     await nextTick()
 
@@ -66,10 +64,10 @@ async function initialize() {
       fontUrls: [],
       backgroundImage: null,
       language: 'vi',   // 'en' | 'vi'
-      // enableUnzip: true,  // if your RewardPlayPage supports it
     })
 
     rewardPlayApp.use(RewardPlay, {
+      coreUrl: coreUrl.trim(),
       backendUrl: backendUrl.trim(),
       token,
     })
@@ -77,72 +75,76 @@ async function initialize() {
     rewardPlayApp.mount(mountPoint)
   } catch (err) {
     initialized.value = false
-    // handle err
+    // handle error
   }
 }
 
-// e.g. in onMounted or after login
+// e.g. onMounted or after login
 onMounted(() => {
-  initialize()
+  initRewardPlay()
 })
 ```
 
-### 3. Plugin options (required)
+---
 
-| Option      | Type   | Description                    |
-|------------|--------|--------------------------------|
-| `backendUrl` | string | Base URL of RewardPlay API     |
-| `token`      | string | RewardPlay auth token          |
+## Plugin options (all required)
 
-Both are required when calling `app.use(RewardPlay, { backendUrl, token })`.
+| Option | Type | Description |
+|--------|------|-------------|
+| `coreUrl` | string | Base URL of Core API (zones, auth check). |
+| `backendUrl` | string | Base URL of RewardPlay API (game data, manifest). |
+| `token` | string | RewardPlay auth token. |
 
-### 4. Vite: optimizeDeps
+All three are required: `app.use(RewardPlay, { coreUrl, backendUrl, token })`.
 
-If you mount RewardPlay in a separate app with `createApp(RewardPlayPage).use(RewardPlay, { backendUrl, token }).mount(...)`, add the package to Vite’s `optimizeDeps.include` so it uses the same Vue instance and `inject('gameApi')` works:
+---
+
+## Vite: same Vue instance
+
+If you mount RewardPlay in a separate `createApp(RewardPlayPage)`, add the package to Vite so it shares the same Vue instance and `inject('gameApi')` works:
 
 ```js
-// vite.config.js (or vite.config.ts)
+// vite.config.js
 export default {
-  // ...
   optimizeDeps: {
     include: ['@kennofizet/rewardplay-frontend'],
-    // ... rest of your config
   },
 }
 ```
 
-Without this, dev and build can end up with a different Vue instance for the package and `gameApi` may be missing (e.g. “gameApi.... is not a function”)
+---
 
-### 5. RewardPlayPage root props (optional)
+## RewardPlayPage props (optional)
 
-| Prop             | Type   | Default | Description                    |
-|------------------|--------|--------|--------------------------------|
-| `imageUrls`      | Array  | `[]`   | URLs for image manifest/assets |
-| `scriptUrls`     | Array  | `[]`   | Script URLs to load            |
-| `stylesheetUrls` | Array  | `[]`   | CSS URLs                       |
-| `fontUrls`       | Array  | `[]`   | Font URLs                      |
-| `backgroundImage`| string | null   | Background image URL           |
-| `language`       | string | `'en'` | UI language: `'en'` or `'vi'`  |
-| `rotate`         | boolean| true   | Auto-rotate in portrait        |
-| `customStyles`    | Object | `{}`   | Extra inline/CSS variables     |
+| Prop | Type | Default | Description |
+|------|------|--------|-------------|
+| `imageUrls` | Array | `[]` | URLs for image manifest/assets |
+| `scriptUrls` | Array | `[]` | Script URLs to load |
+| `stylesheetUrls` | Array | `[]` | CSS URLs |
+| `fontUrls` | Array | `[]` | Font URLs |
+| `backgroundImage` | string | null | Background image URL |
+| `language` | string | `'en'` | `'en'` or `'vi'` |
+| `rotate` | boolean | true | Auto-rotate in portrait |
+| `customStyles` | Object | `{}` | Extra CSS variables |
 
-## Backend and data
+---
 
-- **Token**: Your host app must obtain the RewardPlay token (e.g. from your own backend that talks to RewardPlay). How to issue/validate the token and which endpoints to call is defined in **@kennofizet/rewardplay-backend**.
-- **API**: The frontend calls endpoints under `backendUrl` (e.g. `/api/rewardplay/auth/user-data`, `/api/rewardplay/player/shop`, etc.). Base URL, routes, and response shapes are documented in the backend package.
-- For API contracts, env vars, and server setup, read **@kennofizet/rewardplay-backend** (or the backend README in the same repo).
+## Backend and token
+
+- **Token:** Your host app gets the RewardPlay token from your backend (see **kennofizet/rewardplay-backend** README).
+- **URLs:** Core and RewardPlay can live on the same app; just pass the correct base paths for `coreUrl` and `backendUrl`.
+
+---
 
 ## Exports
 
-- **default**: plugin object `{ install }` — use with `app.use(RewardPlay, { backendUrl, token })`.
-- **RewardPlayPage**: root Vue component to mount.
-- **installGameModule**, **createGameApi**, **RewardPlayPage**, **ComingSoonPage**, **LoadingSource**, **LoginScreen**.
-- Utilities: **ResourceLoader**, **useResourceLoader**, constants helpers, **createTranslator**, **translations**.
+- **default** — Plugin: `app.use(RewardPlay, { coreUrl, backendUrl, token })`
+- **RewardPlayPage** — Root component to mount
+- **createGameApi**, **installGameModule**, **ComingSoonPage**, **LoadingSource**, **LoginScreen**
+- **ResourceLoader**, **useResourceLoader**, constants helpers, **createTranslator**, **translations**
 
-## Development
+---
 
-If you work inside the repo (e.g. `rewardplay-packages`):
+## Development (editing the package)
 
-- Dependencies are usually installed at the **root** of the repo: `npm install` at root.
-- The package entry is `src/index.js`; the host can resolve source directly (no build step required for development).
-- For a production build of the frontend package, run `npm run production` in this package (output in `dist/`).
+From the **rewardplay-packages** repo root: `npm install`, then `npm run dev:frontend` or `npm run build:frontend`. Package entry is `src/index.js`.

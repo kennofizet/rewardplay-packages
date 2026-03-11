@@ -42,8 +42,8 @@ class AuthController extends Controller
      */
     public function getUserData(Request $request)
     {
-        // Middleware ValidateRewardPlayToken attaches user id and permissions to request
-        $userId = $request->attributes->get('rewardplay_user_id');
+        // Middleware knf.core.token attaches user id and permissions to request
+        $userId = $request->attributes->get('knf_core_user_id');
 
         if (empty($userId)) {
             return $this->apiErrorResponse('User not authenticated', 401);
