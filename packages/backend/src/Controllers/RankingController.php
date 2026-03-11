@@ -21,7 +21,7 @@ class RankingController extends Controller
      */
     public function getRanking(Request $request): JsonResponse
     {
-        $userId = $request->attributes->get('rewardplay_user_id');
+        $userId = $request->attributes->get('knf_core_user_id');
         if (empty($userId)) {
             return $this->apiErrorResponse('User not authenticated', 401);
         }

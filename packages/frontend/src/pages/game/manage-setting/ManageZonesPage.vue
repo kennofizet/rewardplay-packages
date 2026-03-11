@@ -48,7 +48,6 @@
             <label>{{ t('page.manageSetting.manageZones.form.name') || 'Name' }}</label>
             <input v-model="formData.name" type="text" required />
           </div>
-          <!-- server_id is determined by server context; no input required -->
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" @click="closeModal">{{ t('page.manageSetting.manageZones.cancel') || 'Cancel' }}</button>

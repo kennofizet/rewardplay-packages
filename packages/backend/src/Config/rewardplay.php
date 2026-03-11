@@ -1,10 +1,11 @@
 <?php
 
-// NOTE: table_user, user_server_id_column, table_prefix, api_prefix, rate_limit
+// NOTE: table_user, user_server_id_column, table_prefix, rate_limit
 // have been moved to the packages-core config (packages-core.php).
 // Use config('packages-core.table_user') etc. going forward.
 
 return [
+    'api_prefix' => env('REWARDPLAY_API_PREFIX', 'rewardplay'),
     /*
     |--------------------------------------------------------------------------
     | Default Images Folder Name
