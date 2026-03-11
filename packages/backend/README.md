@@ -41,8 +41,8 @@ php artisan config:clear
 
 The frontend needs **two** base URLs:
 
-1. **coreUrl** — Your core API (e.g. `https://your-app.com/api/knf`). Used for auth check, player zones, managed zones, zone CRUD. Comes from **packages-core**.
-2. **backendUrl** — RewardPlay API (e.g. `https://your-app.com/api/knf/rewardplay`). Used for user data, bag, shop, daily rewards, ranking, settings, manifest.
+1. **coreUrl** — Your core API (e.g. `https://your-app.com/KNF_CORE_API_PREFIX`). Used for auth check, player zones, managed zones, zone CRUD. Comes from **packages-core**.
+2. **backendUrl** — RewardPlay API (e.g. `https://your-app.com/KNF_CORE_API_PREFIX/REWARDPLAY_API_PREFIX`). Used for user data, bag, shop, daily rewards, ranking, settings, manifest.
 
 So in the host app you pass both when mounting RewardPlay (see frontend README).
 

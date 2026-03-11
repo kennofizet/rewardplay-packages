@@ -54,8 +54,8 @@ Mount RewardPlay with **coreUrl**, **backendUrl**, and **token**:
 
 ```js
 rewardPlayApp.use(RewardPlay, {
-  coreUrl: 'https://your-app.com/api/knf',           // Core API (zones, auth check)
-  backendUrl: 'https://your-app.com/api/knf/rewardplay',  // RewardPlay API
+  coreUrl: 'https://your-app.com/KNF_CORE_API_PREFIX',           // Core API (zones, auth check)
+  backendUrl: 'https://your-app.com/KNF_CORE_API_PREFIX/REWARDPLAY_API_PREFIX',  // RewardPlay API
   token: yourRewardPlayToken,
 })
 ```

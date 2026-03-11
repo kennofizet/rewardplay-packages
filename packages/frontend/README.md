@@ -28,8 +28,8 @@ Show it only when `initialized` is true (e.g. after login), then mount in a `nex
 
 Your app must provide:
 
-- **coreUrl** — Base URL of the Core API (e.g. `https://your-app.com/api/knf`). Used for auth check, zones, managed zones.
-- **backendUrl** — Base URL of the RewardPlay API (e.g. `https://your-app.com/api/knf/rewardplay`). Used for user data, bag, shop, daily rewards, ranking, manifest, settings.
+- **coreUrl** — Base URL of the Core API (e.g. `https://your-app.com/KNF_CORE_API_PREFIX`). Used for auth check, zones, managed zones.
+- **backendUrl** — Base URL of the RewardPlay API (e.g. `https://your-app.com/KNF_CORE_API_PREFIX/REWARDPLAY_API_PREFIX`). Used for user data, bag, shop, daily rewards, ranking, manifest, settings.
 - **token** — RewardPlay token (from your backend; see rewardplay-backend README).
 
 ### 3. Create app and use the plugin
@@ -42,8 +42,8 @@ const initialized = ref(false)
 let rewardPlayApp = null
 
 async function initRewardPlay() {
-  const coreUrl = 'https://your-app.com/api/knf'                    // from your config
-  const backendUrl = 'https://your-app.com/api/knf/rewardplay'     // from your config
+  const coreUrl = 'https://your-app.com/KNF_CORE_API_PREFIX'                    // from your config
+  const backendUrl = 'https://your-app.com/KNF_CORE_API_PREFIX/rewardplay'     // from your config
   if (!coreUrl?.trim() || !backendUrl?.trim()) return
 
   try {
